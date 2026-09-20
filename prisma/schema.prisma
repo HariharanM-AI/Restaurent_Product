@@ -1,0 +1,321 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PLATFORM_ADMIN
+  OWNER
+  MANAGER
+  STAFF
+}
+
+enum ActionType {
+  MENU
+  REWARDS
+  REVIEW
+  WIFI
+  FEEDBACK
+  GAME
+  SOCIAL
+  CUSTOM
+}
+
+enum SocialPlatform {
+  INSTAGRAM
+  FACEBOOK
+  TIKTOK
+  X
+  YOUTUBE
+  WEBSITE
+}
+
+enum RestaurantStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum LoyaltyTransactionType {
+  STAMP_EARNED
+  STAMP_REVERSED
+  MILESTONE_UNLOCKED
+  REWARD_REDEEMED
+  REWARD_EXPIRED
+}
+
+enum CheckoutSessionStatus {
+  ACTIVE
+  CONSUMED
+  EXPIRED
+  CANCELLED
+}
+
+enum RewardStatus {
+  AVAILABLE
+  REDEEMED
+  EXPIRED
+}
+
+model User {
+  id           String             @id @default(cuid())
+  email        String             @unique
+  name         String?
+  passwordHash String
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  memberships  RestaurantMember[]
+}
+
+model Restaurant {
+  id             String             @id @default(cuid())
+  name           String
+  slug           String             @unique
+  logoUrl        String?
+  coverImageUrl  String?
+  tagline        String?
+  primaryColor   String             @default("#0F766E")
+  secondaryColor String             @default("#F8FAFC")
+  address        String?
+  phone          String?
+  website        String?
+  status         RestaurantStatus   @default(ACTIVE)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  members          RestaurantMember[]
+  actions          GuestAction[]
+  wifiConfig       WifiConfig?
+  socialLinks      SocialLink[]
+  feedbacks        Feedback[]
+  analytics        AnalyticsEvent[]
+
+  customers        Customer[]
+  loyaltyProgram   LoyaltyProgram?
+  loyaltyWallets   LoyaltyWallet[]
+  checkoutSessions LoyaltyCheckoutSession[]
+  loyaltyTxns      LoyaltyStampTransaction[]
+  loyaltyRewards   LoyaltyReward[]
+
+  @@index([slug])
+  @@index([status])
+}
+
+model RestaurantMember {
+  id           String     @id @default(cuid())
+  userId       String
+  restaurantId String
+  role         Role       @default(STAFF)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, restaurantId])
+  @@index([restaurantId])
+}
+
+model GuestAction {
+  id           String     @id @default(cuid())
+  restaurantId String
+  type         ActionType @default(CUSTOM)
+  title        String
+  description  String?
+  icon         String
+  url          String?
+  enabled      Boolean    @default(true)
+  displayOrder Int        @default(0)
+  badge        String?
+  metadata     String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, displayOrder])
+}
+
+model Customer {
+  id           String          @id @default(cuid())
+  restaurantId String
+  displayName  String?
+  phone        String?
+  email        String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  restaurant   Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  wallets      LoyaltyWallet[]
+
+  @@unique([restaurantId, phone])
+  @@unique([restaurantId, email])
+  @@index([restaurantId])
+}
+
+model LoyaltyProgram {
+  id           String             @id @default(cuid())
+  restaurantId String             @unique
+  name         String             @default("Stamp Rewards")
+  enabled      Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  restaurant   Restaurant         @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  milestones   LoyaltyMilestone[]
+}
+
+model LoyaltyMilestone {
+  id                String          @id @default(cuid())
+  loyaltyProgramId  String
+  stampRequirement  Int
+  rewardTitle       String
+  rewardDescription String?
+  validityDays      Int             @default(30)
+  enabled           Boolean         @default(true)
+  displayOrder      Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  loyaltyProgram    LoyaltyProgram  @relation(fields: [loyaltyProgramId], references: [id], onDelete: Cascade)
+  rewards           LoyaltyReward[]
+
+  @@index([loyaltyProgramId, stampRequirement])
+}
+
+model LoyaltyWallet {
+  id                 String                    @id @default(cuid())
+  restaurantId       String
+  customerId         String?
+  anonymousBrowserId String
+  status             String                    @default("ACTIVE")
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+
+  restaurant         Restaurant                @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  customer           Customer?                 @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  transactions       LoyaltyStampTransaction[]
+  rewards            LoyaltyReward[]
+
+  @@unique([restaurantId, anonymousBrowserId])
+  @@index([restaurantId, customerId])
+}
+
+model LoyaltyCheckoutSession {
+  id           String                @id @default(cuid())
+  restaurantId String
+  tokenHash    String                @unique
+  status       CheckoutSessionStatus @default(ACTIVE)
+  expiresAt    DateTime
+  consumedAt   DateTime?
+  createdAt    DateTime              @default(now())
+
+  restaurant   Restaurant            @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  transactions LoyaltyStampTransaction[]
+
+  @@index([restaurantId, status, expiresAt])
+}
+
+model LoyaltyStampTransaction {
+  id                String                 @id @default(cuid())
+  restaurantId      String
+  walletId          String
+  type              LoyaltyTransactionType
+  quantity          Int                    @default(1)
+  checkoutSessionId String?
+  milestoneId       String?
+  rewardId          String?
+  idempotencyKey    String                 @unique
+  metadata          String?
+  createdAt         DateTime               @default(now())
+
+  restaurant        Restaurant             @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  wallet            LoyaltyWallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  checkoutSession   LoyaltyCheckoutSession? @relation(fields: [checkoutSessionId], references: [id], onDelete: SetNull)
+
+  @@index([walletId, createdAt])
+  @@index([restaurantId, createdAt])
+}
+
+model LoyaltyReward {
+  id           String           @id @default(cuid())
+  restaurantId String
+  walletId     String
+  milestoneId  String
+  status       RewardStatus     @default(AVAILABLE)
+  unlockedAt   DateTime         @default(now())
+  redeemedAt   DateTime?
+  expiresAt    DateTime?
+
+  restaurant   Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  wallet       LoyaltyWallet    @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  milestone    LoyaltyMilestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+
+  @@index([walletId, status])
+  @@index([restaurantId, status])
+}
+
+model WifiConfig {
+  id           String     @id @default(cuid())
+  restaurantId String     @unique
+  ssid         String
+  password     String
+  enabled      Boolean    @default(true)
+  instructions String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+model SocialLink {
+  id           String         @id @default(cuid())
+  restaurantId String
+  platform     SocialPlatform
+  url          String
+  enabled      Boolean        @default(true)
+  displayOrder Int            @default(0)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  restaurant   Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, displayOrder])
+}
+
+model Feedback {
+  id           String     @id @default(cuid())
+  restaurantId String
+  rating       Int
+  category     String?
+  message      String
+  contact      String?
+  isAnonymous  Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, createdAt])
+}
+
+model AnalyticsEvent {
+  id                 String     @id @default(cuid())
+  restaurantId       String
+  eventType          String
+  actionId           String?
+  anonymousSessionId String
+  deviceCategory     String?
+  referrer           String?
+  source             String?
+  metadata           String?
+  createdAt          DateTime   @default(now())
+
+  restaurant         Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, eventType, createdAt])
+  @@index([restaurantId, createdAt])
+}

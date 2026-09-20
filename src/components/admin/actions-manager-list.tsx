@@ -1,0 +1,839 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import {
+  Plus,
+  ArrowUp,
+  ArrowDown,
+  Trash2,
+  Edit2,
+  Copy,
+  Check,
+  X,
+  Loader2,
+  ExternalLink,
+  Lightbulb,
+  ChevronRight,
+  Layers,
+  Sparkles,
+} from "lucide-react";
+import { IconRenderer } from "@/components/shared/icon-renderer";
+import { GuestActionData } from "@/types";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+
+interface ActionsManagerListProps {
+  initialActions: GuestActionData[];
+  restaurantId: string;
+  restaurantName: string;
+  restaurantSlug: string;
+}
+
+const AVAILABLE_ICONS = [
+  "UtensilsCrossed",
+  "Award",
+  "Star",
+  "Wifi",
+  "MessageSquarePlus",
+  "Gamepad2",
+  "Gift",
+  "Coffee",
+  "Heart",
+  "MapPin",
+  "Phone",
+  "Globe",
+];
+
+const PRESET_TEMPLATES = [
+  {
+    title: "Start Earning Rewards",
+    description: "Collect digital stamps with every checkout for complimentary rewards.",
+    icon: "Gift",
+    type: "REWARDS",
+    badge: "Loyalty",
+    badgeSecondary: "Rewards",
+    urlPattern: (slug: string) => `/${slug}/rewards`,
+  },
+  {
+    title: "Leave a Google Review",
+    description: "Share your culinary experience with the community.",
+    icon: "Star",
+    type: "REVIEW",
+    badge: "Feedback",
+    badgeSecondary: "Review",
+    urlPattern: () => `https://maps.google.com/?cid=1234567890`,
+  },
+  {
+    title: "View Menu",
+    description: "Explore our seasonal farm-to-table lunch, dinner, and cocktails.",
+    icon: "UtensilsCrossed",
+    type: "MENU",
+    badge: "Seasonal",
+    badgeSecondary: "Menu",
+    urlPattern: (slug: string) => `/${slug}/menu`,
+  },
+  {
+    title: "Connect to Wi-Fi",
+    description: "High-speed complimentary wireless internet for guests.",
+    icon: "Wifi",
+    type: "WIFI",
+    badge: "Wi-Fi",
+    badgeSecondary: "",
+    urlPattern: (slug: string) => `/${slug}/wifi`,
+  },
+  {
+    title: "Leave Anonymous Feedback",
+    description: "Send direct, private feedback to our executive chef and managers.",
+    icon: "MessageSquarePlus",
+    type: "FEEDBACK",
+    badge: "Feedback",
+    badgeSecondary: "",
+    urlPattern: (slug: string) => `/${slug}/feedback`,
+  },
+  {
+    title: "Play Sudoku",
+    description: "Enjoy a relaxing classic puzzle while waiting for your course.",
+    icon: "Gamepad2",
+    type: "GAME",
+    badge: "Game",
+    badgeSecondary: "",
+    urlPattern: (slug: string) => `/${slug}/game`,
+  },
+];
+
+export function ActionsManagerList({
+  initialActions,
+  restaurantId,
+  restaurantName,
+  restaurantSlug,
+}: ActionsManagerListProps) {
+  const [actions, setActions] = useState<GuestActionData[]>(initialActions);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [editingAction, setEditingAction] = useState<GuestActionData | null>(null);
+
+  // Form state
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [icon, setIcon] = useState("UtensilsCrossed");
+  const [type, setType] = useState("CUSTOM");
+  const [url, setUrl] = useState("");
+  const [badge, setBadge] = useState("");
+  const [enabled, setEnabled] = useState(true);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const activeCount = actions.filter((a) => a.enabled).length;
+
+  const openCreateModal = () => {
+    setEditingAction(null);
+    setTitle("");
+    setDescription("");
+    setIcon("UtensilsCrossed");
+    setType("CUSTOM");
+    setUrl("");
+    setBadge("");
+    setEnabled(true);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (action: GuestActionData) => {
+    setEditingAction(action);
+    setTitle(action.title);
+    setDescription(action.description || "");
+    setIcon(action.icon);
+    setType(action.type);
+    setUrl(action.url || "");
+    setBadge(action.badge || "");
+    setEnabled(action.enabled);
+    setIsModalOpen(true);
+  };
+
+  const handleToggleEnabled = async (action: GuestActionData) => {
+    const nextState = !action.enabled;
+    setActions((prev) =>
+      prev.map((a) => (a.id === action.id ? { ...a, enabled: nextState } : a))
+    );
+
+    try {
+      await fetch(`/api/actions/${action.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: nextState }),
+      });
+    } catch {
+      setActions(actions);
+    }
+  };
+
+  const handleMove = async (index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= actions.length) return;
+
+    const newActions = [...actions];
+    const [moved] = newActions.splice(index, 1);
+    newActions.splice(targetIndex, 0, moved);
+
+    const reordered = newActions.map((item, idx) => ({
+      ...item,
+      displayOrder: idx + 1,
+    }));
+
+    setActions(reordered);
+
+    try {
+      await fetch(`/api/restaurants/${restaurantId}/actions/reorder`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          actionIds: reordered.map((a) => a.id),
+        }),
+      });
+    } catch {
+      setActions(actions);
+    }
+  };
+
+  const handleDuplicate = async (action: GuestActionData) => {
+    setIsLoading(true);
+    try {
+      const payload = {
+        title: `${action.title} (Copy)`,
+        description: action.description,
+        icon: action.icon,
+        type: action.type,
+        url: action.url,
+        badge: action.badge,
+        enabled: action.enabled,
+        displayOrder: actions.length + 1,
+      };
+
+      const res = await fetch(`/api/restaurants/${restaurantId}/actions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setActions((prev) => [...prev, json.data]);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (actionId: string) => {
+    if (!confirm("Are you sure you want to remove this action card?")) return;
+
+    setActions((prev) => prev.filter((a) => a.id !== actionId));
+
+    try {
+      await fetch(`/api/actions/${actionId}`, {
+        method: "DELETE",
+      });
+    } catch {
+      setActions(actions);
+    }
+  };
+
+  const handleCopyLink = (action: GuestActionData) => {
+    const fullLink = action.url?.startsWith("http")
+      ? action.url
+      : `${window.location.origin}${action.url || `/r/${restaurantSlug}`}`;
+    navigator.clipboard.writeText(fullLink);
+    setCopiedId(action.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleAddFromTemplate = async (template: (typeof PRESET_TEMPLATES)[0]) => {
+    setIsLoading(true);
+    try {
+      const payload = {
+        title: template.title,
+        description: template.description,
+        icon: template.icon,
+        type: template.type,
+        url: template.urlPattern(restaurantSlug),
+        badge: template.badge,
+        enabled: true,
+        displayOrder: actions.length + 1,
+      };
+
+      const res = await fetch(`/api/restaurants/${restaurantId}/actions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setActions((prev) => [...prev, json.data]);
+        setIsTemplateModalOpen(false);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    const payload = {
+      title,
+      description: description || null,
+      icon,
+      type,
+      url: url || null,
+      badge: badge || null,
+      enabled,
+      displayOrder: editingAction ? editingAction.displayOrder : actions.length + 1,
+    };
+
+    try {
+      if (editingAction) {
+        const res = await fetch(`/api/actions/${editingAction.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          setActions((prev) =>
+            prev.map((a) => (a.id === editingAction.id ? json.data : a))
+          );
+          setIsModalOpen(false);
+        } else {
+          setErrorMessage(json.error || "Failed to update action");
+        }
+      } else {
+        const res = await fetch(`/api/restaurants/${restaurantId}/actions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          setActions((prev) => [...prev, json.data]);
+          setIsModalOpen(false);
+        } else {
+          setErrorMessage(json.error || "Failed to create action");
+        }
+      }
+    } catch {
+      setErrorMessage("An unexpected network error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Helper function for icon container color styles
+  const getIconContainerStyle = (action: GuestActionData) => {
+    switch (action.type) {
+      case "REWARDS":
+        return "bg-[#E6F4F1] text-[#0A7E6C] border-[#BDE3DB]";
+      case "REVIEW":
+        return "bg-[#FFF8E6] text-[#D97706] border-[#FDE68A]";
+      case "MENU":
+        return "bg-[#EBF7EE] text-[#16A34A] border-[#BBF7D0]";
+      case "WIFI":
+        return "bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]";
+      case "FEEDBACK":
+        return "bg-[#F5F3FF] text-[#7C3AED] border-[#DDD6FE]";
+      case "GAME":
+        return "bg-[#FFF4ED] text-[#EA580C] border-[#FED7AA]";
+      default:
+        return "bg-[#F0FDF4] text-[#0E473F] border-[#BBF7D0]";
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Top Breadcrumb and Header exactly matching Image 2 */}
+      <div>
+        <nav className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-2.5">
+          <Link href="/admin" className="hover:text-slate-800 transition">
+            Restaurants
+          </Link>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+          <Link
+            href={`/admin/restaurants/${restaurantId}/dashboard`}
+            className="hover:text-slate-800 transition"
+          >
+            {restaurantName}
+          </Link>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+          <span className="text-slate-700 font-semibold">Actions</span>
+        </nav>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+                Guest Action Cards
+              </h1>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#E6F7F2] text-[#0A7E6C] border border-[#BCE8DB]">
+                <span className="w-2 h-2 rounded-full bg-[#10B981]"></span>
+                {activeCount} Active Cards
+              </span>
+            </div>
+            <p className="text-sm text-slate-500 mt-1">
+              Add, configure, reorder, or toggle quick actions visible to dining guests on their mobile landing hub.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <a
+              href={`/r/${restaurantSlug}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition shadow-xs"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Preview Public Hub</span>
+            </a>
+
+            <button
+              onClick={openCreateModal}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#072C27] hover:bg-[#0E473F] text-white text-xs font-semibold transition shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Action Card</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Touchpoint Actions Card */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-7">
+        <div className="mb-6">
+          <h2 className="text-base font-bold text-slate-900">Guest Touchpoint Actions</h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Manage the interactive cards displayed on the mobile dining hub.
+          </p>
+        </div>
+
+        {/* Action Cards List */}
+        <div className="space-y-3">
+          {actions.length === 0 ? (
+            <EmptyState
+              icon={<Layers className="w-6 h-6 text-slate-400" />}
+              title="No actions configured"
+              description="Create your first action card or choose from preset templates to display on your guest hub."
+              action={
+                <div className="flex items-center gap-2">
+                  <Button variant="primary" size="sm" onClick={openCreateModal}>
+                    Create Custom Action
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsTemplateModalOpen(true)}
+                  >
+                    Load Templates
+                  </Button>
+                </div>
+              }
+            />
+          ) : (
+            actions.map((action, idx) => (
+              <div
+                key={action.id}
+                className={`p-4 rounded-xl border transition-all duration-150 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                  action.enabled
+                    ? "bg-white border-slate-200/90 shadow-xs hover:border-slate-300"
+                    : "bg-slate-50/70 border-slate-200/60 opacity-60"
+                }`}
+              >
+                {/* Left Side: Icon & Details */}
+                <div className="flex items-start sm:items-center gap-4 min-w-0">
+                  <div
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${getIconContainerStyle(
+                      action
+                    )}`}
+                  >
+                    <IconRenderer name={action.icon} className="w-6 h-6" />
+                  </div>
+
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-bold text-sm text-slate-900 truncate">
+                        {action.title}
+                      </h3>
+
+                      {action.badge && (
+                        <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
+                          {action.badge}
+                        </span>
+                      )}
+
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-50 text-slate-500 border border-slate-200/60 uppercase tracking-wider">
+                        {action.type}
+                      </span>
+                    </div>
+
+                    {action.description && (
+                      <p className="text-xs text-slate-500 line-clamp-1">
+                        {action.description}
+                      </p>
+                    )}
+
+                    {action.url && (
+                      <div className="flex items-center gap-1.5 text-xs text-[#0A7E6C] font-mono">
+                        <span className="truncate max-w-[280px] sm:max-w-md">
+                          {action.url}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyLink(action)}
+                          className="text-slate-400 hover:text-[#0A7E6C] transition p-0.5"
+                          title="Copy destination URL"
+                        >
+                          {copiedId === action.id ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Side: Toggle & Controls */}
+                <div className="flex items-center gap-3 shrink-0 self-end md:self-center">
+                  {/* Real-time iOS Style Switch Toggle */}
+                  <div className="flex items-center gap-2 mr-2">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={action.enabled}
+                      onClick={() => handleToggleEnabled(action)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#0E473F] focus:ring-offset-2 ${
+                        action.enabled ? "bg-[#0E473F]" : "bg-slate-300"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          action.enabled ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                    <span
+                      className={`text-xs font-semibold ${
+                        action.enabled ? "text-slate-900" : "text-slate-400"
+                      }`}
+                    >
+                      {action.enabled ? "Active" : "Disabled"}
+                    </span>
+                  </div>
+
+                  {/* Move Up */}
+                  <button
+                    onClick={() => handleMove(idx, "up")}
+                    disabled={idx === 0}
+                    className="w-9 h-9 rounded-xl border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center disabled:opacity-30 disabled:hover:bg-transparent transition shadow-xs"
+                    title="Move Up"
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </button>
+
+                  {/* Move Down */}
+                  <button
+                    onClick={() => handleMove(idx, "down")}
+                    disabled={idx === actions.length - 1}
+                    className="w-9 h-9 rounded-xl border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center disabled:opacity-30 disabled:hover:bg-transparent transition shadow-xs"
+                    title="Move Down"
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </button>
+
+                  {/* Edit */}
+                  <button
+                    onClick={() => openEditModal(action)}
+                    className="w-9 h-9 rounded-xl border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center transition shadow-xs"
+                    title="Edit Action"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+
+                  {/* Duplicate */}
+                  <button
+                    onClick={() => handleDuplicate(action)}
+                    className="w-9 h-9 rounded-xl border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center transition shadow-xs"
+                    title="Duplicate Action"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+
+                  {/* Delete */}
+                  <button
+                    onClick={() => handleDelete(action.id)}
+                    className="w-9 h-9 rounded-xl border border-slate-200/90 text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition shadow-xs"
+                    title="Delete Action"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Bottom Inspiration Card matching Image 2 */}
+      <div className="bg-[#EAF6F3] border border-[#BCE8DC] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-full bg-[#0A7E6C]/15 text-[#0A7E6C] flex items-center justify-center shrink-0">
+            <Lightbulb className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-slate-900">
+              Create memorable guest experiences
+            </h4>
+            <p className="text-xs text-slate-600">
+              Show the right actions at the right time to engage your guests and drive loyalty.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 self-end sm:self-center">
+          <span className="text-xs text-slate-500">Need ideas?</span>
+          <button
+            type="button"
+            onClick={() => setIsTemplateModalOpen(true)}
+            className="text-xs font-bold text-[#0A7E6C] hover:text-[#072C27] flex items-center gap-1 transition"
+          >
+            <span>Explore templates</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Preset Templates Drawer / Modal */}
+      {isTemplateModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-xl bg-white rounded-2xl p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <div>
+                <h3 className="font-bold text-base text-slate-900">Action Card Templates</h3>
+                <p className="text-xs text-slate-500">
+                  Quickly add standard hospitality action cards to your dining hub.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsTemplateModalOpen(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+              {PRESET_TEMPLATES.map((tmpl, i) => (
+                <div
+                  key={i}
+                  className="p-3.5 rounded-xl border border-slate-200/90 hover:border-[#0E473F] bg-white hover:bg-emerald-50/20 transition flex flex-col justify-between gap-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-50 text-[#0A7E6C] border border-emerald-200 flex items-center justify-center shrink-0">
+                      <IconRenderer name={tmpl.icon} className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">{tmpl.title}</h4>
+                      <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">
+                        {tmpl.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                      {tmpl.type}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => handleAddFromTemplate(tmpl)}
+                      className="px-2.5 py-1 rounded-lg bg-[#072C27] hover:bg-[#0E473F] text-white text-[11px] font-semibold transition"
+                    >
+                      + Add Card
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Dialog for Add / Edit */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <h3 className="font-bold text-base text-slate-900">
+                {editingAction ? "Edit Action Card" : "Add New Action Card"}
+              </h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {errorMessage && (
+              <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl">
+                {errorMessage}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+              <div>
+                <label
+                  className="block font-semibold text-slate-700 mb-1.5"
+                  htmlFor="action-title"
+                >
+                  Action Title
+                </label>
+                <input
+                  id="action-title"
+                  type="text"
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. View Menu"
+                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs"
+                />
+              </div>
+
+              <div>
+                <label
+                  className="block font-semibold text-slate-700 mb-1.5"
+                  htmlFor="action-desc"
+                >
+                  Short Description
+                </label>
+                <input
+                  id="action-desc"
+                  type="text"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="e.g. Explore our seasonal farm-to-table dishes"
+                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs"
+                />
+              </div>
+
+              {/* Icon Picker */}
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1.5">
+                  Select Icon
+                </label>
+                <div className="grid grid-cols-6 gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl max-h-32 overflow-y-auto">
+                  {AVAILABLE_ICONS.map((ic) => (
+                    <button
+                      key={ic}
+                      type="button"
+                      onClick={() => setIcon(ic)}
+                      className={`p-2 rounded-xl flex items-center justify-center transition ${
+                        icon === ic
+                          ? "bg-[#072C27] text-white shadow-sm"
+                          : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/60"
+                      }`}
+                      title={ic}
+                    >
+                      <IconRenderer name={ic} className="w-4 h-4" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label
+                    className="block font-semibold text-slate-700 mb-1.5"
+                    htmlFor="action-type"
+                  >
+                    Action Type
+                  </label>
+                  <select
+                    id="action-type"
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs"
+                  >
+                    <option value="MENU">MENU</option>
+                    <option value="REWARDS">REWARDS</option>
+                    <option value="REVIEW">REVIEW</option>
+                    <option value="WIFI">WIFI</option>
+                    <option value="FEEDBACK">FEEDBACK</option>
+                    <option value="GAME">GAME</option>
+                    <option value="SOCIAL">SOCIAL</option>
+                    <option value="CUSTOM">CUSTOM</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    className="block font-semibold text-slate-700 mb-1.5"
+                    htmlFor="action-badge"
+                  >
+                    Badge (Optional)
+                  </label>
+                  <input
+                    id="action-badge"
+                    type="text"
+                    value={badge}
+                    onChange={(e) => setBadge(e.target.value)}
+                    placeholder="e.g. Popular, Spring 2026"
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  className="block font-semibold text-slate-700 mb-1.5"
+                  htmlFor="action-url"
+                >
+                  Destination URL
+                </label>
+                <input
+                  id="action-url"
+                  type="text"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder={`/${restaurantSlug}/menu or https://...`}
+                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs font-mono"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <Button variant="ghost" size="sm" onClick={() => setIsModalOpen(false)}>
+                  Cancel
+                </Button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#072C27] hover:bg-[#0E473F] text-white text-xs font-semibold transition shadow-sm disabled:opacity-50"
+                >
+                  {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <Check className="w-3.5 h-3.5" />
+                  <span>{editingAction ? "Save Changes" : "Create Action"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

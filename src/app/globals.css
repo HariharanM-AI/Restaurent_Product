@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #FFFFFF;
+    --foreground: #0F172A;
+    --muted: #64748B;
+    --muted-foreground: #94A3B8;
+    --surface: #F8FAFC;
+    --surface-foreground: #0F172A;
+    --border: #E2E8F0;
+    --primary: #0F766E;
+    --brand-primary: #0F766E;
+    --brand-secondary: #F8FAFC;
+    --brand-text: #0F172A;
+    --success: #16A34A;
+    --warning: #D97706;
+    --destructive: #DC2626;
+  }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+}
+
+/* Touch targets and accessibility */
+button, a, input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* Focus visible styling */
+:focus-visible {
+  outline: 2px solid var(--brand-primary, #0F766E);
+  outline-offset: 2px;
+}
+
+/* Hide scrollbar for clean horizontal tab lists */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
