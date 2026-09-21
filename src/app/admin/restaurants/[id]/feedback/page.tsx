@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
 import { getSession, verifyRestaurantAccess } from "@/lib/auth/session";
-import { prisma } from "@/lib/db/prisma";
 import { FeedbackInbox } from "@/components/admin/feedback-inbox";
 
 export default async function FeedbackAdminPage({
@@ -16,15 +15,9 @@ export default async function FeedbackAdminPage({
 
   if (!access.authorized) notFound();
 
-  const feedbacks = await prisma.feedback.findMany({
-    where: { restaurantId },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
-
   return (
     <div className="animate-in fade-in duration-200">
-      <FeedbackInbox initialFeedbacks={feedbacks} />
+      <FeedbackInbox restaurantId={restaurantId} />
     </div>
   );
 }

@@ -16,7 +16,9 @@ import {
   Lightbulb,
   ChevronRight,
   Layers,
-  Sparkles,
+  AlertTriangle,
+  Search,
+  LayoutTemplate,
 } from "lucide-react";
 import { IconRenderer } from "@/components/shared/icon-renderer";
 import { GuestActionData } from "@/types";
@@ -53,7 +55,7 @@ const PRESET_TEMPLATES = [
     type: "REWARDS",
     badge: "Loyalty",
     badgeSecondary: "Rewards",
-    urlPattern: (slug: string) => `/${slug}/rewards`,
+    urlPattern: (slug: string) => `/r/${slug}/rewards`,
   },
   {
     title: "Leave a Google Review",
@@ -71,7 +73,7 @@ const PRESET_TEMPLATES = [
     type: "MENU",
     badge: "Seasonal",
     badgeSecondary: "Menu",
-    urlPattern: (slug: string) => `/${slug}/menu`,
+    urlPattern: (slug: string) => `/r/${slug}/menu`,
   },
   {
     title: "Connect to Wi-Fi",
@@ -80,7 +82,7 @@ const PRESET_TEMPLATES = [
     type: "WIFI",
     badge: "Wi-Fi",
     badgeSecondary: "",
-    urlPattern: (slug: string) => `/${slug}/wifi`,
+    urlPattern: (slug: string) => `/r/${slug}/wifi`,
   },
   {
     title: "Leave Anonymous Feedback",
@@ -89,7 +91,7 @@ const PRESET_TEMPLATES = [
     type: "FEEDBACK",
     badge: "Feedback",
     badgeSecondary: "",
-    urlPattern: (slug: string) => `/${slug}/feedback`,
+    urlPattern: (slug: string) => `/r/${slug}/feedback`,
   },
   {
     title: "Play Sudoku",
@@ -98,7 +100,7 @@ const PRESET_TEMPLATES = [
     type: "GAME",
     badge: "Game",
     badgeSecondary: "",
-    urlPattern: (slug: string) => `/${slug}/game`,
+    urlPattern: (slug: string) => `/r/${slug}/game`,
   },
 ];
 
@@ -112,6 +114,9 @@ export function ActionsManagerList({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [editingAction, setEditingAction] = useState<GuestActionData | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("ALL");
 
   // Form state
   const [title, setTitle] = useState("");
@@ -123,10 +128,40 @@ export function ActionsManagerList({
   const [enabled, setEnabled] = useState(true);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const activeCount = actions.filter((a) => a.enabled).length;
+  const uniqueTypes = Array.from(new Set(actions.map((a) => a.type)));
+
+  // Filter actions
+  const filteredActions = actions.filter((a) => {
+    if (typeFilter !== "ALL" && a.type !== typeFilter) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      return (
+        a.title.toLowerCase().includes(q) ||
+        (a.description && a.description.toLowerCase().includes(q)) ||
+        a.type.toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
+
+  // Check for duplicate title
+  const isDuplicate = (newTitle: string, excludeId?: string): boolean => {
+    const normalized = newTitle.trim().toLowerCase();
+    return actions.some(
+      (a) => a.title.trim().toLowerCase() === normalized && a.id !== excludeId
+    );
+  };
+
+  const showSuccess = (msg: string) => {
+    setSuccessMessage(msg);
+    setTimeout(() => setSuccessMessage(null), 3000);
+  };
 
   const openCreateModal = () => {
     setEditingAction(null);
@@ -137,6 +172,7 @@ export function ActionsManagerList({
     setUrl("");
     setBadge("");
     setEnabled(true);
+    setErrorMessage(null);
     setIsModalOpen(true);
   };
 
@@ -149,6 +185,7 @@ export function ActionsManagerList({
     setUrl(action.url || "");
     setBadge(action.badge || "");
     setEnabled(action.enabled);
+    setErrorMessage(null);
     setIsModalOpen(true);
   };
 
@@ -157,24 +194,27 @@ export function ActionsManagerList({
     setActions((prev) =>
       prev.map((a) => (a.id === action.id ? { ...a, enabled: nextState } : a))
     );
-
     try {
-      await fetch(`/api/actions/${action.id}`, {
+      const res = await fetch(`/api/actions/${action.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ enabled: nextState }),
       });
+      if (!res.ok) throw new Error();
     } catch {
       setActions(actions);
     }
   };
 
   const handleMove = async (index: number, direction: "up" | "down") => {
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    // Find the actual index in the full actions array
+    const actionToMove = filteredActions[index];
+    const actualIndex = actions.findIndex((a) => a.id === actionToMove.id);
+    const targetIndex = direction === "up" ? actualIndex - 1 : actualIndex + 1;
     if (targetIndex < 0 || targetIndex >= actions.length) return;
 
     const newActions = [...actions];
-    const [moved] = newActions.splice(index, 1);
+    const [moved] = newActions.splice(actualIndex, 1);
     newActions.splice(targetIndex, 0, moved);
 
     const reordered = newActions.map((item, idx) => ({
@@ -198,10 +238,18 @@ export function ActionsManagerList({
   };
 
   const handleDuplicate = async (action: GuestActionData) => {
+    // Check for duplicates
+    let copyTitle = `${action.title} (Copy)`;
+    let copyNum = 1;
+    while (isDuplicate(copyTitle)) {
+      copyNum++;
+      copyTitle = `${action.title} (Copy ${copyNum})`;
+    }
+
     setIsLoading(true);
     try {
       const payload = {
-        title: `${action.title} (Copy)`,
+        title: copyTitle,
         description: action.description,
         icon: action.icon,
         type: action.type,
@@ -219,6 +267,9 @@ export function ActionsManagerList({
       const json = await res.json();
       if (res.ok && json.success) {
         setActions((prev) => [...prev, json.data]);
+        showSuccess(`"${copyTitle}" created`);
+      } else {
+        setErrorMessage(json.error || "Failed to duplicate");
       }
     } catch {
       // ignore
@@ -228,16 +279,26 @@ export function ActionsManagerList({
   };
 
   const handleDelete = async (actionId: string) => {
-    if (!confirm("Are you sure you want to remove this action card?")) return;
-
-    setActions((prev) => prev.filter((a) => a.id !== actionId));
-
+    setDeletingId(actionId);
     try {
-      await fetch(`/api/actions/${actionId}`, {
+      const res = await fetch(`/api/actions/${actionId}`, {
         method: "DELETE",
       });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setActions((prev) => prev.filter((a) => a.id !== actionId));
+        setDeleteConfirmId(null);
+        showSuccess("Action deleted successfully");
+      } else {
+        setErrorMessage(json.error || "Failed to delete action");
+        // Re-add action if it was optimistically removed
+        setDeleteConfirmId(null);
+      }
     } catch {
-      setActions(actions);
+      setErrorMessage("Network error — could not delete action");
+      setDeleteConfirmId(null);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -251,7 +312,16 @@ export function ActionsManagerList({
   };
 
   const handleAddFromTemplate = async (template: (typeof PRESET_TEMPLATES)[0]) => {
+    // Check for duplicate
+    if (isDuplicate(template.title)) {
+      setErrorMessage(
+        `"${template.title}" already exists. Each action must have a unique title.`
+      );
+      return;
+    }
+
     setIsLoading(true);
+    setErrorMessage(null);
     try {
       const payload = {
         title: template.title,
@@ -272,10 +342,12 @@ export function ActionsManagerList({
       const json = await res.json();
       if (res.ok && json.success) {
         setActions((prev) => [...prev, json.data]);
-        setIsTemplateModalOpen(false);
+        showSuccess(`"${template.title}" added`);
+      } else {
+        setErrorMessage(json.error || "Failed to add template");
       }
     } catch {
-      // ignore
+      setErrorMessage("Network error — try again");
     } finally {
       setIsLoading(false);
     }
@@ -283,8 +355,17 @@ export function ActionsManagerList({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setErrorMessage(null);
+
+    // Duplicate check
+    if (isDuplicate(title, editingAction?.id)) {
+      setErrorMessage(
+        `An action named "${title}" already exists. Please use a different title.`
+      );
+      return;
+    }
+
+    setIsLoading(true);
 
     const payload = {
       title,
@@ -310,6 +391,7 @@ export function ActionsManagerList({
             prev.map((a) => (a.id === editingAction.id ? json.data : a))
           );
           setIsModalOpen(false);
+          showSuccess("Action updated");
         } else {
           setErrorMessage(json.error || "Failed to update action");
         }
@@ -323,6 +405,7 @@ export function ActionsManagerList({
         if (res.ok && json.success) {
           setActions((prev) => [...prev, json.data]);
           setIsModalOpen(false);
+          showSuccess("Action created");
         } else {
           setErrorMessage(json.error || "Failed to create action");
         }
@@ -334,7 +417,6 @@ export function ActionsManagerList({
     }
   };
 
-  // Helper function for icon container color styles
   const getIconContainerStyle = (action: GuestActionData) => {
     switch (action.type) {
       case "REWARDS":
@@ -354,9 +436,21 @@ export function ActionsManagerList({
     }
   };
 
+  const getBadgeColor = (type: string) => {
+    switch (type) {
+      case "REWARDS": return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "REVIEW": return "bg-amber-50 text-amber-700 border-amber-200";
+      case "MENU": return "bg-green-50 text-green-700 border-green-200";
+      case "WIFI": return "bg-blue-50 text-blue-700 border-blue-200";
+      case "FEEDBACK": return "bg-purple-50 text-purple-700 border-purple-200";
+      case "GAME": return "bg-orange-50 text-orange-700 border-orange-200";
+      default: return "bg-slate-50 text-slate-600 border-slate-200";
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Top Breadcrumb and Header exactly matching Image 2 */}
+      {/* Header */}
       <div>
         <nav className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-2.5">
           <Link href="/admin" className="hover:text-slate-800 transition">
@@ -380,8 +474,11 @@ export function ActionsManagerList({
                 Guest Action Cards
               </h1>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#E6F7F2] text-[#0A7E6C] border border-[#BCE8DB]">
-                <span className="w-2 h-2 rounded-full bg-[#10B981]"></span>
-                {activeCount} Active Cards
+                <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+                {activeCount} Active
+              </span>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                {actions.length} Total
               </span>
             </div>
             <p className="text-sm text-slate-500 mt-1">
@@ -390,6 +487,15 @@ export function ActionsManagerList({
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
+            {/* View Templates Button — prominent */}
+            <button
+              onClick={() => setIsTemplateModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50 text-[#0A7E6C] hover:bg-emerald-100 text-xs font-semibold transition shadow-xs"
+            >
+              <LayoutTemplate className="w-4 h-4" />
+              <span>View Templates</span>
+            </button>
+
             <a
               href={`/r/${restaurantSlug}`}
               target="_blank"
@@ -397,7 +503,7 @@ export function ActionsManagerList({
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition shadow-xs"
             >
               <ExternalLink className="w-3.5 h-3.5" />
-              <span>Preview Public Hub</span>
+              <span>Preview Hub</span>
             </a>
 
             <button
@@ -411,13 +517,59 @@ export function ActionsManagerList({
         </div>
       </div>
 
-      {/* Main Touchpoint Actions Card */}
+      {/* Success / Error Messages */}
+      {successMessage && (
+        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-2 animate-in fade-in duration-200">
+          <Check className="w-4 h-4" />
+          {successMessage}
+        </div>
+      )}
+      {errorMessage && !isModalOpen && !isTemplateModalOpen && (
+        <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4" />
+          {errorMessage}
+          <button onClick={() => setErrorMessage(null)} className="ml-auto text-red-500 hover:text-red-700">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Main Card */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-7">
-        <div className="mb-6">
-          <h2 className="text-base font-bold text-slate-900">Guest Touchpoint Actions</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Manage the interactive cards displayed on the mobile dining hub.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Guest Touchpoint Actions</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Manage the interactive cards displayed on the mobile dining hub.
+            </p>
+          </div>
+
+          {/* Search + Filter */}
+          {actions.length > 3 && (
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search actions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 w-40"
+                />
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              </div>
+
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="px-2.5 py-1.5 text-xs rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold"
+              >
+                <option value="ALL">All Types</option>
+                {uniqueTypes.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Action Cards List */}
@@ -442,153 +594,206 @@ export function ActionsManagerList({
                 </div>
               }
             />
+          ) : filteredActions.length === 0 ? (
+            <div className="py-8 text-center text-sm text-slate-400">
+              No actions match your search.
+            </div>
           ) : (
-            actions.map((action, idx) => (
+            filteredActions.map((action, idx) => (
               <div
                 key={action.id}
-                className={`p-4 rounded-xl border transition-all duration-150 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                  action.enabled
-                    ? "bg-white border-slate-200/90 shadow-xs hover:border-slate-300"
+                className={`p-4 rounded-xl border transition-all duration-150 ${
+                  deleteConfirmId === action.id
+                    ? "bg-red-50/50 border-red-200 ring-1 ring-red-200"
+                    : action.enabled
+                    ? "bg-white border-slate-200/90 shadow-xs hover:border-slate-300 hover:shadow-sm"
                     : "bg-slate-50/70 border-slate-200/60 opacity-60"
                 }`}
               >
-                {/* Left Side: Icon & Details */}
-                <div className="flex items-start sm:items-center gap-4 min-w-0">
-                  <div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${getIconContainerStyle(
-                      action
-                    )}`}
-                  >
-                    <IconRenderer name={action.icon} className="w-6 h-6" />
+                {/* Delete confirmation bar */}
+                {deleteConfirmId === action.id ? (
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 text-sm">
+                      <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
+                      <div>
+                        <span className="font-bold text-red-800">Delete "{action.title}"?</span>
+                        <span className="text-red-600 text-xs ml-2">This action cannot be undone.</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => setDeleteConfirmId(null)}
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => handleDelete(action.id)}
+                        disabled={deletingId === action.id}
+                        className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition flex items-center gap-1.5 disabled:opacity-50"
+                      >
+                        {deletingId === action.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5" />
+                        )}
+                        <span>Delete</span>
+                      </button>
+                    </div>
                   </div>
+                ) : (
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    {/* Left: Icon & Details */}
+                    <div className="flex items-start sm:items-center gap-4 min-w-0">
+                      <div
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${getIconContainerStyle(
+                          action
+                        )}`}
+                      >
+                        <IconRenderer name={action.icon} className="w-6 h-6" />
+                      </div>
 
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-bold text-sm text-slate-900 truncate">
-                        {action.title}
-                      </h3>
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-bold text-sm text-slate-900 truncate">
+                            {action.title}
+                          </h3>
 
-                      {action.badge && (
-                        <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
-                          {action.badge}
-                        </span>
-                      )}
+                          {action.badge && (
+                            <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${getBadgeColor(action.type)}`}>
+                              {action.badge}
+                            </span>
+                          )}
 
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-50 text-slate-500 border border-slate-200/60 uppercase tracking-wider">
-                        {action.type}
-                      </span>
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border uppercase tracking-wider ${getBadgeColor(action.type)}`}>
+                            {action.type}
+                          </span>
+                        </div>
+
+                        {action.description && (
+                          <p className="text-xs text-slate-500 line-clamp-1">
+                            {action.description}
+                          </p>
+                        )}
+
+                        {action.url && (
+                          <div className="flex items-center gap-1.5 text-xs text-[#0A7E6C] font-mono">
+                            <span className="truncate max-w-[280px] sm:max-w-md">
+                              {action.url}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleCopyLink(action)}
+                              className="text-slate-400 hover:text-[#0A7E6C] transition p-0.5"
+                              title="Copy destination URL"
+                            >
+                              {copiedId === action.id ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    {action.description && (
-                      <p className="text-xs text-slate-500 line-clamp-1">
-                        {action.description}
-                      </p>
-                    )}
-
-                    {action.url && (
-                      <div className="flex items-center gap-1.5 text-xs text-[#0A7E6C] font-mono">
-                        <span className="truncate max-w-[280px] sm:max-w-md">
-                          {action.url}
-                        </span>
+                    {/* Right: Controls */}
+                    <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                      {/* Toggle */}
+                      <div className="flex items-center gap-2 mr-1">
                         <button
                           type="button"
-                          onClick={() => handleCopyLink(action)}
-                          className="text-slate-400 hover:text-[#0A7E6C] transition p-0.5"
-                          title="Copy destination URL"
+                          role="switch"
+                          aria-checked={action.enabled}
+                          onClick={() => handleToggleEnabled(action)}
+                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#0E473F] focus:ring-offset-2 ${
+                            action.enabled ? "bg-[#0E473F]" : "bg-slate-300"
+                          }`}
                         >
-                          {copiedId === action.id ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-600" />
-                          ) : (
-                            <Copy className="w-3.5 h-3.5" />
-                          )}
+                          <span
+                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                              action.enabled ? "translate-x-5" : "translate-x-0"
+                            }`}
+                          />
                         </button>
+                        <span
+                          className={`text-xs font-semibold min-w-[52px] ${
+                            action.enabled ? "text-slate-900" : "text-slate-400"
+                          }`}
+                        >
+                          {action.enabled ? "Active" : "Disabled"}
+                        </span>
                       </div>
-                    )}
+
+                      {/* Move Up */}
+                      <button
+                        onClick={() => handleMove(idx, "up")}
+                        disabled={idx === 0}
+                        className="w-8 h-8 rounded-lg border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center disabled:opacity-30 transition"
+                        title="Move Up"
+                      >
+                        <ArrowUp className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Move Down */}
+                      <button
+                        onClick={() => handleMove(idx, "down")}
+                        disabled={idx === filteredActions.length - 1}
+                        className="w-8 h-8 rounded-lg border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center disabled:opacity-30 transition"
+                        title="Move Down"
+                      >
+                        <ArrowDown className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Edit */}
+                      <button
+                        onClick={() => openEditModal(action)}
+                        className="w-8 h-8 rounded-lg border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center transition"
+                        title="Edit Action"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Duplicate */}
+                      <button
+                        onClick={() => handleDuplicate(action)}
+                        disabled={isLoading}
+                        className="w-8 h-8 rounded-lg border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center transition disabled:opacity-40"
+                        title="Duplicate Action"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Delete */}
+                      <button
+                        onClick={() => setDeleteConfirmId(action.id)}
+                        className="w-8 h-8 rounded-lg border border-slate-200/90 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-200 flex items-center justify-center transition"
+                        title="Delete Action"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-
-                {/* Right Side: Toggle & Controls */}
-                <div className="flex items-center gap-3 shrink-0 self-end md:self-center">
-                  {/* Real-time iOS Style Switch Toggle */}
-                  <div className="flex items-center gap-2 mr-2">
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={action.enabled}
-                      onClick={() => handleToggleEnabled(action)}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#0E473F] focus:ring-offset-2 ${
-                        action.enabled ? "bg-[#0E473F]" : "bg-slate-300"
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                          action.enabled ? "translate-x-5" : "translate-x-0"
-                        }`}
-                      />
-                    </button>
-                    <span
-                      className={`text-xs font-semibold ${
-                        action.enabled ? "text-slate-900" : "text-slate-400"
-                      }`}
-                    >
-                      {action.enabled ? "Active" : "Disabled"}
-                    </span>
-                  </div>
-
-                  {/* Move Up */}
-                  <button
-                    onClick={() => handleMove(idx, "up")}
-                    disabled={idx === 0}
-                    className="w-9 h-9 rounded-xl border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center disabled:opacity-30 disabled:hover:bg-transparent transition shadow-xs"
-                    title="Move Up"
-                  >
-                    <ArrowUp className="w-4 h-4" />
-                  </button>
-
-                  {/* Move Down */}
-                  <button
-                    onClick={() => handleMove(idx, "down")}
-                    disabled={idx === actions.length - 1}
-                    className="w-9 h-9 rounded-xl border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center disabled:opacity-30 disabled:hover:bg-transparent transition shadow-xs"
-                    title="Move Down"
-                  >
-                    <ArrowDown className="w-4 h-4" />
-                  </button>
-
-                  {/* Edit */}
-                  <button
-                    onClick={() => openEditModal(action)}
-                    className="w-9 h-9 rounded-xl border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center transition shadow-xs"
-                    title="Edit Action"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-
-                  {/* Duplicate */}
-                  <button
-                    onClick={() => handleDuplicate(action)}
-                    className="w-9 h-9 rounded-xl border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center transition shadow-xs"
-                    title="Duplicate Action"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-
-                  {/* Delete */}
-                  <button
-                    onClick={() => handleDelete(action.id)}
-                    className="w-9 h-9 rounded-xl border border-slate-200/90 text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition shadow-xs"
-                    title="Delete Action"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                )}
               </div>
             ))
           )}
         </div>
+
+        {/* Action count footer */}
+        {actions.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-between">
+            <span>
+              Showing {filteredActions.length} of {actions.length} actions
+              {searchQuery || typeFilter !== "ALL" ? " (filtered)" : ""}
+            </span>
+            <span>{activeCount} active · {actions.length - activeCount} disabled</span>
+          </div>
+        )}
       </div>
 
-      {/* Bottom Inspiration Card matching Image 2 */}
+      {/* Bottom CTA Card */}
       <div className="bg-[#EAF6F3] border border-[#BCE8DC] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <div className="w-10 h-10 rounded-full bg-[#0A7E6C]/15 text-[#0A7E6C] flex items-center justify-center shrink-0">
@@ -604,20 +809,17 @@ export function ActionsManagerList({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-center">
-          <span className="text-xs text-slate-500">Need ideas?</span>
-          <button
-            type="button"
-            onClick={() => setIsTemplateModalOpen(true)}
-            className="text-xs font-bold text-[#0A7E6C] hover:text-[#072C27] flex items-center gap-1 transition"
-          >
-            <span>Explore templates</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setIsTemplateModalOpen(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0A7E6C] text-white text-xs font-bold hover:bg-[#0E473F] transition shadow-sm"
+        >
+          <LayoutTemplate className="w-4 h-4" />
+          <span>Explore Templates</span>
+        </button>
       </div>
 
-      {/* Preset Templates Drawer / Modal */}
+      {/* ─── Template Modal ─── */}
       {isTemplateModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-xl bg-white rounded-2xl p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150">
@@ -629,52 +831,73 @@ export function ActionsManagerList({
                 </p>
               </div>
               <button
-                onClick={() => setIsTemplateModalOpen(false)}
+                onClick={() => { setIsTemplateModalOpen(false); setErrorMessage(null); }}
                 className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
-              {PRESET_TEMPLATES.map((tmpl, i) => (
-                <div
-                  key={i}
-                  className="p-3.5 rounded-xl border border-slate-200/90 hover:border-[#0E473F] bg-white hover:bg-emerald-50/20 transition flex flex-col justify-between gap-3"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-emerald-50 text-[#0A7E6C] border border-emerald-200 flex items-center justify-center shrink-0">
-                      <IconRenderer name={tmpl.icon} className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-900">{tmpl.title}</h4>
-                      <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">
-                        {tmpl.description}
-                      </p>
-                    </div>
-                  </div>
+            {errorMessage && (
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-700 text-xs rounded-xl flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                      {tmpl.type}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={isLoading}
-                      onClick={() => handleAddFromTemplate(tmpl)}
-                      className="px-2.5 py-1 rounded-lg bg-[#072C27] hover:bg-[#0E473F] text-white text-[11px] font-semibold transition"
-                    >
-                      + Add Card
-                    </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+              {PRESET_TEMPLATES.map((tmpl, i) => {
+                const alreadyAdded = isDuplicate(tmpl.title);
+                return (
+                  <div
+                    key={i}
+                    className={`p-3.5 rounded-xl border transition flex flex-col justify-between gap-3 ${
+                      alreadyAdded
+                        ? "bg-slate-50 border-slate-200/60 opacity-60"
+                        : "bg-white border-slate-200/90 hover:border-[#0E473F] hover:bg-emerald-50/20"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-emerald-50 text-[#0A7E6C] border border-emerald-200 flex items-center justify-center shrink-0">
+                        <IconRenderer name={tmpl.icon} className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900">{tmpl.title}</h4>
+                        <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">
+                          {tmpl.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${getBadgeColor(tmpl.type)}`}>
+                        {tmpl.type}
+                      </span>
+                      {alreadyAdded ? (
+                        <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5" />
+                          Already added
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={isLoading}
+                          onClick={() => handleAddFromTemplate(tmpl)}
+                          className="px-2.5 py-1 rounded-lg bg-[#072C27] hover:bg-[#0E473F] text-white text-[11px] font-semibold transition disabled:opacity-50"
+                        >
+                          + Add Card
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal Dialog for Add / Edit */}
+      {/* ─── Create/Edit Modal ─── */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-2xl p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150">
@@ -691,17 +914,15 @@ export function ActionsManagerList({
             </div>
 
             {errorMessage && (
-              <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl">
-                {errorMessage}
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{errorMessage}</span>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               <div>
-                <label
-                  className="block font-semibold text-slate-700 mb-1.5"
-                  htmlFor="action-title"
-                >
+                <label className="block font-semibold text-slate-700 mb-1.5" htmlFor="action-title">
                   Action Title
                 </label>
                 <input
@@ -713,13 +934,16 @@ export function ActionsManagerList({
                   placeholder="e.g. View Menu"
                   className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs"
                 />
+                {title && isDuplicate(title, editingAction?.id) && (
+                  <p className="mt-1 text-red-500 text-[11px] font-medium flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    An action with this title already exists
+                  </p>
+                )}
               </div>
 
               <div>
-                <label
-                  className="block font-semibold text-slate-700 mb-1.5"
-                  htmlFor="action-desc"
-                >
+                <label className="block font-semibold text-slate-700 mb-1.5" htmlFor="action-desc">
                   Short Description
                 </label>
                 <input
@@ -734,9 +958,7 @@ export function ActionsManagerList({
 
               {/* Icon Picker */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">
-                  Select Icon
-                </label>
+                <label className="block font-semibold text-slate-700 mb-1.5">Select Icon</label>
                 <div className="grid grid-cols-6 gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl max-h-32 overflow-y-auto">
                   {AVAILABLE_ICONS.map((ic) => (
                     <button
@@ -758,10 +980,7 @@ export function ActionsManagerList({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label
-                    className="block font-semibold text-slate-700 mb-1.5"
-                    htmlFor="action-type"
-                  >
+                  <label className="block font-semibold text-slate-700 mb-1.5" htmlFor="action-type">
                     Action Type
                   </label>
                   <select
@@ -782,10 +1001,7 @@ export function ActionsManagerList({
                 </div>
 
                 <div>
-                  <label
-                    className="block font-semibold text-slate-700 mb-1.5"
-                    htmlFor="action-badge"
-                  >
+                  <label className="block font-semibold text-slate-700 mb-1.5" htmlFor="action-badge">
                     Badge (Optional)
                   </label>
                   <input
@@ -793,17 +1009,14 @@ export function ActionsManagerList({
                     type="text"
                     value={badge}
                     onChange={(e) => setBadge(e.target.value)}
-                    placeholder="e.g. Popular, Spring 2026"
+                    placeholder="e.g. Popular"
                     className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs"
                   />
                 </div>
               </div>
 
               <div>
-                <label
-                  className="block font-semibold text-slate-700 mb-1.5"
-                  htmlFor="action-url"
-                >
+                <label className="block font-semibold text-slate-700 mb-1.5" htmlFor="action-url">
                   Destination URL
                 </label>
                 <input
@@ -811,7 +1024,7 @@ export function ActionsManagerList({
                   type="text"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder={`/${restaurantSlug}/menu or https://...`}
+                  placeholder={`/r/${restaurantSlug}/menu or https://...`}
                   className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs font-mono"
                 />
               </div>
@@ -822,7 +1035,7 @@ export function ActionsManagerList({
                 </Button>
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || (!!title && isDuplicate(title, editingAction?.id))}
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#072C27] hover:bg-[#0E473F] text-white text-xs font-semibold transition shadow-sm disabled:opacity-50"
                 >
                   {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}

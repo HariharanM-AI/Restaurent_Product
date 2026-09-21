@@ -70,7 +70,6 @@ export default async function AdminLayout({
         <AdminHeader
           restaurantName={membership.restaurant.name}
           restaurantSlug={membership.restaurant.slug}
-          userName={session.user.name}
         />
 
         <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8">

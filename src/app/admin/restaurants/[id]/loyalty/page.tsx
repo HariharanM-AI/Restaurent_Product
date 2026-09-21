@@ -18,37 +18,21 @@ export default async function LoyaltyAdminPage({
     notFound();
   }
 
-  // Run restaurant query with loyalty milestones + all 4 counts concurrently
-  const [restaurant, totalWallets, totalStampsIssued, totalRewardsUnlocked, totalRewardsRedeemed] =
-    await Promise.all([
-      prisma.restaurant.findUnique({
-        where: { id: restaurantId },
-        select: {
-          id: true,
-          slug: true,
-          primaryColor: true,
-          loyaltyProgram: {
-            include: {
-              milestones: {
-                orderBy: { stampRequirement: "asc" },
-              },
-            },
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { id: restaurantId },
+    select: {
+      id: true,
+      slug: true,
+      primaryColor: true,
+      loyaltyProgram: {
+        include: {
+          milestones: {
+            orderBy: { stampRequirement: "asc" },
           },
         },
-      }),
-      prisma.loyaltyWallet.count({
-        where: { restaurantId },
-      }),
-      prisma.loyaltyStampTransaction.count({
-        where: { restaurantId, type: "STAMP_EARNED" },
-      }),
-      prisma.loyaltyReward.count({
-        where: { restaurantId },
-      }),
-      prisma.loyaltyReward.count({
-        where: { restaurantId, status: "REDEEMED" },
-      }),
-    ]);
+      },
+    },
+  });
 
   if (!restaurant) notFound();
 
@@ -58,12 +42,6 @@ export default async function LoyaltyAdminPage({
         restaurantId={restaurantId}
         restaurantSlug={restaurant.slug}
         primaryColor={restaurant.primaryColor}
-        metrics={{
-          totalWallets,
-          totalStampsIssued,
-          totalRewardsUnlocked,
-          totalRewardsRedeemed,
-        }}
         initialMilestones={restaurant.loyaltyProgram?.milestones || []}
       />
     </div>
