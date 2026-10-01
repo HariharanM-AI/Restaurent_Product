@@ -21,19 +21,19 @@ async function main() {
 
   console.log(`Created admin user: ${user.email} (password: password123)`);
 
-  // 2. Create Restaurant: Barlow & Fields
+  // 2. Create Restaurant: Noura
   const restaurant = await prisma.restaurant.upsert({
-    where: { slug: "barlow-and-fields" },
+    where: { slug: "noura" },
     update: {},
     create: {
-      name: "Barlow & Fields",
-      slug: "barlow-and-fields",
+      name: "Noura",
+      slug: "noura",
       tagline: "Locally sourced rustic kitchen & craft cocktail lounge",
       primaryColor: "#0F766E",
       secondaryColor: "#F8FAFC",
       address: "428 Market Street, Suite 100",
       phone: "(555) 234-8901",
-      website: "https://barlowandfields.com",
+      website: "https://noura.com",
       status: "ACTIVE",
     },
   });

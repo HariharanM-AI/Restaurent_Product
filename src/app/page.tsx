@@ -52,7 +52,7 @@ export default function HomePage() {
 
           <div className="flex items-center gap-3 sm:gap-4">
             <Link
-              href="/r/barlow-and-fields"
+              href="/r/noura"
               target="_blank"
               className="hidden md:inline-flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-xl text-slate-600 hover:text-teal-800 hover:bg-teal-50/50 transition"
             >
@@ -112,7 +112,7 @@ export default function HomePage() {
           </Link>
 
           <Link
-            href="/r/barlow-and-fields"
+            href="/r/noura"
             target="_blank"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border-2 border-slate-200 text-base sm:text-lg font-bold shadow-sm transition"
           >
@@ -335,7 +335,7 @@ export default function HomePage() {
             <Link href="/login" className="hover:text-teal-800 font-bold transition">
               Admin Sign In
             </Link>
-            <Link href="/r/barlow-and-fields" target="_blank" className="hover:text-teal-800 font-bold transition">
+            <Link href="/r/noura" target="_blank" className="hover:text-teal-800 font-bold transition">
               Sample Diner Hub
             </Link>
           </div>
