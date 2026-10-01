@@ -136,14 +136,16 @@ export default function RewardsPage() {
       </div>
 
       {/* Stamp Scanner Modal */}
-      <StampScannerModal
-        isOpen={isScanModalOpen}
-        onClose={() => setIsScanModalOpen(false)}
-        onSuccess={() => refetch()}
-        restaurantId={restaurantId || ""}
-        restaurantName={restaurantName}
-        brandColor={brandColor}
-      />
+      {isScanModalOpen && (
+        <StampScannerModal
+          isOpen={isScanModalOpen}
+          onClose={() => setIsScanModalOpen(false)}
+          onSuccess={() => refetch()}
+          restaurantId={restaurantId || ""}
+          restaurantName={restaurantName}
+          brandColor={brandColor}
+        />
+      )}
     </div>
   );
 }

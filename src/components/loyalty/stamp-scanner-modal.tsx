@@ -269,6 +269,25 @@ export function StampScannerModal({
     reader.readAsDataURL(file);
   };
 
+  // Reset all state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSuccessData(null);
+      setErrorMessage(null);
+      setManualCode("");
+      setMode("camera");
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    stopCamera();
+    setSuccessData(null);
+    setErrorMessage(null);
+    setManualCode("");
+    setMode("camera");
+    onClose();
+  };
+
   useEffect(() => {
     if (isOpen && mode === "camera" && !successData) {
       startCamera();
@@ -283,7 +302,12 @@ export function StampScannerModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+    >
       <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
@@ -301,7 +325,7 @@ export function StampScannerModal({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
           >
             <X className="w-4 h-4" />
@@ -340,14 +364,28 @@ export function StampScannerModal({
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-full py-3 px-4 rounded-xl text-white font-bold text-xs shadow-sm transition"
-                style={{ backgroundColor: brandColor }}
-              >
-                View Stamp Card
-              </button>
+              <div className="space-y-2 pt-2">
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="w-full py-3 px-4 rounded-xl text-white font-bold text-xs shadow-sm transition"
+                  style={{ backgroundColor: brandColor }}
+                >
+                  View Stamp Card
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSuccessData(null);
+                    setErrorMessage(null);
+                    setManualCode("");
+                    setMode("camera");
+                  }}
+                  className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition"
+                >
+                  Scan Another QR Code
+                </button>
+              </div>
             </div>
           ) : (
             <>
