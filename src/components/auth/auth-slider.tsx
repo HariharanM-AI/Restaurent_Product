@@ -5,24 +5,22 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Lock,
   Mail,
   User,
-  Building2,
   Eye,
   EyeOff,
   ArrowRight,
-  Sparkles,
   QrCode,
   Heart,
   MessageSquare,
   BarChart3,
   Quote,
-  ChevronLeft,
-  ChevronRight,
   Loader2,
   AlertCircle,
+  Sparkles,
 } from "lucide-react";
 
 interface AuthSliderProps {
@@ -57,7 +55,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
   const [signupLoading, setSignupLoading] = useState(false);
   const [signupError, setSignupError] = useState<string | null>(null);
 
-  // Animation DOM Refs
+  // Animation DOM Refs (Desktop Glowing Diagonal Seam Wipe)
   const cardRef = useRef<HTMLDivElement | null>(null);
   const wipeRef = useRef<HTMLDivElement | null>(null);
   const seamSharpRef = useRef<HTMLDivElement | null>(null);
@@ -73,7 +71,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
 
   const isMobile = () => {
     if (typeof window === "undefined") return false;
-    return window.innerWidth <= 768;
+    return window.innerWidth <= 1024;
   };
 
   const setClip = useCallback((el: HTMLElement, dir: number, p: number) => {
@@ -93,6 +91,18 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
   const switchTo = useCallback(
     (target: "signin" | "signup") => {
       if (animating || mode === target) return;
+
+      // On mobile / tablet screens: smooth state-driven transition without overlay DOM interference
+      if (isMobile()) {
+        setAnimating(true);
+        setMode(target);
+        setTargetMode(null);
+        window.history.pushState(null, "", target === "signup" ? "/signup" : "/login");
+        setTimeout(() => setAnimating(false), 250);
+        return;
+      }
+
+      // On desktop screens: run the diagonal glowing seam wipe
       setAnimating(true);
       setTargetMode(target);
 
@@ -105,35 +115,12 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
         setMode(target);
         setTargetMode(null);
         setAnimating(false);
-        return;
-      }
-
-      if (isMobile()) {
-        wipe.style.clipPath = "none";
-        wipe.style.opacity = "0";
-        wipe.style.transform = "translateX(12px)";
-        wipe.style.transition = `opacity ${DUR * 0.7}ms cubic-bezier(0.65, 0, 0.35, 1), transform ${DUR * 0.7}ms cubic-bezier(0.65, 0, 0.35, 1)`;
-        wipe.style.pointerEvents = "auto";
-
-        requestAnimationFrame(() => {
-          wipe.style.opacity = "1";
-          wipe.style.transform = "translateX(0)";
-        });
-
-        setTimeout(() => {
-          setMode(target);
-          setTargetMode(null);
-          wipe.style.opacity = "";
-          wipe.style.transform = "";
-          wipe.style.transition = "";
-          wipe.style.pointerEvents = "none";
-          setAnimating(false);
-          window.history.pushState(null, "", target === "signup" ? "/signup" : "/login");
-        }, DUR * 0.7);
+        window.history.pushState(null, "", target === "signup" ? "/signup" : "/login");
         return;
       }
 
       const dir = target === "signup" ? 1 : -1;
+      wipe.style.display = "block";
       wipe.style.pointerEvents = "auto";
       setClip(wipe, dir, 0);
 
@@ -165,9 +152,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
           setTargetMode(null);
           wipe.style.pointerEvents = "none";
           wipe.style.clipPath = "polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)";
-          wipe.style.opacity = "";
-          wipe.style.transform = "";
-          wipe.style.transition = "";
+          wipe.style.display = "none";
           seamSharp.style.opacity = "0";
           seamSoft.style.opacity = "0";
           setAnimating(false);
@@ -288,17 +273,19 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
     const isSignup = viewMode === "signup";
 
     return (
-      <div className="bg-[#082F29] text-white p-7 sm:p-9 lg:p-10 flex flex-col justify-between relative overflow-hidden h-full">
-        {/* Ambient background glow */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-gradient-to-br from-[#062923]/95 via-[#08352E]/92 to-[#041F1B]/95 backdrop-blur-2xl text-white p-7 sm:p-9 lg:p-10 flex flex-col justify-between relative overflow-hidden h-full border-l border-emerald-500/15">
+        {/* Ambient background glow orbs */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-400/15 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top Section */}
         <div className="relative z-10">
-          <div className="text-[11px] font-extrabold tracking-[0.2em] text-[#d8a860] uppercase">
-            {isSignup ? "START YOUR JOURNEY" : "MORE THAN A MENU"}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] backdrop-blur-md border border-white/10 text-[11px] font-extrabold tracking-[0.2em] text-[#d8a860] uppercase shadow-xs">
+            <Sparkles className="w-3 h-3 text-[#d8a860]" />
+            <span>{isSignup ? "START YOUR JOURNEY" : "MORE THAN A MENU"}</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mt-2 leading-[1.18] tracking-tight">
+
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mt-3 leading-[1.18] tracking-tight">
             {isSignup ? (
               <>
                 Empower your <br />
@@ -311,7 +298,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
               </>
             )}
           </h1>
-          <p className="text-xs text-emerald-100/70 mt-3 leading-relaxed max-w-sm">
+          <p className="text-xs text-emerald-100/75 mt-3 leading-relaxed max-w-sm">
             {isSignup
               ? "Join hundreds of dining venues and hospitality brands growing revenue with smart touchpoints."
               : "Everything you need to create memorable guest experiences, build loyalty, and grow your business — in one simple platform."}
@@ -320,58 +307,58 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
           {/* Features list & Arched photo cut-out */}
           <div className="mt-6 sm:mt-7 flex items-start gap-4">
             <div className="space-y-3.5 flex-1">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-emerald-900/60 border border-emerald-600/40 flex items-center justify-center text-emerald-300 shrink-0">
+              <div className="flex items-start gap-3 group">
+                <div className="w-8 h-8 rounded-xl bg-white/[0.08] backdrop-blur-md border border-white/15 flex items-center justify-center text-emerald-300 shrink-0 group-hover:scale-110 group-hover:bg-white/[0.14] transition-all duration-300 shadow-sm">
                   <QrCode className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-white">QR & NFC</div>
+                  <div className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">QR & NFC</div>
                   <div className="text-[11px] text-emerald-200/60">Instant, seamless access</div>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-emerald-900/60 border border-emerald-600/40 flex items-center justify-center text-emerald-300 shrink-0">
+              <div className="flex items-start gap-3 group">
+                <div className="w-8 h-8 rounded-xl bg-white/[0.08] backdrop-blur-md border border-white/15 flex items-center justify-center text-emerald-300 shrink-0 group-hover:scale-110 group-hover:bg-white/[0.14] transition-all duration-300 shadow-sm">
                   <Heart className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-white">Loyalty & Rewards</div>
+                  <div className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">Loyalty & Rewards</div>
                   <div className="text-[11px] text-emerald-200/60">Turn visits into lasting relationships</div>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-emerald-900/60 border border-emerald-600/40 flex items-center justify-center text-emerald-300 shrink-0">
+              <div className="flex items-start gap-3 group">
+                <div className="w-8 h-8 rounded-xl bg-white/[0.08] backdrop-blur-md border border-white/15 flex items-center justify-center text-emerald-300 shrink-0 group-hover:scale-110 group-hover:bg-white/[0.14] transition-all duration-300 shadow-sm">
                   <MessageSquare className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-white">Guest Feedback</div>
+                  <div className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">Guest Feedback</div>
                   <div className="text-[11px] text-emerald-200/60">Listen, learn, and improve</div>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-emerald-900/60 border border-emerald-600/40 flex items-center justify-center text-emerald-300 shrink-0">
+              <div className="flex items-start gap-3 group">
+                <div className="w-8 h-8 rounded-xl bg-white/[0.08] backdrop-blur-md border border-white/15 flex items-center justify-center text-emerald-300 shrink-0 group-hover:scale-110 group-hover:bg-white/[0.14] transition-all duration-300 shadow-sm">
                   <BarChart3 className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-white">Powerful Analytics</div>
+                  <div className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">Powerful Analytics</div>
                   <div className="text-[11px] text-emerald-200/60">Make data-driven decisions</div>
                 </div>
               </div>
             </div>
 
             {/* Arched Photo Cut-out with warm ambiance */}
-            <div className="hidden sm:block relative w-32 h-52 rounded-t-[60px] rounded-b-2xl overflow-hidden border-2 border-emerald-500/30 shadow-2xl shrink-0">
+            <div className="hidden sm:block relative w-32 h-52 rounded-t-[60px] rounded-b-2xl overflow-hidden border-2 border-[#d8a860]/40 shadow-2xl shrink-0 group">
               <Image
                 src="/restaurant-showcase.jpg"
                 alt="Fine dining experience"
                 fill
-                className="object-cover"
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
                 sizes="140px"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-2.5 text-center">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex items-end p-2.5 text-center">
                 <span className="text-white font-serif italic text-[11px] leading-tight drop-shadow-md">
                   Great Experiences Bring People Back
                 </span>
@@ -381,26 +368,24 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
         </div>
 
         {/* Bottom Testimonial Box */}
-        <div className="mt-6 pt-4 border-t border-emerald-900/60 relative z-10">
-          <div className="flex items-start gap-2.5">
-            <Quote className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-            <p className="text-[11px] text-emerald-100/80 italic leading-relaxed">
-              "Noura has helped us create a more connected experience with our customers. It's simple, powerful, and easy to use."
-            </p>
-          </div>
-          <div className="mt-2.5 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-emerald-700 border border-emerald-400/40 flex items-center justify-center text-white text-[10px]">
-                <User className="w-3 h-3" />
-              </div>
-              <div>
-                <div className="text-[11px] font-bold text-white">A Happy Customer</div>
-                <div className="text-[9px] text-emerald-300/70">Restaurant Owner</div>
-              </div>
+        <div className="mt-6 pt-4 border-t border-white/10 relative z-10">
+          <div className="p-3.5 rounded-2xl bg-white/[0.05] backdrop-blur-md border border-white/10 shadow-sm hover:bg-white/[0.08] transition-colors">
+            <div className="flex items-start gap-2.5">
+              <Quote className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-emerald-100/90 italic leading-relaxed">
+                "Noura has helped us create a more connected experience with our customers. It's simple, powerful, and easy to use."
+              </p>
             </div>
-            <div className="flex items-center gap-1 text-emerald-400">
-              <ChevronLeft className="w-3.5 h-3.5 cursor-pointer opacity-60 hover:opacity-100" />
-              <ChevronRight className="w-3.5 h-3.5 cursor-pointer opacity-60 hover:opacity-100" />
+            <div className="mt-2.5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-emerald-700/80 border border-emerald-400/40 flex items-center justify-center text-white text-[10px]">
+                  <User className="w-3 h-3" />
+                </div>
+                <div>
+                  <div className="text-[11px] font-bold text-white">A Happy Customer</div>
+                  <div className="text-[9px] text-emerald-300/80">Restaurant Owner</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -408,47 +393,47 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
     );
   };
 
-  // Render Sign In Form
+  // Render Sign In Form with Glassmorphism
   const renderSignInForm = () => {
     return (
-      <div className="bg-white p-7 sm:p-9 lg:p-11 flex flex-col justify-center h-full overflow-y-auto">
-        {/* Segmented Switcher [Sign In | Sign Up] */}
-        <div className="flex justify-center mb-5">
-          <div className="inline-flex p-1 rounded-2xl bg-slate-100 border border-slate-200/80">
+      <div className="bg-white/[0.88] backdrop-blur-2xl p-7 sm:p-9 lg:p-11 flex flex-col justify-center h-full overflow-y-auto">
+        {/* Segmented Switcher [Sign In | Sign Up] with Glassmorphism */}
+        <div className="flex justify-center mb-6">
+          <div className="inline-flex p-1.5 rounded-2xl bg-slate-900/[0.05] backdrop-blur-md border border-slate-900/[0.08] shadow-inner gap-1">
             <button
               type="button"
               onClick={() => switchTo("signin")}
-              className="px-6 py-1.5 rounded-xl bg-emerald-100 text-emerald-900 font-extrabold text-xs shadow-xs transition"
+              className="px-6 py-2 rounded-xl bg-gradient-to-r from-[#072F29] to-[#0A4B40] text-white font-extrabold text-xs shadow-md shadow-emerald-950/20 transition-all duration-300 scale-[1.02] cursor-default"
             >
               Sign In
             </button>
             <button
               type="button"
               onClick={() => switchTo("signup")}
-              className="px-6 py-1.5 rounded-xl text-slate-500 hover:text-slate-900 font-semibold text-xs transition"
+              className="px-6 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white/70 font-semibold text-xs transition-all duration-200 hover:scale-105 active:scale-95"
             >
               Sign Up
             </button>
           </div>
         </div>
 
-        <div className="text-center mb-5">
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             Welcome back
           </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Sign in to your Noura account.
+          <p className="text-xs text-slate-500 mt-1.5 font-medium">
+            Sign in to manage your guest experience hub.
           </p>
         </div>
 
         {loginError && (
-          <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2 animate-in fade-in-50">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="mb-4 p-3.5 rounded-2xl bg-red-50/90 backdrop-blur-md border border-red-200 text-red-700 text-xs flex items-center gap-2.5 animate-in fade-in-50">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
             <span>{loginError}</span>
           </div>
         )}
 
-        <form onSubmit={handleLoginSubmit} className="space-y-3.5">
+        <form onSubmit={handleLoginSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
               Email address
@@ -460,7 +445,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
                 placeholder="you@yourbusiness.com"
-                className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-700 text-slate-900 placeholder:text-slate-400"
+                className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200/90 hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-600 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-all duration-200 shadow-2xs"
               />
               <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             </div>
@@ -477,13 +462,13 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="w-full pl-10 pr-10 py-2.5 text-xs rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-700 text-slate-900 placeholder:text-slate-400"
+                className="w-full pl-10 pr-10 py-2.5 text-xs rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200/90 hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-600 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-all duration-200 shadow-2xs"
               />
               <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <button
                 type="button"
                 onClick={() => setShowLoginPassword(!showLoginPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 transition-colors"
                 aria-label="Toggle password visibility"
               >
                 {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -492,19 +477,19 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
           </div>
 
           <div className="flex items-center justify-between text-xs pt-0.5">
-            <label className="flex items-center gap-2 cursor-pointer text-slate-600 select-none">
+            <label className="flex items-center gap-2 cursor-pointer text-slate-600 select-none group">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600 cursor-pointer"
               />
-              <span>Remember me</span>
+              <span className="group-hover:text-slate-900 transition-colors">Remember me</span>
             </label>
             <button
               type="button"
               onClick={handleFillDemoLogin}
-              className="text-emerald-700 font-bold hover:underline"
+              className="text-emerald-700 hover:text-emerald-800 font-bold hover:underline transition-colors"
             >
               Auto-fill demo
             </button>
@@ -513,7 +498,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
           <button
             type="submit"
             disabled={loginLoading}
-            className="w-full py-3 px-4 rounded-xl bg-[#0B3B36] hover:bg-[#072B26] text-white font-extrabold text-xs flex items-center justify-center gap-2 transition shadow-md disabled:opacity-50"
+            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#072F29] via-[#0B3B36] to-[#0A4B40] hover:from-[#0B483E] hover:to-[#10705E] text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-emerald-950/25 hover:shadow-xl hover:shadow-emerald-800/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 group"
           >
             {loginLoading ? (
               <>
@@ -523,22 +508,22 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
             ) : (
               <>
                 <span>Sign In</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </>
             )}
           </button>
         </form>
 
-        <div className="my-4 flex items-center gap-3">
-          <div className="flex-1 h-px bg-slate-200" />
-          <span className="text-[10px] text-slate-400 uppercase font-semibold">Or continue with</span>
-          <div className="flex-1 h-px bg-slate-200" />
+        <div className="my-5 flex items-center gap-3">
+          <div className="flex-1 h-px bg-slate-200/80" />
+          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Or continue with</span>
+          <div className="flex-1 h-px bg-slate-200/80" />
         </div>
 
         <button
           type="button"
           onClick={handleFillDemoLogin}
-          className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2.5 transition shadow-2xs"
+          className="w-full py-2.5 px-4 rounded-xl bg-white/90 hover:bg-white backdrop-blur-sm border border-slate-200/90 hover:border-slate-300 text-slate-700 font-bold text-xs flex items-center justify-center gap-2.5 transition-all duration-300 shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path
@@ -561,12 +546,12 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
           <span>Sign in with Google</span>
         </button>
 
-        <p className="mt-4 text-center text-xs text-slate-500">
+        <p className="mt-5 text-center text-xs text-slate-500">
           Don't have an account?{" "}
           <button
             type="button"
             onClick={() => switchTo("signup")}
-            className="text-emerald-700 font-extrabold hover:underline"
+            className="text-emerald-700 font-extrabold hover:text-emerald-800 hover:underline transition-colors hover:scale-105 inline-block"
           >
             Sign Up
           </button>
@@ -575,24 +560,24 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
     );
   };
 
-  // Render Sign Up Form
+  // Render Sign Up Form with Glassmorphism
   const renderSignUpForm = () => {
     return (
-      <div className="bg-white p-7 sm:p-9 lg:p-11 flex flex-col justify-center h-full overflow-y-auto">
-        {/* Segmented Switcher [Sign In | Sign Up] */}
-        <div className="flex justify-center mb-4">
-          <div className="inline-flex p-1 rounded-2xl bg-slate-100 border border-slate-200/80">
+      <div className="bg-white/[0.88] backdrop-blur-2xl p-7 sm:p-9 lg:p-11 flex flex-col justify-center h-full overflow-y-auto">
+        {/* Segmented Switcher [Sign In | Sign Up] with Glassmorphism */}
+        <div className="flex justify-center mb-5">
+          <div className="inline-flex p-1.5 rounded-2xl bg-slate-900/[0.05] backdrop-blur-md border border-slate-900/[0.08] shadow-inner gap-1">
             <button
               type="button"
               onClick={() => switchTo("signin")}
-              className="px-6 py-1.5 rounded-xl text-slate-500 hover:text-slate-900 font-semibold text-xs transition"
+              className="px-6 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white/70 font-semibold text-xs transition-all duration-200 hover:scale-105 active:scale-95"
             >
               Sign In
             </button>
             <button
               type="button"
               onClick={() => switchTo("signup")}
-              className="px-6 py-1.5 rounded-xl bg-emerald-100 text-emerald-900 font-extrabold text-xs shadow-xs transition"
+              className="px-6 py-2 rounded-xl bg-gradient-to-r from-[#072F29] to-[#0A4B40] text-white font-extrabold text-xs shadow-md shadow-emerald-950/20 transition-all duration-300 scale-[1.02] cursor-default"
             >
               Sign Up
             </button>
@@ -600,22 +585,22 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
         </div>
 
         <div className="text-center mb-4">
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             Start your 30-day free trial
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 mt-1 font-medium">
             No credit card required. Instant venue setup.
           </p>
         </div>
 
         {signupError && (
-          <div className="mb-3 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2 animate-in fade-in-50">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="mb-3.5 p-3.5 rounded-2xl bg-red-50/90 backdrop-blur-md border border-red-200 text-red-700 text-xs flex items-center gap-2.5 animate-in fade-in-50">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
             <span>{signupError}</span>
           </div>
         )}
 
-        <form onSubmit={handleSignupSubmit} className="space-y-2.5">
+        <form onSubmit={handleSignupSubmit} className="space-y-3">
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
               Full name
@@ -627,7 +612,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                 value={signupName}
                 onChange={(e) => setSignupName(e.target.value)}
                 placeholder="John Doe"
-                className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-700 text-slate-900 placeholder:text-slate-400"
+                className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200/90 hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-600 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-all duration-200 shadow-2xs"
               />
               <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             </div>
@@ -644,7 +629,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                 value={signupEmail}
                 onChange={(e) => setSignupEmail(e.target.value)}
                 placeholder="you@yourbusiness.com"
-                className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-700 text-slate-900 placeholder:text-slate-400"
+                className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200/90 hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-600 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-all duration-200 shadow-2xs"
               />
               <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             </div>
@@ -662,13 +647,13 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                   value={signupPassword}
                   onChange={(e) => setSignupPassword(e.target.value)}
                   placeholder="At least 8 chars"
-                  className="w-full pl-9 pr-9 py-2 text-xs rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-700 text-slate-900 placeholder:text-slate-400"
+                  className="w-full pl-9 pr-9 py-2 text-xs rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200/90 hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-600 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-all duration-200 shadow-2xs"
                 />
                 <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <button
                   type="button"
                   onClick={() => setShowSignupPassword(!showSignupPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 transition-colors"
                   aria-label="Toggle password visibility"
                 >
                   {showSignupPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -687,7 +672,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                   value={signupConfirmPassword}
                   onChange={(e) => setSignupConfirmPassword(e.target.value)}
                   placeholder="Repeat password"
-                  className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-700 text-slate-900 placeholder:text-slate-400"
+                  className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200/90 hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-600 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-all duration-200 shadow-2xs"
                 />
                 <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               </div>
@@ -711,7 +696,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
           <button
             type="submit"
             disabled={signupLoading}
-            className="w-full py-2.5 px-4 rounded-xl bg-[#0B3B36] hover:bg-[#072B26] text-white font-extrabold text-xs flex items-center justify-center gap-2 transition shadow-md disabled:opacity-50 mt-1"
+            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#072F29] via-[#0B3B36] to-[#0A4B40] hover:from-[#0B483E] hover:to-[#10705E] text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-emerald-950/25 hover:shadow-xl hover:shadow-emerald-800/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 group mt-1"
           >
             {signupLoading ? (
               <>
@@ -721,22 +706,22 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
             ) : (
               <>
                 <span>Create Account</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </>
             )}
           </button>
         </form>
 
-        <div className="my-3 flex items-center gap-3">
-          <div className="flex-1 h-px bg-slate-200" />
-          <span className="text-[10px] text-slate-400 uppercase font-semibold">Or continue with</span>
-          <div className="flex-1 h-px bg-slate-200" />
+        <div className="my-4 flex items-center gap-3">
+          <div className="flex-1 h-px bg-slate-200/80" />
+          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Or continue with</span>
+          <div className="flex-1 h-px bg-slate-200/80" />
         </div>
 
         <button
           type="button"
           onClick={handleFillDemoSignup}
-          className="w-full py-2 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2.5 transition shadow-2xs"
+          className="w-full py-2 px-4 rounded-xl bg-white/90 hover:bg-white backdrop-blur-sm border border-slate-200/90 hover:border-slate-300 text-slate-700 font-bold text-xs flex items-center justify-center gap-2.5 transition-all duration-300 shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path
@@ -759,12 +744,12 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
           <span>Sign up with Google</span>
         </button>
 
-        <p className="mt-3 text-center text-xs text-slate-500">
+        <p className="mt-4 text-center text-xs text-slate-500">
           Already have an account?{" "}
           <button
             type="button"
             onClick={() => switchTo("signin")}
-            className="text-emerald-700 font-extrabold hover:underline"
+            className="text-emerald-700 font-extrabold hover:text-emerald-800 hover:underline transition-colors hover:scale-105 inline-block"
           >
             Sign In
           </button>
@@ -777,12 +762,21 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
   const renderFaceContent = (viewMode: "signin" | "signup") => {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full min-h-[620px] lg:min-h-[660px]">
-        {/* In signin mode: Form on left (order-1), Info on right (order-2) */}
-        {/* In signup mode: Info on left (order-1), Form on right (order-2) */}
         {viewMode === "signin" ? (
           <>
             <div className="order-1 flex flex-col justify-center h-full">
-              {renderSignInForm()}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key="signin-view"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.22, ease: "easeOut" }}
+                  className="h-full flex flex-col justify-center"
+                >
+                  {renderSignInForm()}
+                </motion.div>
+              </AnimatePresence>
             </div>
             <div className="order-2 hidden lg:block h-full">
               {renderSideInfo("signin")}
@@ -794,7 +788,18 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
               {renderSideInfo("signup")}
             </div>
             <div className="order-1 lg:order-2 flex flex-col justify-center h-full">
-              {renderSignUpForm()}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key="signup-view"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.22, ease: "easeOut" }}
+                  className="h-full flex flex-col justify-center"
+                >
+                  {renderSignUpForm()}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </>
         )}
@@ -803,8 +808,8 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
   };
 
   return (
-    <div className="min-h-screen text-slate-900 flex flex-col justify-between relative overflow-hidden p-4 sm:p-6 lg:p-8 selection:bg-emerald-500 selection:text-white">
-      {/* Background image from user's uploaded design */}
+    <div className="min-h-screen text-slate-900 flex flex-col justify-between relative overflow-hidden p-3.5 sm:p-6 lg:p-8 selection:bg-emerald-500 selection:text-white">
+      {/* Background image with deep atmospheric overlay */}
       <div className="absolute inset-0 z-0">
         <Image
           src="/auth-bg.png"
@@ -814,72 +819,79 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
           priority
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-[#052621]/75 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-[#04201c]/80 backdrop-blur-[4px]" />
       </div>
-      {/* Ambient overlay gradients on top of the image */}
-      <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-emerald-700/10 blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-[600px] h-[600px] rounded-full bg-teal-600/10 blur-[140px] pointer-events-none" />
 
-      {/* Top Header */}
-      <header className="w-full max-w-5xl mx-auto flex items-center justify-between z-10 py-2">
+      {/* Floating ambient colored glowing orbs for authentic Glassmorphism depth */}
+      <div className="absolute -top-32 -left-32 w-[550px] h-[550px] rounded-full bg-emerald-500/20 blur-[130px] pointer-events-none animate-pulse duration-[8000ms]" />
+      <div className="absolute -bottom-32 -right-32 w-[550px] h-[550px] rounded-full bg-teal-400/20 blur-[140px] pointer-events-none animate-pulse duration-[10000ms]" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-[#d8a860]/10 blur-[120px] pointer-events-none" />
+
+      {/* Top Header - Floating Glassmorphic Pill */}
+      <header className="w-full max-w-5xl mx-auto flex items-center justify-between z-10 py-2.5 px-4 sm:px-6 rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-all">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-white border border-white/20 flex items-center justify-center p-0.5 shadow-xs overflow-hidden">
+          <div className="w-9 h-9 rounded-xl bg-white/90 backdrop-blur-md border border-white/30 flex items-center justify-center p-0.5 shadow-md group-hover:scale-105 group-hover:shadow-emerald-500/30 transition-all duration-300 overflow-hidden">
             <img src="/images/Own brand logo.png" alt="Noura" className="w-full h-full object-contain" />
           </div>
-          <span className="text-white font-extrabold text-xl tracking-tight">Noura</span>
+          <span className="text-white font-extrabold text-lg sm:text-xl tracking-tight group-hover:text-emerald-200 transition-colors">
+            Noura
+          </span>
         </Link>
 
-        <div className="flex items-center gap-3">
-          <span className="text-emerald-100/70 text-xs hidden sm:inline">
+        {/* Header Right: "New here?" / "Already a member?" + Animated Glass Button for ALL screens */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="text-emerald-100/90 text-[11px] sm:text-xs font-semibold whitespace-nowrap">
             {mode === "signin" ? "New here?" : "Already a member?"}
           </span>
           <button
             type="button"
             disabled={animating}
             onClick={() => switchTo(mode === "signin" ? "signup" : "signin")}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-white border border-white/20 hover:border-white/40 hover:bg-white/5 transition disabled:opacity-50"
+            className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/25 hover:border-emerald-400/60 backdrop-blur-md shadow-sm hover:shadow-emerald-500/25 transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center gap-1.5 group cursor-pointer"
           >
-            {mode === "signin" ? "Sign Up" : "Sign In"}
+            <span>{mode === "signin" ? "Sign Up" : "Sign In"}</span>
+            <ArrowRight className="w-3.5 h-3.5 text-emerald-300 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
       </header>
 
-      {/* Main Animated Card Scene */}
-      <main className="w-full max-w-5xl mx-auto my-4 z-10">
+      {/* Main Glassmorphism Auth Card */}
+      <main className="w-full max-w-5xl mx-auto my-3 sm:my-5 z-10">
         <div
           ref={cardRef}
-          className="relative overflow-hidden rounded-[28px] bg-white shadow-2xl border border-white/10 min-h-[620px] lg:min-h-[660px]"
+          className="relative overflow-hidden rounded-[28px] sm:rounded-[32px] backdrop-blur-2xl bg-white/[0.12] shadow-[0_30px_90px_rgba(0,0,0,0.55),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-white/20 min-h-[580px] lg:min-h-[660px]"
         >
-          {/* Base Face (Current Active Form) */}
+          {/* Base Face (Current Active Form / Info) */}
           <div className="relative w-full h-full z-[1]">
             {renderFaceContent(mode)}
           </div>
 
-          {/* Wipe Face (Revealed via diagonal clipPath during transition) */}
+          {/* Wipe Face (Desktop only: Revealed via diagonal clipPath during transition) */}
           <div
             ref={wipeRef}
-            className="absolute inset-0 z-[2] pointer-events-none overflow-hidden bg-white"
+            className="hidden lg:block absolute inset-0 z-[2] pointer-events-none overflow-hidden"
             style={{
+              display: "none",
               clipPath: "polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)",
             }}
           >
             {targetMode && renderFaceContent(targetMode)}
           </div>
 
-          {/* Soft Glowing Seam riding the diagonal */}
+          {/* Soft Glowing Seam riding the diagonal (Desktop) */}
           <div
             ref={seamSoftRef}
-            className="absolute top-[-4%] h-[108%] w-[18px] opacity-0 z-[4] pointer-events-none blur-[7px] origin-top"
+            className="hidden lg:block absolute top-[-4%] h-[108%] w-[18px] opacity-0 z-[4] pointer-events-none blur-[7px] origin-top"
             style={{
               background:
                 "linear-gradient(180deg, transparent, rgba(216,168,96,0.5) 40%, rgba(216,168,96,0.5) 60%, transparent)",
             }}
           />
 
-          {/* Sharp Glowing Seam riding the diagonal edge */}
+          {/* Sharp Glowing Seam riding the diagonal edge (Desktop) */}
           <div
             ref={seamSharpRef}
-            className="absolute top-[-4%] h-[108%] w-[3.5px] opacity-0 z-[5] pointer-events-none origin-top"
+            className="hidden lg:block absolute top-[-4%] h-[108%] w-[3.5px] opacity-0 z-[5] pointer-events-none origin-top"
             style={{
               background:
                 "linear-gradient(180deg, transparent, #e9c98c 45%, #d8a860 55%, transparent)",
@@ -889,15 +901,15 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
         </div>
 
         {/* Subtle Hint Below Card */}
-        <p className="text-center mt-3.5 text-xs text-emerald-200/50 select-none">
+        <p className="text-center mt-3 text-[11px] sm:text-xs text-emerald-100/60 select-none">
           Try both directions — switch modes to send the glowing diagonal seam across the card.
         </p>
       </main>
 
-      {/* Bottom Footer */}
-      <footer className="w-full max-w-5xl mx-auto flex items-center justify-between text-[11px] text-emerald-300/40 font-bold z-10 py-2">
+      {/* Bottom Footer - Glassmorphic Pill */}
+      <footer className="w-full max-w-5xl mx-auto flex items-center justify-between text-[10px] sm:text-[11px] text-emerald-200/70 font-bold z-10 py-2.5 px-4 sm:px-6 rounded-2xl backdrop-blur-md bg-white/[0.04] border border-white/10 shadow-sm">
         <span className="tracking-[0.15em]">BETTER GUESTS. BRIGHTER BUSINESS.</span>
-        <span className="tracking-[0.2em]">NOURA</span>
+        <span className="tracking-[0.2em] text-emerald-300">NOURA</span>
       </footer>
     </div>
   );
