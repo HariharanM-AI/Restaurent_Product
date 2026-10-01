@@ -1,9 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { GuestActionCard } from "./action-card";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { subscribeToActivity } from "@/lib/realtime/broadcast";
 import { GuestActionData } from "@/types";
 
 interface GuestActionListProps {
@@ -19,7 +21,33 @@ export function GuestActionList({
   brandPrimaryColor,
   onActionClick,
 }: GuestActionListProps) {
+  const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    // Real-time synchronization when admin adds/edits/deletes actions
+    const unsubscribe = subscribeToActivity(restaurantId, (event) => {
+      if (
+        event.eventType === "action_updated" ||
+        event.eventType === "action_created" ||
+        event.eventType === "action_deleted"
+      ) {
+        router.refresh();
+      }
+    });
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        router.refresh();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      unsubscribe();
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [restaurantId, router]);
 
   const containerVariants = {
     hidden: { opacity: 0 },

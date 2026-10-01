@@ -23,7 +23,10 @@ export async function GET() {
     const memberships = await prisma.restaurantMember.findMany({
       where: { userId: session.user.id },
       include: { restaurant: true },
-      orderBy: { createdAt: "asc" },
+      orderBy: [
+        { restaurant: { createdAt: "asc" } },
+        { createdAt: "asc" },
+      ],
     });
 
     return NextResponse.json({

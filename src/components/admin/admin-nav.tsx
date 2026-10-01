@@ -1124,7 +1124,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                   <div className="flex items-center justify-between mb-3.5">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
                       <Store className="w-3.5 h-3.5" />
-                      <span>Connected Venues & Locations ({venuesList.length})</span>
+                      <span>VENUES & LOCATIONS ({venuesList.length})</span>
                     </h4>
                     <button
                       type="button"

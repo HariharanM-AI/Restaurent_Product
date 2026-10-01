@@ -144,7 +144,10 @@ export async function getUserPrimaryMembership(userId: string) {
     include: {
       restaurant: true,
     },
-    orderBy: { createdAt: "asc" },
+    orderBy: [
+      { restaurant: { createdAt: "asc" } },
+      { createdAt: "asc" },
+    ],
   });
 
   if (membership) {
@@ -163,7 +166,10 @@ export async function getUserRestaurants(userId: string) {
     include: {
       restaurant: true,
     },
-    orderBy: { createdAt: "asc" },
+    orderBy: [
+      { restaurant: { createdAt: "asc" } },
+      { createdAt: "asc" },
+    ],
   });
 
   return memberships.map((m) => ({

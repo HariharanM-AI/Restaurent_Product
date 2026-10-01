@@ -11,7 +11,10 @@ export default async function AdminRootPage() {
   const membership = await prisma.restaurantMember.findFirst({
     where: { userId: session.user.id },
     include: { restaurant: true },
-    orderBy: { createdAt: "asc" },
+    orderBy: [
+      { restaurant: { createdAt: "asc" } },
+      { createdAt: "asc" },
+    ],
   });
 
   if (membership?.restaurant) {

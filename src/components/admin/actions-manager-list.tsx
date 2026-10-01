@@ -23,6 +23,7 @@ import {
 import { IconRenderer } from "@/components/shared/icon-renderer";
 import { GuestActionData } from "@/types";
 import { Button } from "@/components/ui/button";
+import { broadcastActivity } from "@/lib/realtime/broadcast";
 import { EmptyState } from "@/components/ui/empty-state";
 
 interface ActionsManagerListProps {
@@ -394,6 +395,7 @@ export function ActionsManagerList({
           );
           setIsModalOpen(false);
           showSuccess("Action updated successfully");
+          broadcastActivity(restaurantId, "action_updated", { actionId: editingAction.id, action: json.data });
         } else {
           setErrorMessage(json.error || "Failed to update action");
         }
@@ -408,6 +410,7 @@ export function ActionsManagerList({
           setActions((prev) => [...prev, json.data]);
           setIsModalOpen(false);
           showSuccess("Action created");
+          broadcastActivity(restaurantId, "action_created", { action: json.data });
         } else {
           setErrorMessage(json.error || "Failed to create action");
         }
@@ -905,158 +908,160 @@ export function ActionsManagerList({
 
       {/* ─── Create/Edit Modal ─── */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="w-full max-w-lg bg-white rounded-t-[28px] sm:rounded-2xl shadow-2xl border border-slate-200 flex flex-col max-h-[92dvh] sm:max-h-[85vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Pinned Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0 bg-white">
               <h3 className="font-bold text-base text-slate-900">
                 {editingAction ? "Edit Action Card" : "Add New Action Card"}
               </h3>
               <button
+                type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
+            {/* Error banner */}
             {errorMessage && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
+              <div className="mx-5 mt-3 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2 shrink-0">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1.5" htmlFor="action-title">
-                  Action Title
-                </label>
-                <input
-                  id="action-title"
-                  type="text"
-                  required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. View Menu"
-                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs"
-                />
-                {title && isDuplicate(title, editingAction?.id) && (
-                  <p className="mt-1 text-red-500 text-[11px] font-medium flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" />
-                    An action with this title already exists
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1.5" htmlFor="action-desc">
-                  Short Description
-                </label>
-                <input
-                  id="action-desc"
-                  type="text"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="e.g. Explore our seasonal farm-to-table dishes"
-                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs"
-                />
-              </div>
-
-              {/* Icon Picker */}
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">Select Icon</label>
-                <div className="grid grid-cols-6 gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl max-h-32 overflow-y-auto">
-                  {AVAILABLE_ICONS.map((ic) => (
-                    <button
-                      key={ic}
-                      type="button"
-                      onClick={() => setIcon(ic)}
-                      className={`p-2 rounded-xl flex items-center justify-center transition ${
-                        icon === ic
-                          ? "bg-[#072C27] text-white shadow-sm"
-                          : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/60"
-                      }`}
-                      title={ic}
-                    >
-                      <IconRenderer name={ic} className="w-4 h-4" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            {/* Form with inner scroll and Enter-key submit prevention */}
+            <form
+              onSubmit={handleSubmit}
+              onKeyDown={(e) => {
+                // Ensure text only saves when clicking the save changes button, not on Enter
+                if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+                  e.preventDefault();
+                }
+              }}
+              className="flex-1 flex flex-col min-h-0 overflow-hidden"
+            >
+              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3.5 text-xs">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1.5" htmlFor="action-type">
-                    Action Type
+                  <label className="block font-semibold text-slate-700 mb-1" htmlFor="action-title">
+                    Action Title
                   </label>
-                  <select
-                    id="action-type"
-                    value={type}
-                    onChange={(e) => setType(e.target.value)}
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs"
-                  >
-                    <option value="MENU">MENU</option>
-                    <option value="REWARDS">REWARDS</option>
-                    <option value="REVIEW">REVIEW</option>
-                    <option value="WIFI">WIFI</option>
-                    <option value="FEEDBACK">FEEDBACK</option>
-                    <option value="GAME">GAME</option>
-                    <option value="SOCIAL">SOCIAL</option>
-                    <option value="CUSTOM">CUSTOM</option>
-                  </select>
+                  <input
+                    id="action-title"
+                    type="text"
+                    required
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. View Menu"
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs text-xs sm:text-sm font-medium"
+                  />
+                  {title && isDuplicate(title, editingAction?.id) && (
+                    <p className="mt-1 text-red-500 text-[11px] font-medium flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      An action with this title already exists
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block font-semibold text-slate-700 text-xs" htmlFor="action-badge">
+                  <label className="block font-semibold text-slate-700 mb-1" htmlFor="action-desc">
+                    Short Description
+                  </label>
+                  <input
+                    id="action-desc"
+                    type="text"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="e.g. Explore our seasonal farm-to-table dishes"
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs text-xs sm:text-sm"
+                  />
+                </div>
+
+                {/* Icon Picker */}
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Select Icon</label>
+                  <div className="grid grid-cols-6 gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl max-h-28 overflow-y-auto">
+                    {AVAILABLE_ICONS.map((ic) => (
+                      <button
+                        key={ic}
+                        type="button"
+                        onClick={() => setIcon(ic)}
+                        className={`p-2 rounded-xl flex items-center justify-center transition ${
+                          icon === ic
+                            ? "bg-[#072C27] text-white shadow-sm"
+                            : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/60"
+                        }`}
+                        title={ic}
+                      >
+                        <IconRenderer name={ic} className="w-4 h-4" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1" htmlFor="action-type">
+                      Action Type
+                    </label>
+                    <select
+                      id="action-type"
+                      value={type}
+                      onChange={(e) => setType(e.target.value)}
+                      className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs text-xs sm:text-sm"
+                    >
+                      <option value="MENU">MENU</option>
+                      <option value="REWARDS">REWARDS</option>
+                      <option value="REVIEW">REVIEW</option>
+                      <option value="WIFI">WIFI</option>
+                      <option value="FEEDBACK">FEEDBACK</option>
+                      <option value="GAME">GAME</option>
+                      <option value="SOCIAL">SOCIAL</option>
+                      <option value="CUSTOM">CUSTOM</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1" htmlFor="action-badge">
                       Badge (Optional)
                     </label>
-                    {badge ? (
-                      <button
-                        type="button"
-                        onClick={() => setBadge("")}
-                        className="text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer"
-                      >
-                        Clear badge
-                      </button>
-                    ) : null}
+                    <input
+                      id="action-badge"
+                      type="text"
+                      value={badge}
+                      onChange={(e) => setBadge(e.target.value)}
+                      placeholder="Optional"
+                      className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs text-xs sm:text-sm"
+                    />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1" htmlFor="action-url">
+                    Destination URL
+                  </label>
                   <input
-                    id="action-badge"
+                    id="action-url"
                     type="text"
-                    value={badge}
-                    onChange={(e) => setBadge(e.target.value)}
-                    placeholder="e.g. Loyalty, Feedback, Spring 2026 (or leave empty)"
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs text-xs"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder={`/r/${restaurantSlug}/menu or https://...`}
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs font-mono text-xs sm:text-sm"
                   />
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Leave blank or click &quot;Clear badge&quot; to show this action without a badge.
-                  </p>
                 </div>
               </div>
 
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1.5" htmlFor="action-url">
-                  Destination URL
-                </label>
-                <input
-                  id="action-url"
-                  type="text"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder={`/r/${restaurantSlug}/menu or https://...`}
-                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs font-mono"
-                />
-              </div>
-
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                <Button variant="ghost" size="sm" onClick={() => setIsModalOpen(false)}>
+              {/* Pinned Footer */}
+              <div className="px-5 py-3.5 border-t border-slate-100 bg-white sm:bg-slate-50/60 flex items-center justify-end gap-2.5 shrink-0">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setIsModalOpen(false)}>
                   Cancel
                 </Button>
                 <button
                   type="submit"
                   disabled={isLoading || (!!title && isDuplicate(title, editingAction?.id))}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#072C27] hover:bg-[#0E473F] text-white text-xs font-semibold transition shadow-sm disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#072C27] hover:bg-[#0E473F] text-white text-xs font-semibold transition shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <Check className="w-3.5 h-3.5" />

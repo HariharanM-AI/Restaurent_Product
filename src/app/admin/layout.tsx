@@ -37,7 +37,10 @@ export default async function AdminLayout({
     include: {
       restaurant: true,
     },
-    orderBy: { createdAt: "asc" },
+    orderBy: [
+      { restaurant: { createdAt: "asc" } },
+      { createdAt: "asc" },
+    ],
   });
 
   if (!memberships.length || !memberships[0]?.restaurant) {
