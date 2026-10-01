@@ -409,7 +409,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
   // Render Sign In Form with Glassmorphism
   const renderSignInForm = () => {
     return (
-      <div className="bg-white/[0.06] lg:bg-white/[0.90] backdrop-blur-2xl p-6 sm:p-8 lg:p-11 flex flex-col justify-center h-full overflow-y-auto rounded-3xl lg:rounded-none border border-white/15 lg:border-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.35)] lg:shadow-none">
+      <div className="bg-transparent lg:bg-white/[0.90] p-6 sm:p-8 lg:p-11 flex flex-col justify-center h-full overflow-y-auto lg:backdrop-blur-2xl">
         {/* Segmented Switcher [Sign In | Sign Up] with Glassmorphism */}
         <div className="flex justify-center mb-6">
           <div className="inline-flex p-1.5 rounded-2xl bg-black/30 lg:bg-slate-900/[0.05] backdrop-blur-md border border-white/15 lg:border-slate-900/[0.08] shadow-inner gap-1">
@@ -431,7 +431,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
         </div>
 
         <div className="text-center mb-6">
-          <h2 className="text-2xl sm:text-3xl font-black text-white lg:text-slate-900 tracking-tight drop-shadow-xs">
+          <h2 className="text-2xl sm:text-3xl font-black text-white lg:text-slate-900 tracking-tight drop-shadow-sm">
             Welcome back
           </h2>
           <p className="text-xs text-emerald-100/80 lg:text-slate-500 mt-1.5 font-medium">
@@ -458,7 +458,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
                 placeholder="you@yourbusiness.com"
-                className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-white/[0.12] lg:bg-white/80 backdrop-blur-md border border-white/25 lg:border-slate-200/90 hover:border-emerald-400/60 lg:hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 focus:border-emerald-400 lg:focus:border-emerald-600 focus:bg-white/[0.20] lg:focus:bg-white text-white lg:text-slate-900 placeholder:text-emerald-100/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] lg:shadow-2xs"
+                className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-black/25 lg:bg-white/80 hover:bg-black/35 focus:bg-black/40 border border-white/25 lg:border-slate-200/90 focus:border-emerald-400 lg:focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 text-white lg:text-slate-900 placeholder:text-white/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] lg:shadow-2xs backdrop-blur-sm lg:backdrop-blur-none"
               />
               <Mail className="w-4 h-4 text-emerald-200/70 lg:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             </div>
@@ -475,7 +475,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="w-full pl-10 pr-10 py-2.5 text-xs rounded-xl bg-white/[0.12] lg:bg-white/80 backdrop-blur-md border border-white/25 lg:border-slate-200/90 hover:border-emerald-400/60 lg:hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 focus:border-emerald-400 lg:focus:border-emerald-600 focus:bg-white/[0.20] lg:focus:bg-white text-white lg:text-slate-900 placeholder:text-emerald-100/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] lg:shadow-2xs"
+                className="w-full pl-10 pr-10 py-2.5 text-xs rounded-xl bg-black/25 lg:bg-white/80 hover:bg-black/35 focus:bg-black/40 border border-white/25 lg:border-slate-200/90 focus:border-emerald-400 lg:focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 text-white lg:text-slate-900 placeholder:text-white/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] lg:shadow-2xs backdrop-blur-sm lg:backdrop-blur-none"
               />
               <Lock className="w-4 h-4 text-emerald-200/70 lg:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <button
@@ -576,7 +576,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
   // Render Sign Up Form with Glassmorphism
   const renderSignUpForm = () => {
     return (
-      <div className="bg-white/[0.06] lg:bg-white/[0.90] backdrop-blur-2xl p-6 sm:p-8 lg:p-11 flex flex-col justify-center h-full overflow-y-auto rounded-3xl lg:rounded-none border border-white/15 lg:border-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.35)] lg:shadow-none">
+      <div className="bg-transparent lg:bg-white/[0.90] p-6 sm:p-8 lg:p-11 flex flex-col justify-center h-full overflow-y-auto lg:backdrop-blur-2xl">
         {/* Segmented Switcher [Sign In | Sign Up] with Glassmorphism */}
         <div className="flex justify-center mb-5">
           <div className="inline-flex p-1.5 rounded-2xl bg-black/30 lg:bg-slate-900/[0.05] backdrop-blur-md border border-white/15 lg:border-slate-900/[0.08] shadow-inner gap-1">
@@ -598,7 +598,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
         </div>
 
         <div className="text-center mb-4">
-          <h2 className="text-2xl sm:text-3xl font-black text-white lg:text-slate-900 tracking-tight drop-shadow-xs">
+          <h2 className="text-2xl sm:text-3xl font-black text-white lg:text-slate-900 tracking-tight drop-shadow-sm">
             Start your 30-day free trial
           </h2>
           <p className="text-xs text-emerald-100/80 lg:text-slate-500 mt-1 font-medium">
@@ -625,7 +625,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                 value={signupName}
                 onChange={(e) => setSignupName(e.target.value)}
                 placeholder="John Doe"
-                className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-white/[0.12] lg:bg-white/80 backdrop-blur-md border border-white/25 lg:border-slate-200/90 hover:border-emerald-400/60 lg:hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 focus:border-emerald-400 lg:focus:border-emerald-600 focus:bg-white/[0.20] lg:focus:bg-white text-white lg:text-slate-900 placeholder:text-emerald-100/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] lg:shadow-2xs"
+                className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-black/25 lg:bg-white/80 hover:bg-black/35 focus:bg-black/40 border border-white/25 lg:border-slate-200/90 focus:border-emerald-400 lg:focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 text-white lg:text-slate-900 placeholder:text-white/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] lg:shadow-2xs backdrop-blur-sm lg:backdrop-blur-none"
               />
               <User className="w-4 h-4 text-emerald-200/70 lg:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             </div>
@@ -642,7 +642,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                 value={signupEmail}
                 onChange={(e) => setSignupEmail(e.target.value)}
                 placeholder="you@yourbusiness.com"
-                className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-white/[0.12] lg:bg-white/80 backdrop-blur-md border border-white/25 lg:border-slate-200/90 hover:border-emerald-400/60 lg:hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 focus:border-emerald-400 lg:focus:border-emerald-600 focus:bg-white/[0.20] lg:focus:bg-white text-white lg:text-slate-900 placeholder:text-emerald-100/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] lg:shadow-2xs"
+                className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-black/25 lg:bg-white/80 hover:bg-black/35 focus:bg-black/40 border border-white/25 lg:border-slate-200/90 focus:border-emerald-400 lg:focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 text-white lg:text-slate-900 placeholder:text-white/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] lg:shadow-2xs backdrop-blur-sm lg:backdrop-blur-none"
               />
               <Mail className="w-4 h-4 text-emerald-200/70 lg:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             </div>
@@ -660,7 +660,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                   value={signupPassword}
                   onChange={(e) => setSignupPassword(e.target.value)}
                   placeholder="At least 8 chars"
-                  className="w-full pl-9 pr-9 py-2 text-xs rounded-xl bg-white/[0.12] lg:bg-white/80 backdrop-blur-md border border-white/25 lg:border-slate-200/90 hover:border-emerald-400/60 lg:hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 focus:border-emerald-400 lg:focus:border-emerald-600 focus:bg-white/[0.20] lg:focus:bg-white text-white lg:text-slate-900 placeholder:text-emerald-100/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] lg:shadow-2xs"
+                  className="w-full pl-9 pr-9 py-2 text-xs rounded-xl bg-black/25 lg:bg-white/80 hover:bg-black/35 focus:bg-black/40 border border-white/25 lg:border-slate-200/90 focus:border-emerald-400 lg:focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 text-white lg:text-slate-900 placeholder:text-white/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] lg:shadow-2xs backdrop-blur-sm lg:backdrop-blur-none"
                 />
                 <Lock className="w-3.5 h-3.5 text-emerald-200/70 lg:text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <button
@@ -685,7 +685,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                   value={signupConfirmPassword}
                   onChange={(e) => setSignupConfirmPassword(e.target.value)}
                   placeholder="Repeat password"
-                  className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-white/[0.12] lg:bg-white/80 backdrop-blur-md border border-white/25 lg:border-slate-200/90 hover:border-emerald-400/60 lg:hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 focus:border-emerald-400 lg:focus:border-emerald-600 focus:bg-white/[0.20] lg:focus:bg-white text-white lg:text-slate-900 placeholder:text-emerald-100/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] lg:shadow-2xs"
+                  className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-black/25 lg:bg-white/80 hover:bg-black/35 focus:bg-black/40 border border-white/25 lg:border-slate-200/90 focus:border-emerald-400 lg:focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 text-white lg:text-slate-900 placeholder:text-white/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] lg:shadow-2xs backdrop-blur-sm lg:backdrop-blur-none"
                 />
                 <Lock className="w-3.5 h-3.5 text-emerald-200/70 lg:text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               </div>
@@ -848,7 +848,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
           priority
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-[#04201c]/80 backdrop-blur-[4px]" />
+        <div className="absolute inset-0 bg-[#04201c]/55 backdrop-blur-[1px]" />
       </div>
 
       {/* Floating ambient colored glowing orbs for authentic Glassmorphism depth */}
@@ -888,7 +888,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
       <main className="w-full max-w-5xl mx-auto my-3 sm:my-5 z-10">
         <div
           ref={cardRef}
-          className="relative overflow-hidden rounded-[28px] sm:rounded-[32px] backdrop-blur-2xl bg-white/[0.06] lg:bg-white/[0.12] shadow-[0_30px_90px_rgba(0,0,0,0.55),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-white/20 min-h-[580px] lg:min-h-[660px]"
+          className="relative overflow-hidden rounded-[28px] sm:rounded-[32px] backdrop-blur-md lg:backdrop-blur-2xl bg-white/[0.03] lg:bg-white/[0.12] shadow-[0_30px_90px_rgba(0,0,0,0.55),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-white/25 min-h-[580px] lg:min-h-[660px]"
         >
           {/* Base Face (Current Active Form / Info) */}
           <div className="relative w-full h-full z-[1]">
