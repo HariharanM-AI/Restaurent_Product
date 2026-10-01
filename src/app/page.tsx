@@ -29,50 +29,52 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col justify-between selection:bg-teal-600 selection:text-white">
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-2xs">
-        <div className="max-w-7xl mx-auto w-full px-5 sm:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 overflow-hidden p-1 shadow-sm flex items-center justify-center">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs">
+        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-3">
+          {/* Brand Left */}
+          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-white border border-slate-200 overflow-hidden p-1 shadow-sm flex items-center justify-center shrink-0">
               <img src="/images/Own brand logo.png" alt="Noura" className="w-full h-full object-contain" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold tracking-tight text-xl text-slate-900">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="font-extrabold tracking-tight text-lg sm:text-xl text-slate-900 leading-none">
                   Noura
                 </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                <span className="hidden sm:inline-flex text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 leading-none">
                   SaaS Platform
                 </span>
               </div>
-              <span className="text-xs text-slate-500 font-medium block">
+              <span className="hidden md:block text-xs text-slate-500 font-medium truncate mt-0.5">
                 Smart Restaurant Guest Experience Hub
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-4">
+          {/* Action Buttons Right */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link
               href="/r/noura"
               target="_blank"
-              className="hidden md:inline-flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-xl text-slate-600 hover:text-teal-800 hover:bg-teal-50/50 transition"
+              className="hidden md:inline-flex items-center gap-2 text-sm font-bold px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-teal-800 hover:bg-teal-50/50 transition whitespace-nowrap"
             >
-              <Smartphone className="w-4 h-4 text-teal-700" />
+              <Smartphone className="w-4 h-4 text-teal-700 shrink-0" />
               <span>Diner Demo Hub</span>
             </Link>
 
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 text-sm font-bold px-4 sm:px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition shadow-2xs"
+              className="inline-flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-bold px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 transition shadow-2xs whitespace-nowrap"
             >
-              <Lock className="w-4 h-4 text-slate-500" />
+              <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 shrink-0" />
               <span>Sign In</span>
             </Link>
 
             <Link
               href="/signup"
-              className="inline-flex items-center gap-2 text-sm font-extrabold px-5 sm:px-6 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white shadow-md shadow-teal-800/15 transition"
+              className="inline-flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-extrabold px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white shadow-md shadow-teal-800/15 transition whitespace-nowrap shrink-0"
             >
-              <UserPlus className="w-4 h-4" />
+              <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               <span>Sign Up Free</span>
             </Link>
           </div>

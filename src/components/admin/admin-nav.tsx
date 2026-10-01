@@ -342,15 +342,15 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
         }}
       >
         {/* Toggle Button & Collapsed Brand Icon */}
-        <div className={`flex pt-4 pb-2 ${isCollapsed ? "flex-col items-center gap-3 px-2" : "justify-end px-3"}`}>
+        <div className={`flex pt-3.5 pb-2 shrink-0 ${isCollapsed ? "flex-col items-center gap-2 px-2" : "justify-end px-3"}`}>
           {isCollapsed && (
-            <div className="w-10 h-10 rounded-2xl bg-white/[0.08] border border-white/10 flex items-center justify-center p-1.5 shadow-sm" title="Noura">
+            <div className="w-9 h-9 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-center p-1.5 shadow-sm shrink-0" title="Noura">
               <img src="/images/Own brand logo.png" alt="Noura" className="w-full h-full object-contain" />
             </div>
           )}
           <motion.button
             onClick={toggle}
-            className="w-10 h-10 rounded-2xl bg-white/[0.07] hover:bg-white/[0.14] border border-white/[0.08] flex items-center justify-center text-white/60 hover:text-white transition-colors"
+            className="w-9 h-9 rounded-xl bg-white/[0.07] hover:bg-white/[0.14] border border-white/[0.08] flex items-center justify-center text-white/60 hover:text-white transition-colors shrink-0"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -359,7 +359,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
               animate={{ rotate: isCollapsed ? 180 : 0 }}
               transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
             >
-              <PanelLeftClose className="w-5 h-5" />
+              <PanelLeftClose className="w-4 h-4" />
             </motion.div>
           </motion.button>
         </div>
@@ -519,7 +519,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
         </AnimatePresence>
 
         {/* Navigation Menu (Dynamically Scoped to activeRestaurant.id) */}
-        <nav className="flex-1 min-h-0 px-2 py-2 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-2 py-1.5 space-y-1 overflow-hidden select-none">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname.startsWith(item.href);
@@ -530,10 +530,10 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                 href={item.href}
                 prefetch={true}
                 title={isCollapsed ? item.label : undefined}
-                className={`group relative flex items-center rounded-2xl text-xs font-semibold transition-all duration-200 ${
+                className={`group relative flex items-center rounded-xl text-xs font-semibold transition-all duration-200 ${
                   isCollapsed
-                    ? "justify-center px-0 py-3 mx-auto w-12 h-12"
-                    : "gap-3 px-3.5 py-2.5"
+                    ? "justify-center px-0 mx-auto w-10 h-10 shrink-0"
+                    : "gap-3 px-3.5 py-2"
                 } ${
                   isActive
                     ? "bg-white/[0.12] text-white shadow-lg shadow-black/10"
@@ -543,7 +543,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                 {isActive && (
                   <motion.div
                     layoutId="activeNavIndicator"
-                    className="absolute inset-0 rounded-2xl bg-white/[0.12] border border-white/[0.08]"
+                    className="absolute inset-0 rounded-xl bg-white/[0.12] border border-white/[0.08]"
                     transition={{ type: "spring", stiffness: 350, damping: 30 }}
                   />
                 )}
@@ -602,11 +602,11 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
         </AnimatePresence>
 
         {/* ── Client Owner Footer (Clickable to open Client Profile) ── */}
-        <div className={`border-t border-white/[0.06] bg-black/20 ${isCollapsed ? "p-2" : "p-3"}`}>
+        <div className={`border-t border-white/[0.06] bg-black/20 shrink-0 ${isCollapsed ? "p-2" : "p-3"}`}>
           <div
             onClick={() => setIsProfileModalOpen(true)}
-            className={`flex items-center rounded-2xl hover:bg-white/[0.08] transition cursor-pointer group ${
-              isCollapsed ? "justify-center p-2" : "justify-between p-1.5"
+            className={`flex items-center rounded-xl hover:bg-white/[0.08] transition cursor-pointer group ${
+              isCollapsed ? "justify-center p-1" : "justify-between p-1.5"
             }`}
             title="Click to view Client Profile, Venues & Contact Info"
           >
