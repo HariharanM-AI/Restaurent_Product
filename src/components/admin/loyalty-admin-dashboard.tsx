@@ -452,10 +452,10 @@ export function LoyaltyAdminDashboard({
         </>
       )}
 
-      {/* 5. QR Generator + Showcase (always visible, not data-dependent) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* 5. QR Generator */}
+      <div className="w-full">
         {/* QR Generator */}
-        <div className="lg:col-span-2 p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
+        <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
               <QrCode className="w-5 h-5" />
@@ -554,47 +554,6 @@ export function LoyaltyAdminDashboard({
               </Link>
             </div>
           </div>
-        </div>
-
-        {/* Showcase Card */}
-        <div className="p-6 rounded-[24px] bg-[#072F29] text-white shadow-xs flex flex-col justify-between relative overflow-hidden">
-          <div>
-            <h2 className="text-lg font-black text-white leading-tight">Turn Every Visit into a Reward</h2>
-            <p className="text-xs text-emerald-100/70 mt-1 leading-relaxed">
-              Delight your guests with exclusive rewards, special offers, and unforgettable experiences.
-            </p>
-          </div>
-
-          <div className="my-4 mx-auto w-44 rounded-2xl bg-black/40 border-2 border-emerald-500/30 p-2.5 shadow-2xl">
-            <div className="rounded-xl bg-white text-slate-900 p-3 text-center">
-              <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-800 flex items-center justify-center mx-auto mb-1 font-bold text-xs">
-                <Award className="w-4 h-4" />
-              </div>
-              <div className="text-[11px] font-bold">Stamp Card</div>
-              <div className="flex justify-center gap-1 my-2">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <span
-                    key={s}
-                    className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${
-                      s <= 3 ? "bg-[#0F766E] text-white" : "bg-slate-100 text-slate-400"
-                    }`}
-                  >
-                    {s}
-                  </span>
-                ))}
-              </div>
-              <div className="text-[9px] text-slate-400">2 stamps away from Free Drink</div>
-            </div>
-          </div>
-
-          <Link
-            href={`/r/${restaurantSlug}/rewards?preview=true`}
-            target="_blank"
-            className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-emerald-50 text-[#072F29] text-xs font-extrabold flex items-center justify-center gap-2 transition shadow-sm"
-          >
-            <span>Preview on Mobile</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </Link>
         </div>
       </div>
 

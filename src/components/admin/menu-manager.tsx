@@ -147,10 +147,10 @@ export function MenuManager({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full overflow-hidden">
       {/* Top Breadcrumb and Header matching Image 4 */}
       <div>
-        <nav className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-2.5">
+        <nav className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-2.5 flex-wrap">
           <Link href="/admin" className="hover:text-slate-800 transition">
             Restaurants
           </Link>
@@ -193,11 +193,11 @@ export function MenuManager({
       )}
 
       {/* Main Two Column Layout: Left Form + Right Fixed Phone Preview */}
-      <div className="flex flex-col xl:flex-row gap-8 items-start">
+      <div className="w-full max-w-full flex flex-col xl:flex-row gap-8 items-stretch xl:items-start">
         {/* Left Column: Form Controls */}
-        <div className="flex-1 min-w-0 space-y-6">
+        <div className="w-full max-w-full min-w-0 flex-1 space-y-6">
           {/* Card 1: Guest Action Card Display */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-7 space-y-5">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 sm:p-7 space-y-5 w-full max-w-full overflow-hidden">
             <div className="flex items-start gap-3.5 pb-4 border-b border-slate-100">
               <div className="w-10 h-10 rounded-xl bg-[#E6F7F2] text-[#0A7E6C] border border-[#BCE8DB] flex items-center justify-center shrink-0">
                 <FileText className="w-5 h-5" />
@@ -254,7 +254,7 @@ export function MenuManager({
           </div>
 
           {/* Card 2: Menu Delivery Format */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-7 space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 sm:p-7 space-y-6 w-full max-w-full overflow-hidden">
             <div className="flex items-start gap-3.5 pb-4 border-b border-slate-100">
               <div className="w-10 h-10 rounded-xl bg-[#E6F7F2] text-[#0A7E6C] border border-[#BCE8DB] flex items-center justify-center shrink-0">
                 <UtensilsCrossed className="w-5 h-5" />
@@ -268,11 +268,11 @@ export function MenuManager({
             </div>
 
             {/* 4 Selectable Format Options */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setMenuType("pdf")}
-                className={`p-4 rounded-2xl border text-center transition flex flex-col items-center justify-center gap-2 relative ${
+                className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-center transition flex flex-col items-center justify-center gap-2 relative ${
                   menuType === "pdf"
                     ? "bg-[#072C27] text-white border-[#072C27] shadow-md shadow-[#072C27]/10"
                     : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
@@ -288,7 +288,7 @@ export function MenuManager({
               <button
                 type="button"
                 onClick={() => setMenuType("images")}
-                className={`p-4 rounded-2xl border text-center transition flex flex-col items-center justify-center gap-2 relative ${
+                className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-center transition flex flex-col items-center justify-center gap-2 relative ${
                   menuType === "images"
                     ? "bg-[#072C27] text-white border-[#072C27] shadow-md shadow-[#072C27]/10"
                     : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
@@ -304,7 +304,7 @@ export function MenuManager({
               <button
                 type="button"
                 onClick={() => setMenuType("link")}
-                className={`p-4 rounded-2xl border text-center transition flex flex-col items-center justify-center gap-2 relative ${
+                className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-center transition flex flex-col items-center justify-center gap-2 relative ${
                   menuType === "link"
                     ? "bg-[#072C27] text-white border-[#072C27] shadow-md shadow-[#072C27]/10"
                     : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
@@ -320,7 +320,7 @@ export function MenuManager({
               <button
                 type="button"
                 onClick={() => setMenuType("items")}
-                className={`p-4 rounded-2xl border text-center transition flex flex-col items-center justify-center gap-2 relative ${
+                className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-center transition flex flex-col items-center justify-center gap-2 relative ${
                   menuType === "items"
                     ? "bg-[#072C27] text-white border-[#072C27] shadow-md shadow-[#072C27]/10"
                     : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
@@ -336,7 +336,7 @@ export function MenuManager({
 
             {/* Mode 1: PDF Menu Section matching Image 4 */}
             {menuType === "pdf" && (
-              <div className="p-5 bg-[#EAF6F3]/40 border border-[#BCE8DC] rounded-2xl space-y-4 animate-in fade-in-50">
+              <div className="p-4 sm:p-5 bg-[#EAF6F3]/40 border border-[#BCE8DC] rounded-2xl space-y-4 animate-in fade-in-50 w-full max-w-full overflow-hidden">
                 <div>
                   <h3 className="text-xs font-bold text-slate-900 mb-0.5">
                     Upload Printable / Digital Menu PDF
@@ -346,8 +346,8 @@ export function MenuManager({
                   </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-3">
-                  <label className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#072C27] hover:bg-[#0E473F] text-white font-semibold text-xs cursor-pointer shadow-sm transition flex items-center justify-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <label className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#072C27] hover:bg-[#0E473F] text-white font-semibold text-xs cursor-pointer shadow-sm transition flex items-center justify-center gap-2 shrink-0">
                     {isUploading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
@@ -363,37 +363,37 @@ export function MenuManager({
                     />
                   </label>
 
-                  <span className="text-xs text-slate-400 font-medium">or paste direct PDF link:</span>
+                  <span className="text-xs text-slate-400 font-medium shrink-0">or paste direct PDF link:</span>
                 </div>
 
-                <div>
+                <div className="w-full min-w-0">
                   <input
                     type="text"
                     value={pdfUrl}
                     onChange={(e) => setPdfUrl(e.target.value)}
                     placeholder="/uploads/restaurant-menu.pdf or https://..."
-                    className="w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F]"
+                    className="w-full min-w-0 h-11 px-3.5 bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F]"
                   />
                 </div>
 
                 {/* Uploaded PDF Row exactly matching Image 4 */}
                 {pdfUrl ? (
-                  <div className="p-3.5 bg-white rounded-xl border border-slate-200/90 flex items-center justify-between shadow-xs">
-                    <div className="flex items-center gap-3 min-w-0 pr-2">
+                  <div className="p-3.5 bg-white rounded-xl border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs min-w-0 overflow-hidden">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
                         <FileText className="w-4 h-4" />
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <span className="text-xs font-bold text-slate-800 truncate block">
                           {getPdfFilename()}
                         </span>
-                        <span className="text-[10px] text-slate-400 block mt-0.5">
+                        <span className="text-[10px] text-slate-400 block mt-0.5 truncate">
                           Print-Ready PDF • In-App Fast Zoom Enabled
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                       <a
                         href={pdfUrl}
                         target="_blank"
@@ -425,7 +425,7 @@ export function MenuManager({
 
             {/* Mode 2: Multi-Page Photos */}
             {menuType === "images" && (
-              <div className="p-5 bg-[#EAF6F3]/40 border border-[#BCE8DC] rounded-2xl space-y-4 animate-in fade-in-50">
+              <div className="p-4 sm:p-5 bg-[#EAF6F3]/40 border border-[#BCE8DC] rounded-2xl space-y-4 animate-in fade-in-50 w-full max-w-full overflow-hidden">
                 <div>
                   <h3 className="text-xs font-bold text-slate-900 mb-0.5">
                     Multi-Page Menu Photographs
@@ -484,7 +484,7 @@ export function MenuManager({
 
             {/* Mode 3: External Link */}
             {menuType === "link" && (
-              <div className="p-5 bg-[#EAF6F3]/40 border border-[#BCE8DC] rounded-2xl space-y-3 animate-in fade-in-50">
+              <div className="p-4 sm:p-5 bg-[#EAF6F3]/40 border border-[#BCE8DC] rounded-2xl space-y-3 animate-in fade-in-50 w-full max-w-full overflow-hidden">
                 <div>
                   <h3 className="text-xs font-bold text-slate-900 mb-0.5">
                     External POS or Web Menu Link
@@ -494,7 +494,7 @@ export function MenuManager({
                   </p>
                 </div>
 
-                <div>
+                <div className="w-full min-w-0">
                   <label className="block text-xs font-semibold text-slate-700 mb-1" htmlFor="ext-url">
                     External Menu URL
                   </label>
@@ -504,7 +504,7 @@ export function MenuManager({
                     value={externalUrl}
                     onChange={(e) => setExternalUrl(e.target.value)}
                     placeholder="https://www.toasttab.com/your-restaurant/menu"
-                    className="w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F]"
+                    className="w-full min-w-0 h-11 px-3.5 bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F]"
                   />
                 </div>
               </div>
@@ -512,7 +512,7 @@ export function MenuManager({
 
             {/* Mode 4: Interactive Items */}
             {menuType === "items" && (
-              <div className="p-5 bg-[#EAF6F3]/40 border border-[#BCE8DC] rounded-2xl space-y-2 animate-in fade-in-50">
+              <div className="p-4 sm:p-5 bg-[#EAF6F3]/40 border border-[#BCE8DC] rounded-2xl space-y-2 animate-in fade-in-50 w-full max-w-full overflow-hidden">
                 <h3 className="text-xs font-bold text-slate-900">
                   Built-in Interactive Plate Experience
                 </h3>
@@ -523,12 +523,12 @@ export function MenuManager({
             )}
 
             {/* Save Button */}
-            <div className="pt-2 flex items-center justify-end">
+            <div className="pt-2 flex items-center justify-end w-full">
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#072C27] hover:bg-[#0E473F] text-white text-xs font-bold transition shadow-md shadow-[#072C27]/10 disabled:opacity-50"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#072C27] hover:bg-[#0E473F] text-white text-xs font-bold transition shadow-md shadow-[#072C27]/10 disabled:opacity-50"
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -542,7 +542,7 @@ export function MenuManager({
         </div>
 
         {/* Right Column: Realistic Smartphone Mockup matching Image 2 & 4 */}
-        <div className="w-full xl:w-[380px] shrink-0 sticky top-20 space-y-3">
+        <div className="w-full max-w-[380px] mx-auto xl:mx-0 xl:w-[380px] shrink-0 xl:sticky xl:top-20 space-y-3">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <Smartphone className="w-4 h-4 text-slate-500" />
@@ -557,9 +557,9 @@ export function MenuManager({
           </div>
 
           {/* Phone Shell (Takes full 380px width, perfectly proportioned!) */}
-          <div className="w-full bg-slate-950 p-3 rounded-[44px] shadow-2xl ring-1 ring-slate-800">
+          <div className="w-full max-w-full bg-slate-950 p-2.5 sm:p-3 rounded-[36px] sm:rounded-[44px] shadow-2xl ring-1 ring-slate-800">
             {/* Phone Screen */}
-            <div className="bg-[#fcfdfd] rounded-[34px] overflow-hidden border border-slate-200/80 flex flex-col min-h-[620px] relative">
+            <div className="bg-[#fcfdfd] rounded-[28px] sm:rounded-[34px] overflow-hidden border border-slate-200/80 flex flex-col min-h-[580px] sm:min-h-[620px] relative">
               {/* Header Hero Image with Ambient Overlay */}
               <div className="relative h-44 bg-slate-800 overflow-hidden">
                 <img

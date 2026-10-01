@@ -296,11 +296,15 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
             onClick={() => setIsMobileMenuOpen(true)}
             className="cursor-pointer"
           >
-            <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-white text-sm block leading-tight truncate max-w-[150px]">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="font-extrabold text-white text-sm block leading-tight shrink-0">
+                Noura
+              </span>
+              <span className="text-white/30 text-xs shrink-0">•</span>
+              <span className="text-xs text-white/85 font-semibold truncate max-w-[120px]">
                 {activeRestaurant.name}
               </span>
-              <ChevronDown className="w-3 h-3 text-white/50" />
+              <ChevronDown className="w-3 h-3 text-white/50 shrink-0" />
             </div>
             <span className="text-[10px] text-emerald-300/80 font-medium block">Turn Guests into Regulars</span>
           </div>
@@ -680,8 +684,8 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                     />
                   </div>
                   <div className="min-w-0">
-                    <h2 className="font-extrabold text-sm text-white truncate">
-                      {activeRestaurant.name}
+                    <h2 className="font-extrabold text-sm text-white tracking-tight">
+                      Noura
                     </h2>
                     <span className="text-[10px] text-emerald-300/80 font-medium block">
                       Turn Guests into Regulars

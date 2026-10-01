@@ -105,7 +105,7 @@ export default async function AdminLayout({
           address: user?.address,
         }}
       />
-      <div className="flex-1 min-w-0 flex flex-col min-h-screen bg-[#F8FAFC]">
+      <div className="flex-1 min-w-0 flex flex-col min-h-screen bg-[#F8FAFC] overflow-x-hidden">
         {/* Top Desktop Bar */}
         <AdminHeader
           restaurantName={primaryRestaurant.name}
@@ -113,7 +113,7 @@ export default async function AdminLayout({
           restaurants={restaurants}
         />
 
-        <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
+        <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8 overflow-x-hidden">
           <div className="w-full mx-auto">
             <PageTransition>
               {children}
