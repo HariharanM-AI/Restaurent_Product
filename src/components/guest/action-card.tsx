@@ -19,7 +19,7 @@ interface GuestActionCardProps {
 export function GuestActionCard({
   action,
   restaurantId,
-  brandPrimaryColor = "#0F766E",
+  brandPrimaryColor = "var(--brand-primary, #0F766E)",
   onActionClick,
 }: GuestActionCardProps) {
   const shouldReduceMotion = useReducedMotion();
@@ -50,6 +50,10 @@ export function GuestActionCard({
 
   const isExternal = action.url?.startsWith("http");
 
+  const isHex = brandPrimaryColor.startsWith("#");
+  const bgTint = isHex ? `${brandPrimaryColor}14` : "color-mix(in srgb, var(--brand-primary) 12%, transparent)";
+  const badgeTint = isHex ? `${brandPrimaryColor}18` : "color-mix(in srgb, var(--brand-primary) 16%, transparent)";
+
   const CardInner = (
     <motion.div
       whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
@@ -64,7 +68,7 @@ export function GuestActionCard({
         <div
           className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
           style={{
-            backgroundColor: `${brandPrimaryColor}14`, // 8% opacity tint
+            backgroundColor: bgTint,
             color: brandPrimaryColor,
           }}
         >
@@ -81,7 +85,7 @@ export function GuestActionCard({
               <span
                 className="px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase rounded-full shrink-0"
                 style={{
-                  backgroundColor: `${brandPrimaryColor}18`,
+                  backgroundColor: badgeTint,
                   color: brandPrimaryColor,
                 }}
               >

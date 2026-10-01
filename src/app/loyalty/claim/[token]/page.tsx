@@ -26,10 +26,17 @@ export default function ClaimTokenPage() {
 
   useEffect(() => {
     // Generate or retrieve browser wallet ID
-    let browserId = localStorage.getItem("guestlink_loyalty_browser_id");
-    if (!browserId) {
-      browserId = "wal_" + Math.random().toString(36).substring(2, 12) + "_" + Date.now().toString(36);
-      localStorage.setItem("guestlink_loyalty_browser_id", browserId);
+    let browserId = "wal_" + Math.random().toString(36).substring(2, 12);
+    try {
+      const stored = localStorage.getItem("guestlink_loyalty_browser_id");
+      if (stored) {
+        browserId = stored;
+      } else {
+        browserId = "wal_" + Math.random().toString(36).substring(2, 12) + "_" + Date.now().toString(36);
+        localStorage.setItem("guestlink_loyalty_browser_id", browserId);
+      }
+    } catch {
+      // In private browsing mode or storage disabled, use in-memory browserId
     }
 
     const idempotencyKey = `claim_${rawToken}_${browserId}`;

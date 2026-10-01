@@ -21,7 +21,7 @@ export default function WifiPage() {
 
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [restaurantName, setRestaurantName] = useState<string>("Restaurant");
-  const [brandColor, setBrandColor] = useState<string>("#0F766E");
+  const [brandColor, setBrandColor] = useState<string>("var(--brand-primary, #0F766E)");
   const [wifiData, setWifiData] = useState<WifiData | null>(null);
 
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -39,7 +39,7 @@ export default function WifiPage() {
 
           setRestaurantId(rest.id);
           setRestaurantName(rest.name);
-          setBrandColor(rest.primaryColor || "#0F766E");
+          setBrandColor(rest.primaryColor || "var(--brand-primary, #0F766E)");
           setWifiData(wifi);
 
           if (wifi && wifi.enabled && wifi.ssid) {

@@ -51,7 +51,7 @@ const PRESET_TEMPLATES = [
   {
     title: "Start Earning Rewards",
     description: "Collect digital stamps with every checkout for complimentary rewards.",
-    icon: "Gift",
+    icon: "Award",
     type: "REWARDS",
     badge: "Loyalty",
     badgeSecondary: "Rewards",
@@ -64,14 +64,14 @@ const PRESET_TEMPLATES = [
     type: "REVIEW",
     badge: "Feedback",
     badgeSecondary: "Review",
-    urlPattern: () => `https://maps.google.com/?cid=1234567890`,
+    urlPattern: () => `https://maps.google.com`,
   },
   {
     title: "View Menu",
     description: "Explore our seasonal farm-to-table lunch, dinner, and cocktails.",
     icon: "UtensilsCrossed",
     type: "MENU",
-    badge: "Seasonal",
+    badge: "Spring 2026",
     badgeSecondary: "Menu",
     urlPattern: (slug: string) => `/r/${slug}/menu`,
   },
@@ -80,7 +80,7 @@ const PRESET_TEMPLATES = [
     description: "High-speed complimentary wireless internet for guests.",
     icon: "Wifi",
     type: "WIFI",
-    badge: "Wi-Fi",
+    badge: "",
     badgeSecondary: "",
     urlPattern: (slug: string) => `/r/${slug}/wifi`,
   },
@@ -89,7 +89,7 @@ const PRESET_TEMPLATES = [
     description: "Send direct, private feedback to our executive chef and managers.",
     icon: "MessageSquarePlus",
     type: "FEEDBACK",
-    badge: "Feedback",
+    badge: "",
     badgeSecondary: "",
     urlPattern: (slug: string) => `/r/${slug}/feedback`,
   },
@@ -98,7 +98,7 @@ const PRESET_TEMPLATES = [
     description: "Enjoy a relaxing classic puzzle while waiting for your course.",
     icon: "Gamepad2",
     type: "GAME",
-    badge: "Game",
+    badge: "",
     badgeSecondary: "",
     urlPattern: (slug: string) => `/r/${slug}/game`,
   },
@@ -367,13 +367,15 @@ export function ActionsManagerList({
 
     setIsLoading(true);
 
+    const cleanBadge = badge && badge.trim().length > 0 ? badge.trim() : null;
+
     const payload = {
-      title,
-      description: description || null,
+      title: title.trim(),
+      description: description.trim() || null,
       icon,
       type,
-      url: url || null,
-      badge: badge || null,
+      url: url.trim() || null,
+      badge: cleanBadge,
       enabled,
       displayOrder: editingAction ? editingAction.displayOrder : actions.length + 1,
     };
@@ -388,10 +390,10 @@ export function ActionsManagerList({
         const json = await res.json();
         if (res.ok && json.success) {
           setActions((prev) =>
-            prev.map((a) => (a.id === editingAction.id ? json.data : a))
+            prev.map((a) => (a.id === editingAction.id ? { ...a, ...json.data, badge: cleanBadge } : a))
           );
           setIsModalOpen(false);
-          showSuccess("Action updated");
+          showSuccess("Action updated successfully");
         } else {
           setErrorMessage(json.error || "Failed to update action");
         }
@@ -659,14 +661,18 @@ export function ActionsManagerList({
                             {action.title}
                           </h3>
 
-                          {action.badge && (
-                            <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${getBadgeColor(action.type)}`}>
-                              {action.badge}
+                          {action.badge ? (
+                            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
+                              Badge: {action.badge}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 italic">
+                              No badge
                             </span>
                           )}
 
-                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border uppercase tracking-wider ${getBadgeColor(action.type)}`}>
-                            {action.type}
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 uppercase tracking-wider border border-slate-200/80">
+                            Type: {action.type}
                           </span>
                         </div>
 
@@ -1001,17 +1007,31 @@ export function ActionsManagerList({
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1.5" htmlFor="action-badge">
-                    Badge (Optional)
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block font-semibold text-slate-700 text-xs" htmlFor="action-badge">
+                      Badge (Optional)
+                    </label>
+                    {badge ? (
+                      <button
+                        type="button"
+                        onClick={() => setBadge("")}
+                        className="text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer"
+                      >
+                        Clear badge
+                      </button>
+                    ) : null}
+                  </div>
                   <input
                     id="action-badge"
                     type="text"
                     value={badge}
                     onChange={(e) => setBadge(e.target.value)}
-                    placeholder="e.g. Popular"
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs"
+                    placeholder="e.g. Loyalty, Feedback, Spring 2026 (or leave empty)"
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs text-xs"
                   />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Leave blank or click &quot;Clear badge&quot; to show this action without a badge.
+                  </p>
                 </div>
               </div>
 

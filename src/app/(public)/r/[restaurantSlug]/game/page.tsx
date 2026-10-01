@@ -44,7 +44,7 @@ export default function SudokuGamePage() {
   const [seconds, setSeconds] = useState(0);
   const [isWon, setIsWon] = useState(false);
   const [restaurantName, setRestaurantName] = useState("Restaurant");
-  const [brandColor, setBrandColor] = useState("#0F766E");
+  const [brandColor, setBrandColor] = useState("var(--brand-primary, #0F766E)");
 
   useEffect(() => {
     fetch(`/api/restaurants/by-slug/${slug}`)
@@ -52,7 +52,7 @@ export default function SudokuGamePage() {
       .then((json) => {
         if (json.success && json.data) {
           setRestaurantName(json.data.restaurant.name);
-          setBrandColor(json.data.restaurant.primaryColor || "#0F766E");
+          setBrandColor(json.data.restaurant.primaryColor || "var(--brand-primary, #0F766E)");
         }
       })
       .catch(() => {});

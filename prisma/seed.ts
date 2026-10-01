@@ -10,10 +10,10 @@ async function main() {
   // 1. Create Platform & Restaurant Admin User
   const passwordHash = await bcrypt.hash("password123", 12);
   const user = await prisma.user.upsert({
-    where: { email: "admin@barlowfields.com" },
+    where: { email: "demo@noura.com" },
     update: {},
     create: {
-      email: "admin@barlowfields.com",
+      email: "demo@noura.com",
       name: "Marcus Vance",
       passwordHash,
     },

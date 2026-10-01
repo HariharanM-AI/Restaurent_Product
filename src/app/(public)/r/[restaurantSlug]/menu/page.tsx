@@ -118,7 +118,7 @@ export default function MenuPage() {
   const slug = params.restaurantSlug as string;
 
   const [restaurantName, setRestaurantName] = useState("Restaurant");
-  const [brandColor, setBrandColor] = useState("#0F766E");
+  const [brandColor, setBrandColor] = useState<string>("var(--brand-primary, #0F766E)");
   const [menuType, setMenuType] = useState<"pdf" | "images" | "link" | "items">("items");
   const [pdfUrl, setPdfUrl] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
@@ -133,7 +133,7 @@ export default function MenuPage() {
         if (json.success && json.data) {
           const rest = json.data.restaurant;
           setRestaurantName(rest.name);
-          setBrandColor(rest.primaryColor || "#0F766E");
+          setBrandColor(rest.primaryColor || "var(--brand-primary, #0F766E)");
 
           const menuAction = json.data.actions?.find((a: any) => a.type === "MENU");
           if (menuAction?.metadata) {
@@ -222,7 +222,8 @@ export default function MenuPage() {
                 href={pdfUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex-1 py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold text-center flex items-center justify-center gap-2 shadow-xs transition"
+                style={{ backgroundColor: brandColor }}
+                className="flex-1 py-3 px-4 rounded-xl text-white text-xs font-bold text-center flex items-center justify-center gap-2 shadow-xs transition hover:brightness-110 active:scale-[0.99]"
               >
                 <Maximize2 className="w-4 h-4" />
                 <span>Full-Screen PDF</span>
@@ -251,9 +252,10 @@ export default function MenuPage() {
                     key={idx}
                     type="button"
                     onClick={() => setActiveImageIndex(idx)}
+                    style={activeImageIndex === idx ? { backgroundColor: brandColor } : undefined}
                     className={`px-3 py-1.5 rounded-full text-xs font-bold transition ${
                       activeImageIndex === idx
-                        ? "bg-teal-700 text-white shadow-xs"
+                        ? "text-white shadow-xs"
                         : "bg-white text-slate-600 border border-slate-200"
                     }`}
                   >
@@ -298,7 +300,8 @@ export default function MenuPage() {
               href={images[activeImageIndex]}
               target="_blank"
               rel="noreferrer"
-              className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold text-center flex items-center justify-center gap-2 shadow-xs transition"
+              style={{ backgroundColor: brandColor }}
+              className="w-full py-3 px-4 rounded-xl text-white text-xs font-bold text-center flex items-center justify-center gap-2 shadow-xs transition hover:brightness-110 active:scale-[0.99]"
             >
               <Maximize2 className="w-4 h-4" />
               <span>View Full-Size Page {activeImageIndex + 1}</span>
@@ -309,7 +312,14 @@ export default function MenuPage() {
         {/* Mode 3: External Link Gateway */}
         {hasUploadedDocument && menuType === "link" && (
           <div className="p-8 bg-white rounded-3xl border border-slate-200 text-center space-y-4 shadow-sm my-auto animate-in fade-in-50">
-            <div className="w-16 h-16 rounded-2xl bg-teal-50 text-teal-700 border border-teal-200 mx-auto flex items-center justify-center shadow-xs">
+            <div
+              className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center shadow-xs"
+              style={{
+                backgroundColor: "color-mix(in srgb, var(--brand-primary) 12%, transparent)",
+                color: brandColor,
+                borderColor: "color-mix(in srgb, var(--brand-primary) 25%, transparent)",
+              }}
+            >
               <ExternalLink className="w-8 h-8" />
             </div>
             <div>
@@ -322,7 +332,8 @@ export default function MenuPage() {
               href={externalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-5 rounded-2xl bg-teal-700 hover:bg-teal-800 text-white text-sm font-bold shadow-md transition"
+              style={{ backgroundColor: brandColor }}
+              className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-5 rounded-2xl text-white text-sm font-bold shadow-md transition hover:brightness-110 active:scale-[0.99]"
             >
               <span>Open Online Menu</span>
               <ExternalLink className="w-4 h-4" />

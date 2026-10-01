@@ -3,15 +3,24 @@
 import { useState, useEffect, useCallback } from "react";
 import { LoyaltyWalletData } from "@/types";
 
+let inMemoryBrowserId: string | null = null;
+
 function getOrCreateBrowserId(): string {
   if (typeof window === "undefined") return "ssr-placeholder";
 
-  let id = localStorage.getItem("guestlink_loyalty_browser_id");
-  if (!id) {
-    id = "wal_" + Math.random().toString(36).substring(2, 12) + "_" + Date.now().toString(36);
-    localStorage.setItem("guestlink_loyalty_browser_id", id);
+  try {
+    let id = localStorage.getItem("guestlink_loyalty_browser_id");
+    if (!id) {
+      id = "wal_" + Math.random().toString(36).substring(2, 12) + "_" + Date.now().toString(36);
+      localStorage.setItem("guestlink_loyalty_browser_id", id);
+    }
+    return id;
+  } catch {
+    if (!inMemoryBrowserId) {
+      inMemoryBrowserId = "wal_mem_" + Math.random().toString(36).substring(2, 12) + "_" + Date.now().toString(36);
+    }
+    return inMemoryBrowserId;
   }
-  return id;
 }
 
 export function useLoyaltyWallet(restaurantId: string | null) {

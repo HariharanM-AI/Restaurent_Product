@@ -37,7 +37,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
   const [animating, setAnimating] = useState(false);
 
   // Sign In Form State
-  const [loginEmail, setLoginEmail] = useState("admin@barlowfields.com");
+  const [loginEmail, setLoginEmail] = useState("demo@noura.com");
   const [loginPassword, setLoginPassword] = useState("password123");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -269,7 +269,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
   };
 
   const handleFillDemoLogin = () => {
-    setLoginEmail("admin@barlowfields.com");
+    setLoginEmail("demo@noura.com");
     setLoginPassword("password123");
   };
 

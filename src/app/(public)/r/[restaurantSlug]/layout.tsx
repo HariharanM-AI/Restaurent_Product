@@ -1,6 +1,27 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
+
+export async function generateViewport({
+  params,
+}: {
+  params: Promise<{ restaurantSlug: string }>;
+}): Promise<Viewport> {
+  const { restaurantSlug } = await params;
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { slug: restaurantSlug },
+    select: { primaryColor: true },
+  });
+
+  return {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: "cover",
+    themeColor: restaurant?.primaryColor || "#0F766E",
+  };
+}
 
 export async function generateMetadata({
   params,
@@ -50,19 +71,37 @@ export default async function RestaurantGuestLayout({
     notFound();
   }
 
+  const primary = restaurant.primaryColor || "#0F766E";
+  const secondary = restaurant.secondaryColor || "#F8FAFC";
+
   return (
-    <div
-      className="min-h-screen bg-slate-100 flex flex-col justify-start"
-      style={
-        {
-          "--brand-primary": restaurant.primaryColor || "#0F766E",
-          "--brand-secondary": restaurant.secondaryColor || "#F8FAFC",
-        } as React.CSSProperties
-      }
-    >
-      <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-2xl border-x border-slate-200/60 flex flex-col">
-        {children}
+    <>
+      {/* Inline SSR style ensures zero flash of green during initial paint */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            :root {
+              --primary: ${primary} !important;
+              --brand-primary: ${primary} !important;
+              --brand-secondary: ${secondary} !important;
+            }
+          `,
+        }}
+      />
+      <div
+        className="min-h-screen bg-slate-100 flex flex-col justify-start"
+        style={
+          {
+            "--primary": primary,
+            "--brand-primary": primary,
+            "--brand-secondary": secondary,
+          } as React.CSSProperties
+        }
+      >
+        <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-2xl border-x border-slate-200/60 flex flex-col">
+          {children}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

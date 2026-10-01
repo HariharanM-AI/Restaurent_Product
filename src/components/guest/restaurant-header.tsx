@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MapPin, Phone, Globe, ChevronDown, ChevronUp, Clock } from "lucide-react";
 import { RestaurantData } from "@/types";
 
@@ -10,6 +10,12 @@ interface RestaurantHeaderProps {
 
 export function RestaurantHeader({ restaurant }: RestaurantHeaderProps) {
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo(0, 0);
+    }
+  }, []);
 
   return (
     <div className="relative w-full bg-white border-b border-slate-100 shadow-sm">

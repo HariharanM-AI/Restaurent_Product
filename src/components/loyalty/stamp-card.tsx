@@ -20,7 +20,7 @@ export function StampCard({
   nextMilestone,
   stampsNeeded,
   restaurantName,
-  brandColor = "#0F766E",
+  brandColor = "var(--brand-primary, #0F766E)",
 }: StampCardProps) {
   // Target stamps for the active card cycle (default 5 if no milestone defined)
   const targetStamps = nextMilestone ? nextMilestone.stampRequirement : 5;
@@ -29,6 +29,9 @@ export function StampCard({
   // Stamps earned on this specific card
   const earnedOnCard = Math.min(totalLifetimeStamps, targetStamps);
   const progressPercent = Math.min(100, Math.round((earnedOnCard / targetStamps) * 100));
+
+  const isHex = brandColor.startsWith("#");
+  const badgeBg = isHex ? `${brandColor}18` : "color-mix(in srgb, var(--brand-primary) 15%, transparent)";
 
   return (
     <div className="relative overflow-hidden bg-white border border-slate-200/80 rounded-[24px] p-5 shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
@@ -51,7 +54,7 @@ export function StampCard({
         <div
           className="px-3 py-1 rounded-full text-xs font-bold font-mono shrink-0 shadow-sm"
           style={{
-            backgroundColor: `${brandColor}18`,
+            backgroundColor: badgeBg,
             color: brandColor,
           }}
         >

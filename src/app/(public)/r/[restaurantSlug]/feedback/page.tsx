@@ -15,7 +15,7 @@ export default function FeedbackPage() {
 
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [restaurantName, setRestaurantName] = useState<string>("Restaurant");
-  const [brandColor, setBrandColor] = useState<string>("#0F766E");
+  const [brandColor, setBrandColor] = useState<string>("var(--brand-primary, #0F766E)");
 
   const [rating, setRating] = useState<number>(5);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
@@ -40,7 +40,7 @@ export default function FeedbackPage() {
           const rId = json.data.restaurant.id;
           setRestaurantId(rId);
           setRestaurantName(json.data.restaurant.name);
-          setBrandColor(json.data.restaurant.primaryColor || "#0F766E");
+          setBrandColor(json.data.restaurant.primaryColor || "var(--brand-primary, #0F766E)");
           trackEvent({
             restaurantId: rId,
             eventType: "feedback_open",

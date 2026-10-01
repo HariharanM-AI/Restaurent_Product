@@ -3,6 +3,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
 import { slugify, sanitizeString } from "@/lib/utils";
+import { getDefaultGuestActions } from "@/lib/constants/default-actions";
 
 const SignupSchema = z.object({
   name: z.string().min(2, "Owner name must be at least 2 characters"),
@@ -103,65 +104,9 @@ export async function POST(req: Request) {
         },
       });
 
-      // 4. Create Default Guest Actions
+      // 4. Create Default Guest Actions (Standardized demo template across all new accounts)
       await tx.guestAction.createMany({
-        data: [
-          {
-            restaurantId: restaurant.id,
-            type: "MENU",
-            title: "Digital Dining Menu",
-            description: "Explore seasonal lunch, dinner, and craft beverages",
-            icon: "UtensilsCrossed",
-            url: `/r/${slug}/menu`,
-            displayOrder: 1,
-            badge: "Fresh Menu",
-            enabled: true,
-          },
-          {
-            restaurantId: restaurant.id,
-            type: "REVIEW",
-            title: "Leave a Google Review",
-            description: "Share your culinary experience with the community on Google Maps",
-            icon: "Star",
-            url: "https://maps.google.com",
-            displayOrder: 2,
-            badge: "5-Star",
-            enabled: true,
-          },
-          {
-            restaurantId: restaurant.id,
-            type: "WIFI",
-            title: "Connect to Wi-Fi",
-            description: "Fast, complimentary wireless internet for dining guests",
-            icon: "Wifi",
-            url: `/r/${slug}/wifi`,
-            displayOrder: 3,
-            badge: "Free",
-            enabled: true,
-          },
-          {
-            restaurantId: restaurant.id,
-            type: "REWARDS",
-            title: "VIP Stamp Card",
-            description: "Collect digital stamps with every visit for complimentary dining",
-            icon: "Award",
-            url: `/r/${slug}/rewards`,
-            displayOrder: 4,
-            badge: "Rewards",
-            enabled: true,
-          },
-          {
-            restaurantId: restaurant.id,
-            type: "FEEDBACK",
-            title: "Private Guest Feedback",
-            description: "Confidential feedback directly to the executive chef and management",
-            icon: "MessageSquare",
-            url: `/r/${slug}/feedback`,
-            displayOrder: 5,
-            badge: "Private",
-            enabled: true,
-          },
-        ],
+        data: getDefaultGuestActions(restaurant.id, slug),
       });
 
       // 5. Create Default Wi-Fi Config

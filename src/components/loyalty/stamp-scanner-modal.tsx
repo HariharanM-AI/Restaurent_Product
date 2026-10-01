@@ -76,10 +76,17 @@ export function StampScannerModal({
     stopCamera();
 
     try {
-      let browserId = localStorage.getItem("guestlink_loyalty_browser_id");
-      if (!browserId) {
-        browserId = "wal_" + Math.random().toString(36).substring(2, 12) + "_" + Date.now().toString(36);
-        localStorage.setItem("guestlink_loyalty_browser_id", browserId);
+      let browserId = "wal_" + Math.random().toString(36).substring(2, 12);
+      try {
+        const stored = localStorage.getItem("guestlink_loyalty_browser_id");
+        if (stored) {
+          browserId = stored;
+        } else {
+          browserId = "wal_" + Math.random().toString(36).substring(2, 12) + "_" + Date.now().toString(36);
+          localStorage.setItem("guestlink_loyalty_browser_id", browserId);
+        }
+      } catch {
+        // Storage disabled fallback
       }
 
       const idempotencyKey = `claim_${cleanToken}_${browserId}`;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession, invalidateRestaurantAccessCache } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { revalidatePath } from "next/cache";
+import { getDefaultGuestActions } from "@/lib/constants/default-actions";
 
 function slugify(text: string): string {
   return text
@@ -86,65 +87,9 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Default actions
+      // Default actions (Standardized demo template)
       await tx.guestAction.createMany({
-        data: [
-          {
-            restaurantId: restaurant.id,
-            type: "MENU",
-            title: "Digital Dining Menu",
-            description: "Explore culinary offerings and seasonal pairings",
-            icon: "UtensilsCrossed",
-            url: `/r/${slug}/menu`,
-            displayOrder: 1,
-            badge: "Fresh Menu",
-            enabled: true,
-          },
-          {
-            restaurantId: restaurant.id,
-            type: "REVIEW",
-            title: "Leave a Google Review",
-            description: "Share your experience with the community on Google Maps",
-            icon: "Star",
-            url: "https://maps.google.com",
-            displayOrder: 2,
-            badge: "5-Star",
-            enabled: true,
-          },
-          {
-            restaurantId: restaurant.id,
-            type: "WIFI",
-            title: "Connect to Wi-Fi",
-            description: "Fast, complimentary wireless internet for guests",
-            icon: "Wifi",
-            url: `/r/${slug}/wifi`,
-            displayOrder: 3,
-            badge: "Free",
-            enabled: true,
-          },
-          {
-            restaurantId: restaurant.id,
-            type: "REWARDS",
-            title: "VIP Stamp Card",
-            description: "Collect digital stamps with every visit for rewards",
-            icon: "Award",
-            url: `/r/${slug}/rewards`,
-            displayOrder: 4,
-            badge: "Rewards",
-            enabled: true,
-          },
-          {
-            restaurantId: restaurant.id,
-            type: "FEEDBACK",
-            title: "Private Guest Feedback",
-            description: "Confidential feedback directly to management",
-            icon: "MessageSquare",
-            url: `/r/${slug}/feedback`,
-            displayOrder: 5,
-            badge: "Private",
-            enabled: true,
-          },
-        ],
+        data: getDefaultGuestActions(restaurant.id, slug),
       });
 
       // Wi-Fi Config

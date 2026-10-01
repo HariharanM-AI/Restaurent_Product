@@ -16,7 +16,7 @@ export default function RewardsPage() {
 
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [restaurantName, setRestaurantName] = useState("Restaurant");
-  const [brandColor, setBrandColor] = useState("#0F766E");
+  const [brandColor, setBrandColor] = useState("var(--brand-primary, #0F766E)");
   const [isScanModalOpen, setIsScanModalOpen] = useState(false);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function RewardsPage() {
           const rId = json.data.restaurant.id;
           setRestaurantId(rId);
           setRestaurantName(json.data.restaurant.name);
-          setBrandColor(json.data.restaurant.primaryColor || "#0F766E");
+          setBrandColor(json.data.restaurant.primaryColor || "var(--brand-primary, #0F766E)");
           trackEvent({
             restaurantId: rId,
             eventType: "loyalty_open",
