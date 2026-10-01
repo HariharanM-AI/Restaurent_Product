@@ -28,7 +28,23 @@ export async function POST(
     }
 
     const { rawToken, tokenHash } = generateCheckoutToken();
-    const expiresAt = new Date(Date.now() + validityMinutes * 60 * 1000);
+    
+    // Handle special validity values:
+    // 0 = immediate (one-time scan) - set very short expiry, consumed on first scan
+    // -1 = permanent (never expires) - set expiry far in the future
+    let expiresAt: Date;
+    let metadata: string | undefined;
+    
+    if (validityMinutes === 0) {
+      // One-time scan: expires in 24 hours but will be consumed after first use
+      expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      metadata = JSON.stringify({ oneTimeScan: true });
+    } else if (validityMinutes < 0) {
+      // Permanent: expires in 10 years
+      expiresAt = new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000);
+    } else {
+      expiresAt = new Date(Date.now() + validityMinutes * 60 * 1000);
+    }
 
     const session = await prisma.loyaltyCheckoutSession.create({
       data: {

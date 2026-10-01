@@ -75,6 +75,8 @@ export function MenuManager({
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("restaurantId", restaurantId);
+      formData.append("category", "menus");
 
       const res = await fetch("/api/upload", {
         method: "POST",
@@ -165,15 +167,9 @@ export function MenuManager({
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-                Menu & Culinary Catalog
-              </h1>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#E6F7F2] text-[#0A7E6C] border border-[#BCE8DB]">
-                <span className="w-2 h-2 rounded-full bg-[#10B981]"></span>
-                Format: {menuType.toUpperCase()}
-              </span>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+              Menu & Culinary Catalog
+            </h1>
             <p className="text-sm text-slate-500 mt-1">
               Upload your official menu PDF, attach multi-page food photography, link an external POS menu, or customize interactive items.
             </p>
@@ -521,7 +517,7 @@ export function MenuManager({
                   Built-in Interactive Plate Experience
                 </h3>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Guests browse seasonal appetizers, mains, desserts, and cocktails categorized with dietary filters directly within the GuestLink template.
+                  Guests browse seasonal appetizers, mains, desserts, and cocktails categorized with dietary filters directly within the Noura template.
                 </p>
               </div>
             )}

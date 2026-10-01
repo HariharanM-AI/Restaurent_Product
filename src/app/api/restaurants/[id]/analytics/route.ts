@@ -143,14 +143,19 @@ export async function GET(
     }
 
     const timeSeries: { date: string; visits: number; interactions: number }[] = [];
-    for (let i = 0; i < totalDays; i++) {
-      const d = new Date(startDate.getTime() + i * dayMs);
-      const key = d.toISOString().split("T")[0];
+    const curDate = new Date(startDate);
+    curDate.setUTCHours(0, 0, 0, 0);
+    const finalDate = new Date(endDate);
+    finalDate.setUTCHours(0, 0, 0, 0);
+
+    while (curDate <= finalDate) {
+      const key = curDate.toISOString().split("T")[0];
       timeSeries.push({
         date: key,
         visits: dayVisitMap.get(key) || 0,
         interactions: dayInteractionMap.get(key) || 0,
       });
+      curDate.setUTCDate(curDate.getUTCDate() + 1);
     }
 
     // ── Top Performing Features (for highlight) ──

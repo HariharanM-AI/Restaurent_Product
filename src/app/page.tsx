@@ -32,13 +32,13 @@ export default function HomePage() {
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-2xs">
         <div className="max-w-7xl mx-auto w-full px-5 sm:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-teal-700 text-white flex items-center justify-center shadow-md shadow-teal-800/20">
-              <QrCode className="w-7 h-7" />
+            <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 overflow-hidden p-1 shadow-sm flex items-center justify-center">
+              <img src="/images/Own brand logo.png" alt="Noura" className="w-full h-full object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold tracking-tight text-xl text-slate-900">
-                  GuestLink
+                  Noura
                 </span>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
                   SaaS Platform
@@ -243,7 +243,7 @@ export default function HomePage() {
               Simple Onboarding
             </h2>
             <h3 className="text-3xl sm:text-4xl font-extrabold text-slate-900">
-              How GuestLink Works for Your Restaurant
+              How Noura Works for Your Restaurant
             </h3>
           </div>
 
@@ -321,10 +321,10 @@ export default function HomePage() {
       <footer className="bg-white border-t border-slate-200 py-10 px-5 sm:px-8 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-teal-700 text-white flex items-center justify-center text-xs font-bold">
-              <QrCode className="w-3.5 h-3.5" />
+            <div className="w-6 h-6 rounded-lg bg-white border border-slate-200 overflow-hidden p-0.5 flex items-center justify-center">
+              <img src="/images/Own brand logo.png" alt="Noura" className="w-full h-full object-contain" />
             </div>
-            <span className="font-extrabold text-slate-800">GuestLink SaaS</span>
+            <span className="font-extrabold text-slate-800">Noura SaaS</span>
             <span>&copy; {new Date().getFullYear()} Enterprise Hospitality Systems.</span>
           </div>
 

@@ -24,7 +24,7 @@ export default function NotFound() {
       <div className="flex items-center gap-3">
         <Link href="/">
           <Button variant="primary" size="md" icon={<Home className="w-4 h-4" />}>
-            GuestLink Home
+            Noura Home
           </Button>
         </Link>
         <Link href="/admin">

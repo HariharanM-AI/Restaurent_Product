@@ -113,15 +113,9 @@ export function QrExporter({
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-                Physical QR & NFC Touchpoints
-              </h1>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#E6F7F2] text-[#0A7E6C] border border-[#BCE8DB]">
-                <span className="w-2 h-2 rounded-full bg-[#10B981]"></span>
-                Touchpoint Engine
-              </span>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+              Physical QR & NFC Touchpoints
+            </h1>
             <p className="text-sm text-slate-500 mt-1">
               Generate and export high-resolution tabletop QR codes, acrylic tent cards, and NFC link anchors.
             </p>

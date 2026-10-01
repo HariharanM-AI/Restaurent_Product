@@ -59,6 +59,14 @@ export function invalidateRestaurantAccessCache(restaurantId?: string) {
         membershipCache.delete(key);
       }
     }
+    for (const [userId, entry] of primaryMembershipCache.entries()) {
+      if (
+        entry.membership?.restaurantId === restaurantId ||
+        entry.membership?.restaurant?.id === restaurantId
+      ) {
+        primaryMembershipCache.delete(userId);
+      }
+    }
   } else {
     membershipCache.clear();
     primaryMembershipCache.clear();

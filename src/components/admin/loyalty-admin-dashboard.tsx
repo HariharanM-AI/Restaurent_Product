@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import QRCode from "qrcode";
 import Link from "next/link";
+import { subscribeToActivity } from "@/lib/realtime/broadcast";
 import {
   Award,
   Users,
@@ -22,6 +23,7 @@ import {
   Calendar,
   AlertCircle,
   ArrowRight,
+  X,
 } from "lucide-react";
 import { LoyaltyMilestoneData } from "@/types";
 
@@ -134,8 +136,10 @@ export function LoyaltyAdminDashboard({
   }, [restaurantSlug]);
 
   // Fetch stats
-  const fetchStats = useCallback(async () => {
-    setLoading(true);
+  const fetchStats = useCallback(async (isSilent = false) => {
+    if (!isSilent) {
+      setLoading(true);
+    }
     setError(null);
     try {
       let url = `/api/restaurants/${restaurantId}/loyalty/stats?period=${period}`;
@@ -148,12 +152,12 @@ export function LoyaltyAdminDashboard({
       if (json.success) {
         setStats(json.data);
       } else {
-        setError(json.error || "Unknown error");
+        if (!isSilent) setError(json.error || "Unknown error");
       }
     } catch {
-      setError("Unable to load loyalty data.");
+      if (!isSilent) setError("Unable to load loyalty data.");
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }, [restaurantId, period, customFrom, customTo]);
 
@@ -162,13 +166,50 @@ export function LoyaltyAdminDashboard({
     fetchStats();
   }, [fetchStats, period, customFrom, customTo]);
 
+  // Real-time synchronization whenever guests claim stamps or interact
+  useEffect(() => {
+    const unsubscribe = subscribeToActivity(restaurantId, () => {
+      fetchStats(true);
+    });
+
+    const pollInterval = setInterval(() => {
+      fetchStats(true);
+    }, 4000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(pollInterval);
+    };
+  }, [restaurantId, fetchStats]);
+
   const handleGenerateNewQr = async () => {
     setIsGenerating(true);
     try {
+      // Map expiration period to minutes
+      let validityMinutes: number;
+      switch (expirationPeriod) {
+        case "immediate":
+          validityMinutes = 0; // One-time scan, expires immediately after use
+          break;
+        case "24 hours":
+          validityMinutes = 1440;
+          break;
+        case "7 days":
+          validityMinutes = 10080;
+          break;
+        case "30 days":
+          validityMinutes = 43200;
+          break;
+        case "Never":
+          validityMinutes = -1; // Permanent
+          break;
+        default:
+          validityMinutes = 43200;
+      }
       const res = await fetch(`/api/restaurants/${restaurantId}/loyalty/checkout-sessions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ validityMinutes: expirationPeriod === "30 days" ? 43200 : 1440 }),
+        body: JSON.stringify({ validityMinutes }),
       });
       const data = await res.json();
       if (data.success && data.data?.claimUrl) {
@@ -217,14 +258,14 @@ export function LoyaltyAdminDashboard({
       {/* 1. Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400">
+          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 mb-1">
             <span>Restaurants</span>
             <span>/</span>
             <span>Control Center</span>
             <span>/</span>
             <span className="text-slate-600">Loyalty & Rewards</span>
           </div>
-          <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight mt-1">
+          <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">
             Loyalty & Rewards Program
           </h1>
           <p className="text-xs text-slate-500 mt-1">
@@ -291,7 +332,7 @@ export function LoyaltyAdminDashboard({
         <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium flex items-center gap-2">
           <AlertCircle className="w-4 h-4" />
           <span>{error}</span>
-          <button onClick={fetchStats} className="ml-auto text-xs font-bold underline">Retry</button>
+          <button onClick={() => fetchStats()} className="ml-auto text-xs font-bold underline">Retry</button>
         </div>
       )}
 
@@ -441,12 +482,15 @@ export function LoyaltyAdminDashboard({
                     <option value="30 days">30 days (Recommended)</option>
                     <option value="7 days">7 days</option>
                     <option value="24 hours">24 hours</option>
+                    <option value="immediate">Immediate (One-Time Scan)</option>
                     <option value="Never">Never (Permanent Touchpoint)</option>
                   </select>
                   <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
                 <p className="text-[11px] text-slate-400 mt-1">
-                  The QR code will expire automatically after the selected period.
+                  {expirationPeriod === "immediate"
+                    ? "This QR code will be invalidated after a single scan."
+                    : "The QR code will expire automatically after the selected period."}
                 </p>
               </div>
 
@@ -501,7 +545,7 @@ export function LoyaltyAdminDashboard({
               </div>
 
               <Link
-                href={`/r/${restaurantSlug}/rewards`}
+                href={`/r/${restaurantSlug}/rewards?preview=true`}
                 target="_blank"
                 className="mt-2 text-[11px] font-bold text-emerald-700 hover:underline flex items-center gap-1"
               >
@@ -544,7 +588,7 @@ export function LoyaltyAdminDashboard({
           </div>
 
           <Link
-            href={`/r/${restaurantSlug}/rewards`}
+            href={`/r/${restaurantSlug}/rewards?preview=true`}
             target="_blank"
             className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-emerald-50 text-[#072F29] text-xs font-extrabold flex items-center justify-center gap-2 transition shadow-sm"
           >
@@ -682,9 +726,10 @@ export function LoyaltyAdminDashboard({
               <h3 className="text-base font-extrabold text-slate-900">Configure Milestone Reward</h3>
               <button
                 onClick={() => setIsMilestoneModalOpen(false)}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-600"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+                aria-label="Close dialog"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 

@@ -5,7 +5,8 @@ import { GuestActionList } from "@/components/guest/action-list";
 import { SocialFooter } from "@/components/guest/social-footer";
 import { GuestHubTracker } from "@/components/guest/guest-hub-tracker";
 
-export const revalidate = 60; // Edge ISR revalidation
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function RestaurantGuestPage({
   params,
@@ -61,6 +62,8 @@ export default async function RestaurantGuestPage({
             address: restaurant.address,
             phone: restaurant.phone,
             website: restaurant.website,
+            openingHours: restaurant.openingHours,
+            googleMapsUrl: restaurant.googleMapsUrl,
             status: restaurant.status,
             createdAt: restaurant.createdAt,
             updatedAt: restaurant.updatedAt,

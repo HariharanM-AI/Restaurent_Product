@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { subscribeToActivity } from "@/lib/realtime/broadcast";
 import {
   Users,
   Eye,
@@ -24,6 +25,11 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   BarChart3,
+  Sunrise,
+  Sun,
+  Sunset,
+  Moon,
+  AlertTriangle,
 } from "lucide-react";
 
 /* ─── Types ─── */
@@ -137,8 +143,10 @@ export function AnalyticsDashboard({ restaurantId }: AnalyticsDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const fetchData = useCallback(async (isSilent = false) => {
+    if (!isSilent) {
+      setLoading(true);
+    }
     setError(null);
     try {
       let url = `/api/restaurants/${restaurantId}/analytics?period=${period}`;
@@ -149,11 +157,13 @@ export function AnalyticsDashboard({ restaurantId }: AnalyticsDashboardProps) {
       if (!res.ok) throw new Error("Failed");
       const json = await res.json();
       if (json.success) setData(json.data);
-      else setError(json.error || "Unknown error");
+      else {
+        if (!isSilent) setError(json.error || "Unknown error");
+      }
     } catch {
-      setError("Unable to load analytics data.");
+      if (!isSilent) setError("Unable to load analytics data.");
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }, [restaurantId, period, customFrom, customTo]);
 
@@ -161,6 +171,22 @@ export function AnalyticsDashboard({ restaurantId }: AnalyticsDashboardProps) {
     if (period === "custom" && (!customFrom || !customTo)) return;
     fetchData();
   }, [fetchData, period, customFrom, customTo]);
+
+  // Real-time synchronization whenever guest opens or interacts with guest experience
+  useEffect(() => {
+    const unsubscribe = subscribeToActivity(restaurantId, () => {
+      fetchData(true);
+    });
+
+    const pollInterval = setInterval(() => {
+      fetchData(true);
+    }, 4000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(pollInterval);
+    };
+  }, [restaurantId, fetchData]);
 
   const periodLabel = PERIODS.find((p) => p.key === period)?.label || "30 Days";
 
@@ -205,7 +231,7 @@ export function AnalyticsDashboard({ restaurantId }: AnalyticsDashboardProps) {
         <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium flex items-center gap-2">
           <AlertCircle className="w-4 h-4" />
           <span>{error}</span>
-          <button onClick={fetchData} className="ml-auto text-xs font-bold underline">Retry</button>
+          <button onClick={() => fetchData()} className="ml-auto text-xs font-bold underline">Retry</button>
         </div>
       )}
 
@@ -280,10 +306,6 @@ function EngagementFunnel({ funnel, totalVisits }: { funnel: AnalyticsAPIData["f
           <p className="text-xs text-slate-500 mt-0.5">
             How guests interact with each feature — conversion from page view to action.
           </p>
-        </div>
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          Real-time
         </div>
       </div>
 
@@ -469,10 +491,10 @@ function VisitTrendsChart({ timeSeries }: { timeSeries: AnalyticsAPIData["timeSe
 function HourlyHeatmap({ hours, peakHour }: { hours: number[]; peakHour: number }) {
   const maxH = Math.max(...hours, 1);
   const timeSlots = [
-    { label: "Morning", range: [6, 12], icon: "🌅" },
-    { label: "Afternoon", range: [12, 17], icon: "☀️" },
-    { label: "Evening", range: [17, 22], icon: "🌆" },
-    { label: "Night", range: [22, 6], icon: "🌙" },
+    { label: "Morning", range: [6, 12], icon: Sunrise },
+    { label: "Afternoon", range: [12, 17], icon: Sun },
+    { label: "Evening", range: [17, 22], icon: Sunset },
+    { label: "Night", range: [22, 6], icon: Moon },
   ];
 
   return (
@@ -480,7 +502,7 @@ function HourlyHeatmap({ hours, peakHour }: { hours: number[]; peakHour: number 
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-base font-extrabold text-slate-900">Peak Hours</h2>
-          <p className="text-xs text-slate-500 mt-0.5">When guests engage most.</p>
+          <p className="text-xs text-slate-500 mt-0.5">Guest engagement distribution by hour.</p>
         </div>
         <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
           <Clock className="w-3.5 h-3.5" />
@@ -516,11 +538,14 @@ function HourlyHeatmap({ hours, peakHour }: { hours: number[]; peakHour: number 
           const slotTotal = start < end
             ? hours.slice(start, end).reduce((a, b) => a + b, 0)
             : hours.slice(start).reduce((a, b) => a + b, 0) + hours.slice(0, end).reduce((a, b) => a + b, 0);
+          const SlotIcon = slot.icon;
           return (
-            <div key={slot.label} className="p-2 rounded-lg bg-slate-50 border border-slate-200/60 text-center">
-              <span className="text-sm">{slot.icon}</span>
-              <div className="text-[10px] font-bold text-slate-600 mt-0.5">{slot.label}</div>
-              <div className="text-xs font-black text-slate-900">{slotTotal}</div>
+            <div key={slot.label} className="p-2.5 rounded-lg bg-slate-50 border border-slate-200/60 text-center">
+              <div className="flex items-center justify-center text-slate-500 mb-1">
+                <SlotIcon className="w-4 h-4" />
+              </div>
+              <div className="text-[10px] font-bold text-slate-600">{slot.label}</div>
+              <div className="text-xs font-black text-slate-900 mt-0.5">{slotTotal}</div>
             </div>
           );
         })}
@@ -536,14 +561,17 @@ function InsightsCard({ insights }: { insights: AnalyticsAPIData["insights"] }) 
       <div>
         <h2 className="text-base font-extrabold flex items-center gap-2">
           <Zap className="w-4 h-4 text-amber-400" />
-          Quick Insights
+          Operational Insights
         </h2>
-        <p className="text-xs text-emerald-200/70 mt-0.5 mb-5">Auto-generated from your data.</p>
+        <p className="text-xs text-emerald-200/70 mt-0.5 mb-5">Calculated from recent telemetry.</p>
 
         <div className="space-y-4">
           {insights.topFeature && (
             <div className="p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-              <div className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider mb-1">🏆 Most Used Feature</div>
+              <div className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <Award className="w-3.5 h-3.5" />
+                <span>Top Feature</span>
+              </div>
               <div className="text-sm font-bold">{insights.topFeature.label}</div>
               <div className="text-xs text-emerald-200/80 mt-0.5">{insights.topFeature.count} interactions</div>
             </div>
@@ -551,22 +579,28 @@ function InsightsCard({ insights }: { insights: AnalyticsAPIData["insights"] }) 
 
           {insights.leastUsed && insights.leastUsed.count > 0 && (
             <div className="p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-              <div className="text-[10px] font-bold text-amber-300 uppercase tracking-wider mb-1">📉 Needs Attention</div>
+              <div className="text-[10px] font-bold text-amber-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>Needs Attention</span>
+              </div>
               <div className="text-sm font-bold">{insights.leastUsed.label}</div>
               <div className="text-xs text-emerald-200/80 mt-0.5">Only {insights.leastUsed.count} interactions</div>
             </div>
           )}
 
           <div className="p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-            <div className="text-[10px] font-bold text-sky-300 uppercase tracking-wider mb-1">⏰ Peak Hour</div>
+            <div className="text-[10px] font-bold text-sky-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" />
+              <span>Peak Volume Hour</span>
+            </div>
             <div className="text-sm font-bold">{insights.peakHourLabel}</div>
-            <div className="text-xs text-emerald-200/80 mt-0.5">Most guest activity during this hour</div>
+            <div className="text-xs text-emerald-200/80 mt-0.5">Highest guest traffic period</div>
           </div>
         </div>
       </div>
 
       <div className="mt-5 pt-4 border-t border-white/10 text-[11px] text-emerald-200/50">
-        Insights refresh with each period change.
+        Metrics refresh with active reporting period.
       </div>
     </div>
   );

@@ -43,6 +43,8 @@ export interface RestaurantData {
   address?: string | null;
   phone?: string | null;
   website?: string | null;
+  openingHours?: string | null;
+  googleMapsUrl?: string | null;
   status: string;
   createdAt: Date | string;
   updatedAt: Date | string;

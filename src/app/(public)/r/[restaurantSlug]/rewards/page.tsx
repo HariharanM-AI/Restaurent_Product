@@ -4,9 +4,11 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Award, Sparkles, QrCode, Gift, HelpCircle } from "lucide-react";
+import { trackEvent } from "@/lib/analytics/tracker";
 import { useLoyaltyWallet } from "@/hooks/use-loyalty-wallet";
 import { StampCard } from "@/components/loyalty/stamp-card";
 import { UnlockedRewardCard } from "@/components/loyalty/unlocked-reward-card";
+import { StampScannerModal } from "@/components/loyalty/stamp-scanner-modal";
 
 export default function RewardsPage() {
   const params = useParams();
@@ -15,15 +17,21 @@ export default function RewardsPage() {
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [restaurantName, setRestaurantName] = useState("Restaurant");
   const [brandColor, setBrandColor] = useState("#0F766E");
+  const [isScanModalOpen, setIsScanModalOpen] = useState(false);
 
   useEffect(() => {
     fetch(`/api/restaurants/by-slug/${slug}`)
       .then((res) => res.json())
       .then((json) => {
         if (json.success && json.data) {
-          setRestaurantId(json.data.restaurant.id);
+          const rId = json.data.restaurant.id;
+          setRestaurantId(rId);
           setRestaurantName(json.data.restaurant.name);
           setBrandColor(json.data.restaurant.primaryColor || "#0F766E");
+          trackEvent({
+            restaurantId: rId,
+            eventType: "loyalty_open",
+          });
         }
       })
       .catch(() => {});
@@ -79,6 +87,17 @@ export default function RewardsPage() {
           />
         ) : null}
 
+        {/* Scan QR Code to Collect Stamp Button */}
+        <button
+          type="button"
+          onClick={() => setIsScanModalOpen(true)}
+          className="w-full py-3.5 px-4 rounded-2xl text-white font-bold text-sm shadow-md flex items-center justify-center gap-2.5 transition hover:opacity-95 active:scale-[0.99] cursor-pointer"
+          style={{ backgroundColor: brandColor }}
+        >
+          <QrCode className="w-5 h-5" />
+          <span>Scan QR to Collect Stamp</span>
+        </button>
+
         {/* Unlocked Rewards Section */}
         {wallet && wallet.unlockedRewards && wallet.unlockedRewards.length > 0 && (
           <div className="pt-2">
@@ -108,13 +127,23 @@ export default function RewardsPage() {
             <span>How to Collect Stamps</span>
           </div>
           <p className="text-[11px] leading-relaxed text-slate-500">
-            1. Whenever you dine or purchase items, staff will present a single-use checkout loyalty QR code.
+            1. Tap the <strong>Scan QR to Collect Stamp</strong> button above to scan using your camera or enter the checkout code.
           </p>
           <p className="text-[11px] leading-relaxed text-slate-500">
-            2. Point your smartphone camera at the checkout QR to claim your stamp instantly. No app installation or passwords required!
+            2. You can also point your phone camera directly at the single-use checkout QR code presented by staff.
           </p>
         </div>
       </div>
+
+      {/* Stamp Scanner Modal */}
+      <StampScannerModal
+        isOpen={isScanModalOpen}
+        onClose={() => setIsScanModalOpen(false)}
+        onSuccess={() => refetch()}
+        restaurantId={restaurantId || ""}
+        restaurantName={restaurantName}
+        brandColor={brandColor}
+      />
     </div>
   );
 }

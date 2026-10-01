@@ -55,7 +55,7 @@ export function RestaurantHeader({ restaurant }: RestaurantHeaderProps) {
           </div>
 
           {/* Quick Info Drawer Toggle Button */}
-          {(restaurant.address || restaurant.phone || restaurant.website) && (
+          {(restaurant.address || restaurant.phone || restaurant.website || restaurant.openingHours) && (
             <button
               onClick={() => setIsInfoExpanded(!isInfoExpanded)}
               className="mb-1 text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1.5 transition"
@@ -83,7 +83,18 @@ export function RestaurantHeader({ restaurant }: RestaurantHeaderProps) {
             {restaurant.address && (
               <div className="flex items-start gap-2">
                 <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                <span>{restaurant.address}</span>
+                {restaurant.googleMapsUrl ? (
+                  <a
+                    href={restaurant.googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-primary underline"
+                  >
+                    {restaurant.address}
+                  </a>
+                ) : (
+                  <span>{restaurant.address}</span>
+                )}
               </div>
             )}
             {restaurant.phone && (
@@ -109,7 +120,7 @@ export function RestaurantHeader({ restaurant }: RestaurantHeaderProps) {
             )}
             <div className="flex items-center gap-2 text-slate-500">
               <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <span>Open Today: 11:30 AM – 10:00 PM</span>
+              <span>{restaurant.openingHours || "Open Today: 11:30 AM – 10:00 PM"}</span>
             </div>
           </div>
         )}

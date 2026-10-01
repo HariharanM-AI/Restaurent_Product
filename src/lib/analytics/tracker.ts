@@ -3,6 +3,8 @@
  * Collects non-PII metrics to evaluate guest engagement.
  */
 
+import { broadcastActivity } from "@/lib/realtime/broadcast";
+
 function getAnonymousSessionId(): string {
   if (typeof window === "undefined") return "server-ssr";
 
@@ -31,6 +33,9 @@ export function trackEvent(params: {
 }) {
   if (typeof window === "undefined") return;
 
+  // Detect if the owner is previewing the guest page (preview=true in URL)
+  const isPreview = new URLSearchParams(window.location.search).get("preview") === "true";
+
   const payload = {
     restaurantId: params.restaurantId,
     eventType: params.eventType,
@@ -39,7 +44,10 @@ export function trackEvent(params: {
     deviceCategory: getDeviceCategory(),
     referrer: document.referrer || null,
     source: params.source || "direct",
-    metadata: params.metadata || null,
+    metadata: {
+      ...(params.metadata || {}),
+      ...(isPreview ? { preview: true } : {}),
+    },
   };
 
   try {
@@ -58,6 +66,9 @@ export function trackEvent(params: {
         // Telemetry errors fail silently without disturbing the user
       });
     }
+
+    // Instantly notify admin panels across tabs and windows
+    broadcastActivity(params.restaurantId, params.eventType, payload);
   } catch {
     // Fail silently
   }

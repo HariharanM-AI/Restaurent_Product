@@ -8,7 +8,7 @@ const SignupSchema = z.object({
   name: z.string().min(2, "Owner name must be at least 2 characters"),
   email: z.string().email("Please provide a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  restaurantName: z.string().min(2, "Restaurant name must be at least 2 characters"),
+  restaurantName: z.string().optional().nullable(),
   phone: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
 });
@@ -32,6 +32,7 @@ export async function POST(req: Request) {
     }
 
     const { name, email, password, restaurantName, phone, address } = result.data;
+    const resolvedVenueName = restaurantName?.trim() || `${name.trim()}'s Venue`;
     const normalizedEmail = email.toLowerCase().trim();
 
     // Check if user already exists
@@ -53,9 +54,9 @@ export async function POST(req: Request) {
     }
 
     // Generate unique slug for restaurant
-    let slug = slugify(restaurantName);
+    let slug = slugify(resolvedVenueName);
     if (!slug) {
-      slug = "restaurant-" + Math.random().toString(36).substring(2, 8);
+      slug = "venue-" + Math.random().toString(36).substring(2, 8);
     }
 
     const slugExists = await prisma.restaurant.findUnique({
@@ -83,7 +84,7 @@ export async function POST(req: Request) {
       // 2. Create Restaurant
       const restaurant = await tx.restaurant.create({
         data: {
-          name: sanitizeString(restaurantName),
+          name: sanitizeString(resolvedVenueName),
           slug,
           primaryColor: "#0F766E", // Deep emerald green
           secondaryColor: "#F0FDF4", // Soft green-white
@@ -164,7 +165,7 @@ export async function POST(req: Request) {
       });
 
       // 5. Create Default Wi-Fi Config
-      const cleanSsid = restaurantName.replace(/[^\w]/g, "_").slice(0, 24) + "_Guest";
+      const cleanSsid = resolvedVenueName.replace(/[^\w]/g, "_").slice(0, 24) + "_Guest";
       await tx.wifiConfig.create({
         data: {
           restaurantId: restaurant.id,

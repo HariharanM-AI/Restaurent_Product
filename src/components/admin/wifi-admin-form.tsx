@@ -117,14 +117,10 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
           <span>/</span>
           <span className="text-slate-600">Wi-Fi</span>
         </div>
-        <div className="flex items-center gap-3 mt-1">
+        <div className="mt-1">
           <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">
             Guest Wi-Fi Configuration
           </h1>
-          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            {enabled ? "Network Live" : "Hidden"}
-          </span>
         </div>
         <p className="text-xs text-slate-500 mt-1">
           Configure guest wireless credentials, connection instructions, auto-join QR, and display status.

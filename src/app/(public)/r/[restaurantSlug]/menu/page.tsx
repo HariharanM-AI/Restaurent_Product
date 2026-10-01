@@ -125,7 +125,6 @@ export default function MenuPage() {
   const [externalUrl, setExternalUrl] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<"Starters" | "Mains" | "Desserts" | "Drinks">("Starters");
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<"document" | "items">("document");
 
   useEffect(() => {
     fetch(`/api/restaurants/by-slug/${slug}`)
@@ -207,36 +206,8 @@ export default function MenuPage() {
           </p>
         </div>
 
-        {/* View Mode Toggle Switch (if uploaded doc exists) */}
-        {hasUploadedDocument && (
-          <div className="flex items-center justify-center gap-1 bg-slate-100 p-1 rounded-2xl mb-4">
-            <button
-              type="button"
-              onClick={() => setViewMode("document")}
-              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition ${
-                viewMode === "document"
-                  ? "bg-white text-slate-900 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {menuType === "pdf" ? "Official PDF Menu" : menuType === "images" ? "Photo Menu" : "Digital Portal"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("items")}
-              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition ${
-                viewMode === "items"
-                  ? "bg-white text-slate-900 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              Dish List
-            </button>
-          </div>
-        )}
-
         {/* Mode 1: PDF Menu Viewer */}
-        {hasUploadedDocument && viewMode === "document" && menuType === "pdf" && (
+        {hasUploadedDocument && menuType === "pdf" && (
           <div className="space-y-3 animate-in fade-in-50">
             <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm h-[580px] relative">
               <iframe
@@ -271,7 +242,7 @@ export default function MenuPage() {
         )}
 
         {/* Mode 2: Multi-Page Photo Menu */}
-        {hasUploadedDocument && viewMode === "document" && menuType === "images" && (
+        {hasUploadedDocument && menuType === "images" && (
           <div className="space-y-4 animate-in fade-in-50">
             {images.length > 1 && (
               <div className="flex items-center justify-center gap-1.5 overflow-x-auto py-1">
@@ -336,7 +307,7 @@ export default function MenuPage() {
         )}
 
         {/* Mode 3: External Link Gateway */}
-        {hasUploadedDocument && viewMode === "document" && menuType === "link" && (
+        {hasUploadedDocument && menuType === "link" && (
           <div className="p-8 bg-white rounded-3xl border border-slate-200 text-center space-y-4 shadow-sm my-auto animate-in fade-in-50">
             <div className="w-16 h-16 rounded-2xl bg-teal-50 text-teal-700 border border-teal-200 mx-auto flex items-center justify-center shadow-xs">
               <ExternalLink className="w-8 h-8" />
@@ -359,8 +330,8 @@ export default function MenuPage() {
           </div>
         )}
 
-        {/* Mode 4: Interactive Dish Items (Default or fallback) */}
-        {(!hasUploadedDocument || viewMode === "items") && (
+        {/* Mode 4: Interactive Dish Items (Fallback when no document is uploaded) */}
+        {!hasUploadedDocument && (
           <div className="space-y-4 animate-in fade-in-50">
             {/* Category Navigation Pills */}
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 pt-1 sticky top-[57px] bg-[#F8FAFC] z-20">

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Star, Send, CheckCircle2, MessageSquare, AlertCircle, Loader2 } from "lucide-react";
+import { broadcastActivity } from "@/lib/realtime/broadcast";
+import { trackEvent } from "@/lib/analytics/tracker";
 
 const CATEGORIES = ["Food", "Service", "Ambiance", "Cleanliness", "Other"];
 
@@ -35,9 +37,14 @@ export default function FeedbackPage() {
       .then((res) => res.json())
       .then((json) => {
         if (json.success && json.data) {
-          setRestaurantId(json.data.restaurant.id);
+          const rId = json.data.restaurant.id;
+          setRestaurantId(rId);
           setRestaurantName(json.data.restaurant.name);
           setBrandColor(json.data.restaurant.primaryColor || "#0F766E");
+          trackEvent({
+            restaurantId: rId,
+            eventType: "feedback_open",
+          });
         }
       })
       .catch(() => {});
@@ -80,6 +87,9 @@ export default function FeedbackPage() {
       const json = await res.json();
       if (res.ok && json.success) {
         setIsSubmitted(true);
+        if (restaurantId) {
+          broadcastActivity(restaurantId, "feedback_submit", { rating, category });
+        }
       } else {
         setErrorMessage(json.error?.message || "Failed to submit feedback. Please try again.");
       }

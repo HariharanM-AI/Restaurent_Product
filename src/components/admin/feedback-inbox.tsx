@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { subscribeToActivity } from "@/lib/realtime/broadcast";
 import {
   Star,
   MessageSquare,
@@ -8,9 +9,6 @@ import {
   Download,
   Search,
   ChevronDown,
-  ArrowRight,
-  MoreHorizontal,
-  Lightbulb,
   Loader2,
   Calendar,
   AlertCircle,
@@ -79,26 +77,48 @@ function SkeletonCard() {
   );
 }
 
+/* ─── Star Rating Renderer ─── */
+function StarRating({ rating, size = "w-4 h-4" }: { rating: number; size?: string }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={`${size} ${
+            star <= rating
+              ? rating >= 4
+                ? "text-emerald-600 fill-emerald-500"
+                : rating === 3
+                ? "text-amber-500 fill-amber-400"
+                : "text-red-500 fill-red-400"
+              : "text-slate-200"
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
 /* ─── Main Component ─── */
 export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
-  // Date filter
   const [period, setPeriod] = useState("30d");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
   const [showCustomPicker, setShowCustomPicker] = useState(false);
 
-  // Data
   const [data, setData] = useState<FeedbackStatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Feedback list filters
   const [activeTab, setActiveTab] = useState<"ALL" | "POSITIVE" | "NEUTRAL" | "NEGATIVE">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [ratingFilter, setRatingFilter] = useState("ALL");
 
-  const fetchStats = useCallback(async () => {
-    setLoading(true);
+  const fetchStats = useCallback(async (isSilent = false) => {
+    if (!isSilent) {
+      setLoading(true);
+    }
     setError(null);
     try {
       let url = `/api/restaurants/${restaurantId}/feedback/stats?period=${period}`;
@@ -111,12 +131,12 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
       if (json.success) {
         setData(json.data);
       } else {
-        setError(json.error || "Unknown error");
+        if (!isSilent) setError(json.error || "Unknown error");
       }
     } catch {
-      setError("Unable to load feedback data.");
+      if (!isSilent) setError("Unable to load feedback data.");
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }, [restaurantId, period, customFrom, customTo]);
 
@@ -125,7 +145,22 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
     fetchStats();
   }, [fetchStats, period, customFrom, customTo]);
 
-  // Filtered feedback list
+  // Real-time synchronization on guest activity
+  useEffect(() => {
+    const unsubscribe = subscribeToActivity(restaurantId, () => {
+      fetchStats(true);
+    });
+
+    const pollInterval = setInterval(() => {
+      fetchStats(true);
+    }, 4000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(pollInterval);
+    };
+  }, [restaurantId, fetchStats]);
+
   const filteredFeedbacks = useMemo(() => {
     if (!data) return [];
     return data.feedbacks.filter((f) => {
@@ -133,13 +168,14 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
       if (activeTab === "NEUTRAL" && f.rating !== 3) return false;
       if (activeTab === "NEGATIVE" && f.rating > 2) return false;
       if (categoryFilter !== "ALL" && f.category?.toLowerCase() !== categoryFilter.toLowerCase()) return false;
+      if (ratingFilter !== "ALL" && f.rating !== parseInt(ratingFilter)) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         return f.message.toLowerCase().includes(q) || (f.category && f.category.toLowerCase().includes(q));
       }
       return true;
     });
-  }, [data, activeTab, categoryFilter, searchQuery]);
+  }, [data, activeTab, categoryFilter, ratingFilter, searchQuery]);
 
   const periodLabel = PERIODS.find((p) => p.key === period)?.label || "30 Days";
 
@@ -148,7 +184,7 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
       {/* 1. Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="text-xs font-bold text-slate-400 mb-1">← Feedback</div>
+          <div className="text-xs font-bold text-slate-400 mb-1">Feedback</div>
           <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">
             Guest Feedback
           </h1>
@@ -220,7 +256,7 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
         <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium flex items-center gap-2">
           <AlertCircle className="w-4 h-4" />
           <span>{error}</span>
-          <button onClick={fetchStats} className="ml-auto text-xs font-bold underline">Retry</button>
+          <button onClick={() => fetchStats()} className="ml-auto text-xs font-bold underline">Retry</button>
         </div>
       )}
 
@@ -266,146 +302,154 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
             <TopMentionsCard topics={data.topics} />
           </div>
 
-          {/* 4. Charts Row: Distribution, Trends, Sentiment */}
+          {/* 4. Charts: Rating Distribution + Topics */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <RatingDistribution distribution={data.distribution} />
             <FeedbackTrends timeSeries={data.timeSeries} />
-            <SentimentDonut sentiment={data.sentiment} />
+            <TopicsCard topics={data.topics} />
           </div>
 
-          {/* 5. Feedback List + Topics */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Feedback List */}
-            <div className="lg:col-span-2 p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
-              {/* Tabs */}
-              <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
-                <div className="flex items-center gap-1 border-b border-slate-200">
-                  {(["ALL", "POSITIVE", "NEUTRAL", "NEGATIVE"] as const).map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`px-4 py-2 text-xs font-bold transition border-b-2 -mb-px ${
-                        activeTab === tab
-                          ? "border-emerald-700 text-emerald-900"
-                          : "border-transparent text-slate-500 hover:text-slate-900"
-                      }`}
-                    >
-                      {tab === "ALL" ? "All Feedback" : tab.charAt(0) + tab.slice(1).toLowerCase()}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Search feedback..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 w-44"
-                    />
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                  </div>
-
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="px-2.5 py-1.5 text-xs rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold"
+          {/* 5. Feedback Table (matching uploaded image design) */}
+          <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
+            {/* Filter bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-1 border-b border-slate-200">
+                {(["ALL", "POSITIVE", "NEUTRAL", "NEGATIVE"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 text-xs font-bold transition border-b-2 -mb-px ${
+                      activeTab === tab
+                        ? "border-emerald-700 text-emerald-900"
+                        : "border-transparent text-slate-500 hover:text-slate-900"
+                    }`}
                   >
-                    <option value="ALL">All Categories</option>
-                    {data.categories.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
+                    {tab === "ALL" ? "All Feedback" : tab.charAt(0) + tab.slice(1).toLowerCase()}
+                  </button>
+                ))}
               </div>
 
-              {/* Feedback Items */}
-              <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto">
-                {filteredFeedbacks.length > 0 ? (
-                  filteredFeedbacks.map((item) => (
-                    <div key={item.id} className="py-4 flex items-start justify-between gap-4 hover:bg-slate-50/50 px-2 rounded-xl transition">
-                      <div className="space-y-1.5 flex-1 min-w-0">
-                        <div className="flex items-center gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`w-4 h-4 ${
-                                star <= item.rating
-                                  ? item.rating >= 4
-                                    ? "text-emerald-600 fill-emerald-500"
-                                    : item.rating === 3
-                                    ? "text-amber-500 fill-amber-400"
-                                    : "text-red-500 fill-red-400"
-                                  : "text-slate-200"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <p className="text-sm text-slate-800 leading-relaxed font-medium">
-                          {item.message}
-                        </p>
-                        {!item.isAnonymous && item.contact && (
-                          <span className="text-[10px] text-slate-400 font-medium">
-                            — {item.contact}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-3 shrink-0">
-                        {item.category && (
-                          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                            {item.category}
-                          </span>
-                        )}
-                        <span className="text-[11px] text-slate-400 font-mono whitespace-nowrap">
-                          {new Date(item.createdAt).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </span>
-                        <button className="text-slate-400 hover:text-slate-600 p-1">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="py-12 text-center text-sm text-slate-400">
-                    No feedback matching your filters.
-                  </div>
-                )}
-              </div>
-
-              {filteredFeedbacks.length > 0 && (
-                <div className="pt-3 mt-2 border-t border-slate-100 text-xs text-slate-400">
-                  Showing {filteredFeedbacks.length} of {data.feedbacks.length} feedbacks
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search feedback..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 w-44"
+                  />
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                 </div>
-              )}
-            </div>
 
-            {/* Topics + CTA */}
-            <div className="space-y-6">
-              <TopicsCard topics={data.topics} />
+                <select
+                  value={ratingFilter}
+                  onChange={(e) => setRatingFilter(e.target.value)}
+                  className="px-2.5 py-1.5 text-xs rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold"
+                >
+                  <option value="ALL">All Ratings</option>
+                  <option value="5">5 Stars</option>
+                  <option value="4">4 Stars</option>
+                  <option value="3">3 Stars</option>
+                  <option value="2">2 Stars</option>
+                  <option value="1">1 Star</option>
+                </select>
 
-              <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <Lightbulb className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-black text-slate-900">Turn feedback into growth</div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">
-                      Use guest feedback to improve your menu, service, and overall experience.
-                    </div>
-                  </div>
-                </div>
-                <button className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center justify-center shrink-0 transition shadow-2xs">
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="px-2.5 py-1.5 text-xs rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold"
+                >
+                  <option value="ALL">All Categories</option>
+                  {data.categories.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
               </div>
             </div>
+
+            {/* Feedback Table with Column Headers */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm mt-2">
+                <thead>
+                  <tr className="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                    <th className="text-left py-3 px-3 w-24">Rating</th>
+                    <th className="text-left py-3 px-3">Feedback</th>
+                    <th className="text-center py-3 px-3 w-28">Category</th>
+                    <th className="text-right py-3 px-3 w-36">Date & Time</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filteredFeedbacks.length > 0 ? (
+                    filteredFeedbacks.map((item) => (
+                      <tr key={item.id} className="hover:bg-slate-50/50 transition">
+                        <td className="py-4 px-3 align-top">
+                          <StarRating rating={item.rating} size="w-4 h-4" />
+                        </td>
+                        <td className="py-4 px-3 align-top">
+                          <div className="space-y-1">
+                            <p className="text-sm text-slate-800 leading-relaxed font-semibold">
+                              {item.message.length > 80
+                                ? item.message.slice(0, 80).split(" ").slice(0, -1).join(" ") + "..."
+                                : item.message.split(".")[0] || item.message}
+                            </p>
+                            <p className="text-xs text-slate-500 leading-relaxed">
+                              {item.message}
+                            </p>
+                            {!item.isAnonymous && item.contact && (
+                              <span className="text-[10px] text-slate-400 font-medium italic">
+                                — {item.contact}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-4 px-3 text-center align-top">
+                          {item.category ? (
+                            <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${
+                              item.category.toLowerCase() === "food" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                              item.category.toLowerCase() === "service" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                              item.category.toLowerCase() === "ambience" ? "bg-purple-50 text-purple-700 border-purple-200" :
+                              "bg-orange-50 text-orange-700 border-orange-200"
+                            }`}>
+                              {item.category}
+                            </span>
+                          ) : (
+                            <span className="text-slate-300 text-xs">—</span>
+                          )}
+                        </td>
+                        <td className="py-4 px-3 text-right align-top whitespace-nowrap">
+                          <div className="text-xs text-slate-600 font-medium">
+                            {new Date(item.createdAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-0.5">
+                            {new Date(item.createdAt).toLocaleTimeString("en-US", {
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true,
+                            })}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="py-12 text-center text-sm text-slate-400">
+                        No feedback matching your filters.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {filteredFeedbacks.length > 0 && (
+              <div className="pt-3 mt-2 border-t border-slate-100 text-xs text-slate-400">
+                Showing {filteredFeedbacks.length} of {data.feedbacks.length} feedbacks
+              </div>
+            )}
           </div>
         </>
       )}
@@ -491,45 +535,57 @@ function TopMentionsCard({ topics }: { topics: FeedbackStatsData["topics"] }) {
   );
 }
 
-/* ─── Rating Distribution ─── */
+/* ─── Rating Distribution (larger stars matching uploaded image) ─── */
 function RatingDistribution({ distribution }: { distribution: FeedbackStatsData["distribution"] }) {
-  const colorMap: Record<number, string> = {
-    5: "bg-[#0F766E]",
-    4: "bg-emerald-500",
-    3: "bg-amber-400",
-    2: "bg-orange-500",
-    1: "bg-red-500",
+  const starColors: Record<number, string> = {
+    5: "#10B981", // emerald
+    4: "#34D399", // emerald lighter
+    3: "#F59E0B", // amber
+    2: "#F97316", // orange
+    1: "#EF4444", // red
   };
+
+  const barColors: Record<number, string> = {
+    5: "bg-emerald-500",
+    4: "bg-emerald-400",
+    3: "bg-amber-400",
+    2: "bg-orange-400",
+    1: "bg-red-400",
+  };
+
+  const totalCount = distribution.reduce((sum, d) => sum + d.count, 0);
 
   return (
     <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
-      <div className="mb-4">
-        <h2 className="text-base font-extrabold text-slate-900">Rating Distribution</h2>
-        <p className="text-xs text-slate-500 mt-0.5">Breakdown of feedback ratings in this period.</p>
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h2 className="text-base font-extrabold text-slate-900">Rating Distribution</h2>
+          <p className="text-xs text-slate-500 mt-0.5">Breakdown of all feedback ratings.</p>
+        </div>
       </div>
 
-      <div className="space-y-3.5 my-2">
+      <div className="space-y-4 my-2">
         {distribution.map((row) => (
-          <div key={row.stars} className="flex items-center gap-3 text-xs">
-            <span className="w-12 font-bold text-slate-700 flex items-center gap-1 shrink-0">
+          <div key={row.stars} className="flex items-center gap-3">
+            {/* Large colored star + label */}
+            <div className="flex items-center gap-1.5 w-20 shrink-0">
               <Star
-                className={`w-3.5 h-3.5 ${
-                  row.stars >= 4
-                    ? "text-emerald-600 fill-emerald-500"
-                    : row.stars === 3
-                    ? "text-amber-500 fill-amber-400"
-                    : "text-red-500 fill-red-400"
-                }`}
+                className="w-5 h-5"
+                style={{ color: starColors[row.stars], fill: starColors[row.stars] }}
               />
-              <span>{row.stars} stars</span>
-            </span>
-            <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+              <span className="text-sm font-bold text-slate-700">
+                {row.stars} star{row.stars !== 1 ? "s" : ""}
+              </span>
+            </div>
+            {/* Bar */}
+            <div className="flex-1 h-3 rounded-full bg-slate-100 overflow-hidden">
               <div
-                className={`h-full rounded-full ${colorMap[row.stars]} transition-all duration-500`}
-                style={{ width: `${Math.max(row.pct, 1)}%` }}
+                className={`h-full rounded-full ${barColors[row.stars]} transition-all duration-500`}
+                style={{ width: `${Math.max(row.pct, 2)}%` }}
               />
             </div>
-            <span className="w-16 text-right font-mono text-slate-500 text-[11px] shrink-0">
+            {/* Percentage + Count */}
+            <span className="w-24 text-right text-sm font-bold text-slate-700 shrink-0">
               {row.pct}% ({row.count})
             </span>
           </div>
@@ -576,7 +632,6 @@ function FeedbackTrends({ timeSeries }: { timeSeries: FeedbackStatsData["timeSer
       </div>
 
       <div className="relative">
-        {/* Tooltip */}
         {hoveredIdx !== null && timeSeries[hoveredIdx] && (
           <div
             className="absolute top-0 bg-white rounded-lg p-2 shadow-lg border border-slate-100 text-center text-xs z-10 pointer-events-none"
@@ -586,16 +641,13 @@ function FeedbackTrends({ timeSeries }: { timeSeries: FeedbackStatsData["timeSer
             }}
           >
             <div className="text-[10px] text-slate-400 font-bold">
-              {new Date(timeSeries[hoveredIdx].date).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
+              {new Date(timeSeries[hoveredIdx].date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
             </div>
             <div className="font-extrabold text-slate-900">{timeSeries[hoveredIdx].count} feedback</div>
             {timeSeries[hoveredIdx].avgRating > 0 && (
-              <div className="text-[10px] text-emerald-600 font-bold">
-                ★ {timeSeries[hoveredIdx].avgRating} average
+              <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+                <Star className="w-3 h-3 fill-amber-400 text-amber-400 shrink-0" />
+                <span>{timeSeries[hoveredIdx].avgRating} average</span>
               </div>
             )}
           </div>
@@ -623,7 +675,6 @@ function FeedbackTrends({ timeSeries }: { timeSeries: FeedbackStatsData["timeSer
           )}
         </div>
 
-        {/* X Labels */}
         <div className="flex justify-between text-[10px] text-slate-400 mt-2 px-1">
           {dateLabels.map((dl) => (
             <span key={dl.idx}>{dl.label}</span>
@@ -634,85 +685,10 @@ function FeedbackTrends({ timeSeries }: { timeSeries: FeedbackStatsData["timeSer
   );
 }
 
-/* ─── Sentiment Donut ─── */
-function SentimentDonut({ sentiment }: { sentiment: FeedbackStatsData["sentiment"] }) {
-  const circ = 88; // circumference for r=14
-  const posDash = (sentiment.positive.pct / 100) * circ;
-  const neuDash = (sentiment.neutral.pct / 100) * circ;
-  const negDash = (sentiment.negative.pct / 100) * circ;
-
-  return (
-    <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
-      <div>
-        <h2 className="text-base font-extrabold text-slate-900">Feedback Sentiment</h2>
-        <p className="text-xs text-slate-500 mt-0.5">Overall sentiment from guest feedback.</p>
-      </div>
-
-      <div className="flex items-center justify-center my-4">
-        <div className="relative w-40 h-40">
-          <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-            <circle cx="18" cy="18" r="14" fill="none" stroke="#E2E8F0" strokeWidth="4.5" />
-            <circle
-              cx="18" cy="18" r="14" fill="none"
-              stroke="#0F766E"
-              strokeWidth="4.5"
-              strokeDasharray={`${posDash} ${circ - posDash}`}
-              strokeDashoffset="0"
-              strokeLinecap="round"
-            />
-            <circle
-              cx="18" cy="18" r="14" fill="none"
-              stroke="#94A3B8"
-              strokeWidth="4.5"
-              strokeDasharray={`${neuDash} ${circ - neuDash}`}
-              strokeDashoffset={`${-posDash}`}
-              strokeLinecap="round"
-            />
-            <circle
-              cx="18" cy="18" r="14" fill="none"
-              stroke="#EF4444"
-              strokeWidth="4.5"
-              strokeDasharray={`${negDash} ${circ - negDash}`}
-              strokeDashoffset={`${-(posDash + neuDash)}`}
-              strokeLinecap="round"
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <span className="text-base font-black text-slate-900 leading-tight">{sentiment.total}</span>
-            <span className="text-[10px] text-slate-400">Total Feedback</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-2 text-xs">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#0F766E]" />
-            <span className="font-semibold text-slate-700">Positive</span>
-          </div>
-          <span className="font-mono text-slate-900 font-bold">{sentiment.positive.pct}% ({sentiment.positive.count})</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-sm bg-slate-400" />
-            <span className="font-semibold text-slate-700">Neutral</span>
-          </div>
-          <span className="font-mono text-slate-900 font-bold">{sentiment.neutral.pct}% ({sentiment.neutral.count})</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-sm bg-red-500" />
-            <span className="font-semibold text-slate-700">Negative</span>
-          </div>
-          <span className="font-mono text-slate-900 font-bold">{sentiment.negative.pct}% ({sentiment.negative.count})</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Topics Card ─── */
+/* ─── Common Feedback Topics (matching uploaded image - horizontal bars) ─── */
 function TopicsCard({ topics }: { topics: FeedbackStatsData["topics"] }) {
+  const maxCount = Math.max(...topics.map(t => t.count), 1);
+
   return (
     <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
       <div className="flex items-center justify-between mb-4">
@@ -726,18 +702,18 @@ function TopicsCard({ topics }: { topics: FeedbackStatsData["topics"] }) {
         {topics.length === 0 && (
           <div className="text-center text-sm text-slate-400 py-4">No topics identified yet</div>
         )}
-        {topics.map((topic) => (
-          <div key={topic.name} className="space-y-1">
-            <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-              <span>{topic.name}</span>
-              <span className="font-mono text-slate-900">{topic.count}</span>
-            </div>
-            <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+        {topics.map((topic, idx) => (
+          <div key={topic.name} className="flex items-center gap-3">
+            <span className="w-24 text-xs font-bold text-slate-700 shrink-0 truncate">{topic.name}</span>
+            <div className="flex-1 h-2.5 rounded-full bg-slate-100 overflow-hidden">
               <div
-                className="h-full rounded-full bg-[#0F766E] transition-all duration-500"
-                style={{ width: `${topic.pct}%` }}
+                className={`h-full rounded-full transition-all duration-500 ${
+                  idx % 2 === 0 ? "bg-[#0F766E]" : "bg-emerald-400"
+                }`}
+                style={{ width: `${Math.max((topic.count / maxCount) * 100, 3)}%` }}
               />
             </div>
+            <span className="text-xs font-bold text-emerald-700 w-10 text-right shrink-0">{topic.count}</span>
           </div>
         ))}
       </div>

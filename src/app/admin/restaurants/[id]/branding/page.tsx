@@ -20,9 +20,18 @@ export default async function BrandingPage({
     notFound();
   }
 
-  const restaurant = access.restaurant || (await prisma.restaurant.findUnique({
+  const restaurant = await prisma.restaurant.findUnique({
     where: { id: restaurantId },
-  }));
+    include: {
+      actions: {
+        where: { enabled: true },
+        orderBy: { displayOrder: "asc" },
+      },
+      socialLinks: {
+        orderBy: { displayOrder: "asc" },
+      },
+    },
+  });
 
   if (!restaurant) {
     notFound();
@@ -31,17 +40,20 @@ export default async function BrandingPage({
   return (
     <div className="w-full animate-in fade-in duration-200">
       <PageHeader
-        title="Restaurant Branding & Identity"
-        description="Configure logos, cover photography, accent palettes, and physical venue contact information."
+        title="Restaurant Profile"
+        description="Manage restaurant identity, logo, cover photography, brand color palette, operating schedule, and contact channels."
         breadcrumbs={[
           { label: "Restaurants", href: "/admin" },
           { label: restaurant.name, href: `/admin/restaurants/${restaurant.id}/dashboard` },
-          { label: "Branding" },
+          { label: "Restaurant Profile" },
         ]}
-        badge={<StatusBadge status="active" label="Live Theme" />}
       />
 
-      <BrandingEditorForm restaurant={restaurant} />
+      <BrandingEditorForm
+        restaurant={restaurant}
+        actions={restaurant.actions}
+        initialSocialLinks={restaurant.socialLinks}
+      />
     </div>
   );
 }

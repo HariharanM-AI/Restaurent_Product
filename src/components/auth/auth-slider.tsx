@@ -240,7 +240,6 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
           name: signupName.trim(),
           email: signupEmail.trim().toLowerCase(),
           password: signupPassword,
-          restaurantName: signupRestaurantName.trim() || `${signupName}'s Kitchen`,
         }),
       });
 
@@ -386,7 +385,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
           <div className="flex items-start gap-2.5">
             <Quote className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
             <p className="text-[11px] text-emerald-100/80 italic leading-relaxed">
-              "GuestLink has helped us create a more connected experience with our customers. It's simple, powerful, and easy to use."
+              "Noura has helped us create a more connected experience with our customers. It's simple, powerful, and easy to use."
             </p>
           </div>
           <div className="mt-2.5 flex items-center justify-between">
@@ -438,7 +437,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
             Welcome back
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Sign in to your GuestLink account.
+            Sign in to your Noura account.
           </p>
         </div>
 
@@ -636,23 +635,6 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Restaurant name
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                required
-                value={signupRestaurantName}
-                onChange={(e) => setSignupRestaurantName(e.target.value)}
-                placeholder="e.g. The Green Table"
-                className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-700 text-slate-900 placeholder:text-slate-400"
-              />
-              <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
               Email address
             </label>
             <div className="relative">
@@ -738,7 +720,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
               </>
             ) : (
               <>
-                <span>Create Restaurant Account</span>
+                <span>Create Account</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -821,19 +803,30 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#052621] text-slate-900 flex flex-col justify-between relative overflow-hidden p-4 sm:p-6 lg:p-8 selection:bg-emerald-500 selection:text-white">
-      {/* Background organic gradients */}
-      <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-emerald-700/15 blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-[600px] h-[600px] rounded-full bg-teal-600/15 blur-[140px] pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[#072C27]/40 blur-[160px] pointer-events-none" />
+    <div className="min-h-screen text-slate-900 flex flex-col justify-between relative overflow-hidden p-4 sm:p-6 lg:p-8 selection:bg-emerald-500 selection:text-white">
+      {/* Background image from user's uploaded design */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/auth-bg.png"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-[#052621]/75 backdrop-blur-[2px]" />
+      </div>
+      {/* Ambient overlay gradients on top of the image */}
+      <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-emerald-700/10 blur-[120px] pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-[600px] h-[600px] rounded-full bg-teal-600/10 blur-[140px] pointer-events-none" />
 
       {/* Top Header */}
       <header className="w-full max-w-5xl mx-auto flex items-center justify-between z-10 py-2">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 group-hover:bg-emerald-500/30 transition">
-            <Sparkles className="w-4 h-4 text-emerald-300" />
+          <div className="w-9 h-9 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-center p-1 shadow-sm">
+            <img src="/images/Own brand logo.png" alt="Noura" className="w-full h-full object-contain" />
           </div>
-          <span className="text-white font-extrabold text-xl tracking-tight">GuestLink</span>
+          <span className="text-white font-extrabold text-xl tracking-tight">Noura</span>
         </Link>
 
         <div className="flex items-center gap-3">
@@ -904,7 +897,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
       {/* Bottom Footer */}
       <footer className="w-full max-w-5xl mx-auto flex items-center justify-between text-[11px] text-emerald-300/40 font-bold z-10 py-2">
         <span className="tracking-[0.15em]">BETTER GUESTS. BRIGHTER BUSINESS.</span>
-        <span className="tracking-[0.2em]">GUESTLINK</span>
+        <span className="tracking-[0.2em]">NOURA</span>
       </footer>
     </div>
   );

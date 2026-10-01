@@ -3,7 +3,6 @@ import { getSession, verifyRestaurantAccess } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { AnalyticsDashboard } from "@/components/admin/analytics-dashboard";
 import { PageHeader } from "@/components/ui/page-header";
-import { StatusBadge } from "@/components/ui/status-badge";
 
 export default async function AnalyticsAdminPage({
   params,
@@ -33,7 +32,6 @@ export default async function AnalyticsAdminPage({
           { label: restaurant?.name || "Restaurant", href: `/admin/restaurants/${restaurantId}/dashboard` },
           { label: "Analytics" },
         ]}
-        badge={<StatusBadge status="active" label="Telemetry Live" />}
       />
 
       <AnalyticsDashboard restaurantId={restaurantId} />

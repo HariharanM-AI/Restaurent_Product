@@ -20,13 +20,17 @@ export type FeedbackInput = z.infer<typeof feedbackSchema>;
 export const restaurantUpdateSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   tagline: z.string().max(200).optional().nullable(),
-  logoUrl: z.string().url().optional().nullable().or(z.literal("")),
-  coverImageUrl: z.string().url().optional().nullable().or(z.literal("")),
+  logoUrl: z.string().max(2000).optional().nullable().or(z.literal("")),
+  coverImageUrl: z.string().max(2000).optional().nullable().or(z.literal("")),
   primaryColor: z.string().regex(hexColorRegex, "Invalid primary hex color (e.g. #0F766E)").optional(),
   secondaryColor: z.string().regex(hexColorRegex, "Invalid secondary hex color (e.g. #F8FAFC)").optional(),
   address: z.string().max(250).optional().nullable(),
   phone: z.string().max(50).optional().nullable(),
-  website: z.string().url().optional().nullable().or(z.literal("")),
+  website: z.string().max(1000).optional().nullable().or(z.literal("")),
+  openingHours: z.string().max(200).optional().nullable().or(z.literal("")),
+  googleMapsUrl: z.string().max(1000).optional().nullable().or(z.literal("")),
+  instagramUrl: z.string().max(1000).optional().nullable().or(z.literal("")),
+  facebookUrl: z.string().max(1000).optional().nullable().or(z.literal("")),
 });
 
 export type RestaurantUpdateInput = z.infer<typeof restaurantUpdateSchema>;

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { getSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/db/prisma";
+import { uploadClientAsset } from "@/lib/supabase/storage";
 
 export async function POST(req: Request) {
   try {
@@ -39,51 +39,71 @@ export async function POST(req: Request) {
       "image/png",
       "image/webp",
       "image/avif",
+      "image/svg+xml",
+      "image/gif",
     ];
 
     if (!allowedMimeTypes.includes(file.type)) {
       return NextResponse.json(
         {
           success: false,
-          error: { message: "Only PDF documents and image files (JPEG, PNG, WebP) are allowed." },
+          error: {
+            message: "Only PDF documents and image files (JPEG, PNG, WebP, SVG, GIF) are allowed.",
+          },
         },
         { status: 400 }
       );
     }
 
+    // Resolve shop / restaurant ID to ensure client-specific and shop-specific storage
+    let restaurantId =
+      (formData.get("restaurantId") as string) ||
+      (formData.get("shopId") as string);
+
+    if (!restaurantId) {
+      // Look up client's active restaurant membership
+      const membership = await prisma.restaurantMember.findFirst({
+        where: { userId: session.user.id },
+        orderBy: { createdAt: "asc" },
+      });
+      restaurantId = membership?.restaurantId || "default-shop";
+    }
+
+    // Resolve category (logos, covers, menus, or general)
+    let category = (formData.get("category") as "logos" | "covers" | "menus" | "general") || "general";
+    const requestedType = formData.get("type") as string;
+    if (requestedType === "logo") category = "logos";
+    if (requestedType === "cover") category = "covers";
+    if (requestedType === "menu" || requestedType === "pdf" || requestedType === "image") category = "menus";
+
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Ensure public/uploads directory exists
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadsDir, { recursive: true });
-
-    // Generate clean unique filename
-    const ext = path.extname(file.name) || (file.type === "application/pdf" ? ".pdf" : ".jpg");
-    const sanitizedBase = file.name
-      .replace(ext, "")
-      .replace(/[^\w-]/g, "_")
-      .slice(0, 30);
-    const uniqueFilename = `${sanitizedBase}-${Date.now()}${ext}`;
-    const filePath = path.join(uploadsDir, uniqueFilename);
-
-    await writeFile(filePath, buffer);
-
-    const publicUrl = `/uploads/${uniqueFilename}`;
+    // Upload directly to Supabase Storage structured strictly by client and shop
+    const uploadResult = await uploadClientAsset({
+      fileBuffer: buffer,
+      fileName: file.name,
+      mimeType: file.type,
+      clientId: session.user.id,
+      shopId: restaurantId,
+      category,
+    });
 
     return NextResponse.json({
       success: true,
       data: {
-        url: publicUrl,
-        filename: uniqueFilename,
+        url: uploadResult.publicUrl,
+        storagePath: uploadResult.storagePath,
+        filename: uploadResult.filename,
         size: file.size,
         type: file.type,
+        provider: "supabase",
       },
     });
   } catch (error: any) {
     console.error("Upload handler error:", error);
     return NextResponse.json(
-      { success: false, error: { message: "File upload failed. Please try again." } },
+      { success: false, error: { message: error.message || "File upload to Supabase failed. Please try again." } },
       { status: 500 }
     );
   }

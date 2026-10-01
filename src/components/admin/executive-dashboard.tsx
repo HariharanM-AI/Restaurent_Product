@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { subscribeToActivity } from "@/lib/realtime/broadcast";
 import {
   Users,
   Award,
@@ -22,9 +23,22 @@ import {
   Sparkles,
   Activity,
   Clock,
+  ChevronRight,
 } from "lucide-react";
 
 /* ─── Types ─── */
+interface DashboardGuest {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  status: string;
+  totalVisits: number;
+  activeRewards: number;
+  lastVisit: string;
+  joinedAt: string;
+}
+
 interface DashboardData {
   period: string;
   startDate: string;
@@ -56,7 +70,7 @@ interface DashboardData {
   positivePct: number;
   heatmap: number[][];
   funnel: { label: string; count: number; percentage: number }[];
-  recentActivity: { type: string; description: string; icon: string; createdAt: string }[];
+  guests: DashboardGuest[];
 }
 
 interface ExecutiveDashboardProps {
@@ -82,17 +96,6 @@ function fmt(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
   if (n >= 1_000) return (n / 1_000).toFixed(n >= 10_000 ? 0 : 1) + "K";
   return n.toLocaleString();
-}
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
 }
 
 const iconMap: Record<string, React.FC<{ className?: string }>> = {
@@ -157,8 +160,10 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDashboard = useCallback(async () => {
-    setLoading(true);
+  const fetchDashboard = useCallback(async (isSilent = false) => {
+    if (!isSilent) {
+      setLoading(true);
+    }
     setError(null);
     try {
       let url = `/api/restaurants/${restaurant.id}/dashboard?period=${period}`;
@@ -171,26 +176,38 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
       if (json.success) {
         setData(json.data);
       } else {
-        setError(json.error || "Unknown error");
+        if (!isSilent) setError(json.error || "Unknown error");
       }
     } catch {
-      setError("Unable to load dashboard data. Please try again.");
+      if (!isSilent) setError("Unable to load dashboard data. Please try again.");
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }, [restaurant.id, period, customFrom, customTo]);
 
   useEffect(() => {
-    // Don't fetch if custom without dates
     if (period === "custom" && (!customFrom || !customTo)) return;
     fetchDashboard();
   }, [fetchDashboard, period, customFrom, customTo]);
 
-  // Greeting based on time of day
+  // Real-time synchronization whenever guest opens or uses the guest hub
+  useEffect(() => {
+    const unsubscribe = subscribeToActivity(restaurant.id, () => {
+      fetchDashboard(true);
+    });
+
+    const pollInterval = setInterval(() => {
+      fetchDashboard(true);
+    }, 4000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(pollInterval);
+    };
+  }, [restaurant.id, fetchDashboard]);
+
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-
-  // Period label for subtitle
   const periodLabel = PERIODS.find((p) => p.key === period)?.label || "30 Days";
 
   return (
@@ -237,7 +254,6 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
             </button>
           ))}
 
-          {/* Custom date range picker */}
           {showCustomPicker && period === "custom" && (
             <div className="flex items-center gap-2 ml-2">
               <input
@@ -265,7 +281,7 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
         <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium flex items-center gap-2">
           <AlertCircle className="w-4 h-4" />
           <span>{error}</span>
-          <button onClick={fetchDashboard} className="ml-auto text-xs font-bold underline">
+          <button onClick={() => fetchDashboard()} className="ml-auto text-xs font-bold underline">
             Retry
           </button>
         </div>
@@ -284,11 +300,7 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
             <SkeletonBlock className="lg:col-span-2 h-80" />
             <SkeletonBlock className="h-80" />
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <SkeletonBlock className="h-64" />
-            <SkeletonBlock className="h-64" />
-            <SkeletonBlock className="h-64" />
-          </div>
+          <SkeletonBlock className="h-72" />
         </>
       )}
 
@@ -364,11 +376,10 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
             />
           </div>
 
-          {/* 5. Heatmap, Funnel, Recent Activity */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 5. Heatmap + Funnel (no more Recent Activity) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <PeakActivityHeatmap heatmap={data.heatmap} />
             <ReviewFunnel funnel={data.funnel} />
-            <RecentActivity activities={data.recentActivity} />
           </div>
         </>
       )}
@@ -456,17 +467,21 @@ function EngagementChart({
   const previousData = timeSeries.map((d) => d.previous);
   const maxVal = Math.max(...currentData, ...previousData, 1);
 
-  const chartW = 560;
-  const chartH = 180;
-  const padX = 40;
-  const padY = 10;
-  const plotW = chartW - padX;
-  const plotH = chartH - padY * 2;
+  // Clean, consistent Y-axis tick intervals
+  const yTicks = [maxVal, Math.round(maxVal * 0.75), Math.round(maxVal * 0.5), Math.round(maxVal * 0.25), 0];
 
-  const xStep = currentData.length > 1 ? plotW / (currentData.length - 1) : plotW;
+  // Normalized coordinate space
+  const svgW = 1000;
+  const svgH = 200;
+  const padTop = 15;
+  const padBottom = 15;
+  const plotH = svgH - padTop - padBottom;
 
-  const toY = (val: number) => padY + (1 - val / maxVal) * plotH;
-  const toX = (i: number) => padX + i * xStep;
+  const toY = (val: number) => padTop + (1 - val / maxVal) * plotH;
+  const toX = (i: number) => {
+    if (timeSeries.length <= 1) return svgW / 2;
+    return (i / (timeSeries.length - 1)) * svgW;
+  };
 
   const currentPath = currentData
     .map((v, i) => `${i === 0 ? "M" : "L"} ${toX(i).toFixed(1)},${toY(v).toFixed(1)}`)
@@ -475,30 +490,33 @@ function EngagementChart({
     .map((v, i) => `${i === 0 ? "M" : "L"} ${toX(i).toFixed(1)},${toY(v).toFixed(1)}`)
     .join(" ");
   const areaPath = currentData.length > 0
-    ? `${currentPath} L ${toX(currentData.length - 1).toFixed(1)},${(chartH - padY).toFixed(1)} L ${padX},${(chartH - padY).toFixed(1)} Z`
+    ? `${currentPath} L ${svgW},${svgH - padBottom} L 0,${svgH - padBottom} Z`
     : "";
 
-  // Grid lines
-  const gridYs = [0, 0.25, 0.5, 0.75, 1].map((pct) => padY + pct * plotH);
-  const gridLabels = [maxVal, Math.round(maxVal * 0.75), Math.round(maxVal * 0.5), Math.round(maxVal * 0.25), 0];
-
-  // X-axis labels (show ~7 evenly spaced dates)
+  // Date labels distributed across the series, strictly including the first and last days
   const dateLabels: { label: string; idx: number }[] = [];
-  const step = Math.max(1, Math.floor(timeSeries.length / 6));
-  for (let i = 0; i < timeSeries.length; i += step) {
-    const d = new Date(timeSeries[i].date);
-    dateLabels.push({
-      label: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      idx: i,
-    });
-  }
-  // Always include last date
-  if (timeSeries.length > 0 && dateLabels[dateLabels.length - 1]?.idx !== timeSeries.length - 1) {
-    const d = new Date(timeSeries[timeSeries.length - 1].date);
-    dateLabels.push({
-      label: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      idx: timeSeries.length - 1,
-    });
+  if (timeSeries.length > 0) {
+    const numLabels = Math.min(7, timeSeries.length);
+    const step = (timeSeries.length - 1) / (numLabels - 1);
+    for (let l = 0; l < numLabels; l++) {
+      const idx = Math.round(l * step);
+      if (idx < timeSeries.length) {
+        const d = new Date(timeSeries[idx].date);
+        dateLabels.push({
+          label: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+          idx,
+        });
+      }
+    }
+    // Guarantee last index is exactly the last date in the series
+    if (dateLabels.length > 0) {
+      const lastIdx = timeSeries.length - 1;
+      const d = new Date(timeSeries[lastIdx].date);
+      dateLabels[dateLabels.length - 1] = {
+        label: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        idx: lastIdx,
+      };
+    }
   }
 
   return (
@@ -522,99 +540,169 @@ function EngagementChart({
         </div>
       </div>
 
-      <div className="relative w-full h-64 select-none">
-        {/* Hover Tooltip */}
-        {hoveredIdx !== null && timeSeries[hoveredIdx] && (
-          <div
-            className="absolute top-2 bg-white rounded-xl p-3 shadow-xl border border-slate-100 z-20 pointer-events-none text-center animate-in fade-in zoom-in-95 duration-150"
-            style={{ left: `${(hoveredIdx / Math.max(timeSeries.length - 1, 1)) * 85 + 5}%`, transform: "translateX(-50%)" }}
-          >
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              {new Date(timeSeries[hoveredIdx].date).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </div>
-            <div className="text-sm font-black text-slate-900 mt-0.5">
-              {timeSeries[hoveredIdx].current.toLocaleString()} engagements
-            </div>
-            {timeSeries[hoveredIdx].previous > 0 && (
-              <div className="text-[11px] font-bold text-slate-400 mt-0.5">
-                vs {timeSeries[hoveredIdx].previous.toLocaleString()} prev
-              </div>
-            )}
-          </div>
-        )}
-
-        <svg
-          className="w-full h-full overflow-visible"
-          viewBox={`0 0 ${chartW} ${chartH}`}
-          onMouseLeave={() => setHoveredIdx(null)}
-        >
-          <defs>
-            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#0F766E" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#0F766E" stopOpacity="0.0" />
-            </linearGradient>
-          </defs>
-
-          {/* Grid */}
-          {gridYs.map((y, i) => (
-            <g key={i}>
-              <line x1={padX} y1={y} x2={chartW} y2={y} stroke="#F1F5F9" strokeWidth="1" />
-              <text x={padX - 6} y={y + 4} fontSize="9" fill="#94A3B8" textAnchor="end">
-                {fmt(gridLabels[i])}
-              </text>
-            </g>
+      {/* Main Chart Area */}
+      <div className="flex gap-3 items-stretch relative select-none">
+        {/* Y-Axis Column pinned to the far left */}
+        <div className="w-8 shrink-0 flex flex-col justify-between text-right text-[11px] font-semibold text-slate-400 select-none pb-7 pt-1">
+          {yTicks.map((val, idx) => (
+            <span key={idx} className="leading-none">{fmt(val)}</span>
           ))}
+        </div>
 
-          {/* Previous period dashed */}
-          {previousData.length > 1 && (
-            <path d={prevPath} fill="none" stroke="#94A3B8" strokeWidth="1.5" strokeDasharray="4 4" />
+        {/* Plot Area */}
+        <div className="flex-1 flex flex-col relative min-w-0">
+          {/* Tooltip */}
+          {hoveredIdx !== null && timeSeries[hoveredIdx] && (
+            <div
+              className="absolute -top-3 z-30 bg-white rounded-xl p-3 shadow-xl border border-slate-100 pointer-events-none text-center animate-in fade-in zoom-in-95 duration-150 whitespace-nowrap"
+              style={{
+                left: `${(hoveredIdx / Math.max(timeSeries.length - 1, 1)) * 100}%`,
+                transform: "translateX(-50%) translateY(-100%)",
+              }}
+            >
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                {new Date(timeSeries[hoveredIdx].date).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </div>
+              <div className="text-sm font-black text-slate-900 mt-0.5">
+                {timeSeries[hoveredIdx].current.toLocaleString()} engagements
+              </div>
+              {timeSeries[hoveredIdx].previous > 0 && (
+                <div className="text-[11px] font-bold text-slate-400 mt-0.5">
+                  vs {timeSeries[hoveredIdx].previous.toLocaleString()} prev
+                </div>
+              )}
+            </div>
           )}
 
-          {/* Current period area + line */}
-          {currentData.length > 1 && (
-            <>
-              <path d={areaPath} fill="url(#areaGradient)" />
-              <path d={currentPath} fill="none" stroke="#0F766E" strokeWidth="2.5" />
-            </>
-          )}
+          {/* SVG Canvas */}
+          <div className="relative w-full h-56">
+            <svg
+              className="w-full h-full overflow-visible"
+              viewBox={`0 0 ${svgW} ${svgH}`}
+              preserveAspectRatio="none"
+              onMouseLeave={() => setHoveredIdx(null)}
+            >
+              <defs>
+                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#0F766E" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="#0F766E" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
 
-          {/* Hover interaction zones */}
-          {currentData.map((val, i) => (
-            <g key={i} onMouseEnter={() => setHoveredIdx(i)}>
-              <rect
-                x={toX(i) - xStep / 2}
-                y={0}
-                width={xStep}
-                height={chartH}
-                fill="transparent"
-                className="cursor-pointer"
-              />
-              {hoveredIdx === i && (
+              {/* Gridlines */}
+              {yTicks.map((_, i) => {
+                const y = padTop + (i / (yTicks.length - 1)) * plotH;
+                return (
+                  <line
+                    key={i}
+                    x1="0"
+                    y1={y}
+                    x2={svgW}
+                    y2={y}
+                    stroke="#F1F5F9"
+                    strokeWidth="1"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                );
+              })}
+
+              {/* Previous period line */}
+              {previousData.length > 1 && (
+                <path
+                  d={prevPath}
+                  fill="none"
+                  stroke="#94A3B8"
+                  strokeWidth="1.5"
+                  strokeDasharray="4 4"
+                  vectorEffect="non-scaling-stroke"
+                />
+              )}
+
+              {/* Current period area & curve */}
+              {currentData.length > 1 && (
                 <>
-                  <circle cx={toX(i)} cy={toY(val)} r="5" fill="#0F766E" stroke="#FFFFFF" strokeWidth="2" />
-                  <line x1={toX(i)} y1={toY(val)} x2={toX(i)} y2={chartH - padY} stroke="#0F766E" strokeWidth="1" strokeDasharray="3 3" />
+                  <path d={areaPath} fill="url(#areaGradient)" />
+                  <path
+                    d={currentPath}
+                    fill="none"
+                    stroke="#0F766E"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    vectorEffect="non-scaling-stroke"
+                  />
                 </>
               )}
-            </g>
-          ))}
 
-          {currentData.length === 0 && (
-            <text x={chartW / 2} y={chartH / 2} fontSize="12" fill="#94A3B8" textAnchor="middle">
-              No data for this period
-            </text>
-          )}
-        </svg>
-      </div>
+              {/* Hover point & vertical indicator */}
+              {hoveredIdx !== null && (
+                <g>
+                  <line
+                    x1={toX(hoveredIdx)}
+                    y1={toY(currentData[hoveredIdx] || 0)}
+                    x2={toX(hoveredIdx)}
+                    y2={svgH - padBottom}
+                    stroke="#0F766E"
+                    strokeWidth="1.5"
+                    strokeDasharray="3 3"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                  <circle
+                    cx={toX(hoveredIdx)}
+                    cy={toY(currentData[hoveredIdx] || 0)}
+                    r="5"
+                    fill="#0F766E"
+                    stroke="#FFFFFF"
+                    strokeWidth="2"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </g>
+              )}
+            </svg>
 
-      {/* X Axis Labels */}
-      <div className="flex justify-between text-[11px] font-semibold text-slate-400 mt-2 px-6">
-        {dateLabels.map((dl) => (
-          <span key={dl.idx}>{dl.label}</span>
-        ))}
+            {/* Hover Trigger Overlay Columns */}
+            <div
+              className="absolute inset-0 flex"
+              onMouseLeave={() => setHoveredIdx(null)}
+            >
+              {currentData.map((_, i) => (
+                <div
+                  key={i}
+                  className="flex-1 h-full cursor-pointer"
+                  onMouseEnter={() => setHoveredIdx(i)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* X-Axis Date Labels: Positioned at exact data point percentages */}
+          <div className="relative w-full h-6 mt-3">
+            {dateLabels.map((dl) => {
+              const pct = (dl.idx / Math.max(timeSeries.length - 1, 1)) * 100;
+              return (
+                <span
+                  key={dl.idx}
+                  className="absolute text-[11px] font-semibold text-slate-400 whitespace-nowrap"
+                  style={{
+                    left: `${pct}%`,
+                    transform:
+                      dl.idx === 0
+                        ? "none"
+                        : dl.idx === timeSeries.length - 1
+                        ? "translateX(-100%)"
+                        : "translateX(-50%)",
+                  }}
+                >
+                  {dl.label}
+                </span>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -670,7 +758,6 @@ function LoyaltyPerformance({
   restaurantId: string;
   timeSeries: DashboardData["timeSeries"];
 }) {
-  // Simple bar chart data from timeSeries (use last 20 points)
   const barData = timeSeries.slice(-20).map((d) => d.current);
   const maxBar = Math.max(...barData, 1);
 
@@ -709,7 +796,6 @@ function LoyaltyPerformance({
         </div>
       </div>
 
-      {/* Mini bar chart */}
       <div className="mt-4">
         <div className="text-[11px] font-bold text-slate-500 mb-2">Activity trend</div>
         <div className="h-20 flex items-end gap-1">
@@ -736,8 +822,7 @@ function CustomerInsights({
 }) {
   const newPct = insights.newGuestsPct || 0;
   const retPct = insights.returningPct || 0;
-  // SVG donut
-  const newDash = (newPct / 100) * 88; // circumference ≈ 88 for r=14
+  const newDash = (newPct / 100) * 88;
   const retDash = (retPct / 100) * 88;
 
   return (
@@ -747,13 +832,6 @@ function CustomerInsights({
           <h2 className="text-base font-extrabold text-slate-900">Customer Insights</h2>
           <p className="text-xs text-slate-500 mt-0.5">Understand your guest base.</p>
         </div>
-        <Link
-          href={`/admin/restaurants/${restaurantId}/customers`}
-          className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1"
-        >
-          <span>View details</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
       </div>
 
       <div className="flex flex-col sm:flex-row items-center gap-6 my-2">
@@ -915,7 +993,6 @@ function PeakActivityHeatmap({ heatmap }: { heatmap: number[][] }) {
       </div>
 
       <div className="space-y-2 mt-3">
-        {/* Day headers */}
         <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 pl-16">
           {days.map((d) => (
             <span key={d} className="flex-1 text-center">{d}</span>
@@ -958,44 +1035,6 @@ function ReviewFunnel({ funnel }: { funnel: DashboardData["funnel"] }) {
             <div className="mt-2 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
               {stage.percentage}%
             </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Recent Activity Feed ─── */
-function RecentActivity({ activities }: { activities: DashboardData["recentActivity"] }) {
-  return (
-    <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-base font-extrabold text-slate-900">Recent Guest Activity</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Live updates from your guests.</p>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        {activities.length === 0 && (
-          <div className="text-center text-sm text-slate-400 py-8">No recent activity</div>
-        )}
-        {activities.map((item, idx) => (
-          <div key={idx} className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2.5">
-              <DynamicIcon
-                name={item.icon}
-                className={`w-4 h-4 shrink-0 ${
-                  item.icon === "Star"
-                    ? "text-amber-500"
-                    : item.icon === "Gift"
-                    ? "text-purple-600"
-                    : "text-emerald-700"
-                }`}
-              />
-              <span className="font-semibold text-slate-700 truncate">{item.description}</span>
-            </div>
-            <span className="text-[11px] text-slate-400 shrink-0 ml-2">{timeAgo(item.createdAt)}</span>
           </div>
         ))}
       </div>

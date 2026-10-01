@@ -5,6 +5,7 @@ import { verifyRestaurantAccess } from "@/lib/auth/session";
 /**
  * GET /api/restaurants/[id]/dashboard?period=today|7d|30d|90d|1y|custom&from=ISO&to=ISO
  * Returns all dashboard metrics for the given restaurant, filtered by date range.
+ * Queries are batched into small groups to avoid connection pool exhaustion.
  */
 export async function GET(
   req: NextRequest,
@@ -60,138 +61,87 @@ export async function GET(
     const dateFilter = { gte: startDate, lte: endDate };
     const prevDateFilter = { gte: prevStartDate, lt: prevEndDate };
 
-    // Run ALL queries in parallel for maximum performance
+    // ── BATCH 1: Current period KPIs + Previous period KPIs (8 light count queries) ──
     const [
-      // Current period KPIs
-      currentVisits,
-      currentStamps,
-      currentFeedbacks,
-      currentWallets,
-      // Previous period KPIs for comparison
-      prevVisits,
-      prevStamps,
-      prevFeedbacks,
-      prevWallets,
-      // Analytics events for time-series + action breakdown + heatmap
+      currentVisits, currentStamps, currentFeedbacks, currentWallets,
+      prevVisits, prevStamps, prevFeedbacks, prevWallets,
+    ] = await Promise.all([
+      prisma.analyticsEvent.count({ where: { restaurantId, eventType: "guest_page_view", createdAt: dateFilter } }),
+      prisma.loyaltyStampTransaction.count({ where: { restaurantId, type: "STAMP_EARNED", createdAt: dateFilter } }),
+      prisma.feedback.count({ where: { restaurantId, createdAt: dateFilter } }),
+      prisma.loyaltyWallet.count({ where: { restaurantId, createdAt: dateFilter } }),
+      prisma.analyticsEvent.count({ where: { restaurantId, eventType: "guest_page_view", createdAt: prevDateFilter } }),
+      prisma.loyaltyStampTransaction.count({ where: { restaurantId, type: "STAMP_EARNED", createdAt: prevDateFilter } }),
+      prisma.feedback.count({ where: { restaurantId, createdAt: prevDateFilter } }),
+      prisma.loyaltyWallet.count({ where: { restaurantId, createdAt: prevDateFilter } }),
+    ]);
+
+    // ── BATCH 2: Heavy data queries (events, feedback distribution, loyalty) ──
+    const [
       analyticsEvents,
-      // Previous period events for chart comparison
       prevAnalyticsEvents,
-      // Feedback star distribution
       feedbacksByRating,
-      // Average rating
       avgRatingResult,
-      // Loyalty stats
       totalActiveWallets,
       totalMilestonesUnlocked,
       totalRewardsRedeemed,
-      // Customer insights: total wallets, identified (with customerId)
-      allWallets,
-      identifiedWallets,
-      // Recent activity: last 8 events
-      recentEvents,
-      // Recent feedbacks
-      recentFeedbacks,
-      // Recent stamp transactions
-      recentStamps,
-      // Returning guests (wallets with >1 stamp txn in period)
-      walletsWithMultipleStamps,
     ] = await Promise.all([
-      // Current period counts
-      prisma.analyticsEvent.count({
-        where: { restaurantId, eventType: "guest_page_view", createdAt: dateFilter },
-      }),
-      prisma.loyaltyStampTransaction.count({
-        where: { restaurantId, type: "STAMP_EARNED", createdAt: dateFilter },
-      }),
-      prisma.feedback.count({
-        where: { restaurantId, createdAt: dateFilter },
-      }),
-      prisma.loyaltyWallet.count({
-        where: { restaurantId, createdAt: dateFilter },
-      }),
-      // Previous period counts
-      prisma.analyticsEvent.count({
-        where: { restaurantId, eventType: "guest_page_view", createdAt: prevDateFilter },
-      }),
-      prisma.loyaltyStampTransaction.count({
-        where: { restaurantId, type: "STAMP_EARNED", createdAt: prevDateFilter },
-      }),
-      prisma.feedback.count({
-        where: { restaurantId, createdAt: prevDateFilter },
-      }),
-      prisma.loyaltyWallet.count({
-        where: { restaurantId, createdAt: prevDateFilter },
-      }),
-      // All analytics events in current period (for time-series, action breakdown, heatmap)
       prisma.analyticsEvent.findMany({
         where: { restaurantId, createdAt: dateFilter },
         select: { eventType: true, createdAt: true },
       }),
-      // Previous period events for chart overlay
       prisma.analyticsEvent.findMany({
         where: { restaurantId, createdAt: prevDateFilter },
         select: { eventType: true, createdAt: true },
       }),
-      // Feedback star distribution (all-time for current period)
       prisma.feedback.groupBy({
         by: ["rating"],
         where: { restaurantId, createdAt: dateFilter },
         _count: { rating: true },
       }),
-      // Average rating
       prisma.feedback.aggregate({
         where: { restaurantId, createdAt: dateFilter },
         _avg: { rating: true },
       }),
-      // Loyalty stats
-      prisma.loyaltyWallet.count({
-        where: { restaurantId, status: "ACTIVE" },
-      }),
-      prisma.loyaltyStampTransaction.count({
-        where: { restaurantId, type: "MILESTONE_UNLOCKED", createdAt: dateFilter },
-      }),
-      prisma.loyaltyReward.count({
-        where: { restaurantId, status: "REDEEMED", redeemedAt: dateFilter },
-      }),
-      // Customer insights
-      prisma.loyaltyWallet.count({
-        where: { restaurantId },
-      }),
-      prisma.loyaltyWallet.count({
-        where: { restaurantId, customerId: { not: null } },
-      }),
-      // Recent events (last 8)
-      prisma.analyticsEvent.findMany({
-        where: { restaurantId },
-        select: { eventType: true, createdAt: true, anonymousSessionId: true },
-        orderBy: { createdAt: "desc" },
-        take: 8,
-      }),
-      // Recent feedbacks (last 5)
-      prisma.feedback.findMany({
-        where: { restaurantId },
-        select: { rating: true, message: true, createdAt: true },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-      }),
-      // Recent stamp transactions
-      prisma.loyaltyStampTransaction.findMany({
-        where: { restaurantId },
-        select: { type: true, createdAt: true },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-      }),
-      // Returning guests: wallets that have more than 1 stamp txn in the period
+      prisma.loyaltyWallet.count({ where: { restaurantId, status: "ACTIVE" } }),
+      prisma.loyaltyStampTransaction.count({ where: { restaurantId, type: "MILESTONE_UNLOCKED", createdAt: dateFilter } }),
+      prisma.loyaltyReward.count({ where: { restaurantId, status: "REDEEMED", redeemedAt: dateFilter } }),
+    ]);
+
+    // ── BATCH 3: Customer insights + Guest directory data ──
+    const [
+      allWallets,
+      identifiedWallets,
+      walletsWithMultipleStamps,
+      guestDirectory,
+    ] = await Promise.all([
+      prisma.loyaltyWallet.count({ where: { restaurantId } }),
+      prisma.loyaltyWallet.count({ where: { restaurantId, customerId: { not: null } } }),
       prisma.loyaltyWallet.count({
         where: {
           restaurantId,
+          transactions: { some: { type: "STAMP_EARNED", createdAt: dateFilter } },
+        },
+      }),
+      // Guest directory: recent wallets with transaction counts (for dashboard embed)
+      prisma.loyaltyWallet.findMany({
+        where: { restaurantId },
+        select: {
+          id: true,
+          anonymousBrowserId: true,
+          status: true,
+          createdAt: true,
+          customer: { select: { displayName: true, email: true, phone: true } },
+          _count: { select: { transactions: true, rewards: true } },
           transactions: {
-            some: {
-              type: "STAMP_EARNED",
-              createdAt: dateFilter,
-            },
+            where: { type: "STAMP_EARNED" },
+            select: { createdAt: true },
+            orderBy: { createdAt: "desc" },
+            take: 1,
           },
         },
+        orderBy: { createdAt: "desc" },
+        take: 50,
       }),
     ]);
 
@@ -199,33 +149,36 @@ export async function GET(
     const timeSeriesMap = new Map<string, number>();
     const prevTimeSeriesMap = new Map<string, number>();
 
-    // Determine bucket size based on period
     for (const event of analyticsEvents) {
       const dayKey = event.createdAt.toISOString().split("T")[0];
       timeSeriesMap.set(dayKey, (timeSeriesMap.get(dayKey) || 0) + 1);
     }
-
     for (const event of prevAnalyticsEvents) {
       const dayKey = event.createdAt.toISOString().split("T")[0];
       prevTimeSeriesMap.set(dayKey, (prevTimeSeriesMap.get(dayKey) || 0) + 1);
     }
 
-    // Generate all dates in range
     const timeSeries: { date: string; current: number; previous: number }[] = [];
-    const dayMs = 24 * 60 * 60 * 1000;
-    const totalDays = Math.ceil(periodMs / dayMs);
+    const curDate = new Date(startDate);
+    curDate.setUTCHours(0, 0, 0, 0);
+    const finalDate = new Date(endDate);
+    finalDate.setUTCHours(0, 0, 0, 0);
 
-    for (let i = 0; i < totalDays; i++) {
-      const d = new Date(startDate.getTime() + i * dayMs);
-      const dateKey = d.toISOString().split("T")[0];
-      const prevD = new Date(prevStartDate.getTime() + i * dayMs);
-      const prevDateKey = prevD.toISOString().split("T")[0];
+    const prevCurDate = new Date(prevStartDate);
+    prevCurDate.setUTCHours(0, 0, 0, 0);
+
+    while (curDate <= finalDate) {
+      const dateKey = curDate.toISOString().split("T")[0];
+      const prevDateKey = prevCurDate.toISOString().split("T")[0];
 
       timeSeries.push({
         date: dateKey,
         current: timeSeriesMap.get(dateKey) || 0,
         previous: prevTimeSeriesMap.get(prevDateKey) || 0,
       });
+
+      curDate.setUTCDate(curDate.getUTCDate() + 1);
+      prevCurDate.setUTCDate(prevCurDate.getUTCDate() + 1);
     }
 
     // --- Process Action Breakdown ---
@@ -248,23 +201,21 @@ export async function GET(
     })).sort((a, b) => b.count - a.count);
 
     // --- Process Peak Activity Heatmap ---
-    // Matrix: 4 time slots × 7 days (Mon-Sun)
     const heatmapMatrix: number[][] = Array.from({ length: 4 }, () => Array(7).fill(0));
     for (const event of analyticsEvents) {
       const d = event.createdAt;
       const hour = d.getUTCHours();
-      const dayOfWeek = (d.getUTCDay() + 6) % 7; // Mon=0, Sun=6
+      const dayOfWeek = (d.getUTCDay() + 6) % 7;
 
       let timeSlot: number;
-      if (hour >= 6 && hour < 12) timeSlot = 0;       // Morning
-      else if (hour >= 12 && hour < 16) timeSlot = 1;  // Afternoon
-      else if (hour >= 16 && hour < 20) timeSlot = 2;  // Evening
-      else timeSlot = 3;                                // Night
+      if (hour >= 6 && hour < 12) timeSlot = 0;
+      else if (hour >= 12 && hour < 16) timeSlot = 1;
+      else if (hour >= 16 && hour < 20) timeSlot = 2;
+      else timeSlot = 3;
 
       heatmapMatrix[timeSlot][dayOfWeek]++;
     }
 
-    // Normalize to 0-3 intensity levels
     const maxHeat = Math.max(1, ...heatmapMatrix.flat());
     const normalizedHeatmap = heatmapMatrix.map((row) =>
       row.map((val) => Math.min(3, Math.round((val / maxHeat) * 3)))
@@ -308,29 +259,18 @@ export async function GET(
       return Math.round(((current - previous) / previous) * 100 * 10) / 10;
     };
 
-    // --- Recent Activity (merged and sorted) ---
-    const recentActivity = [
-      ...recentEvents.map((e) => ({
-        type: e.eventType,
-        description: eventTypeToLabel(e.eventType),
-        icon: eventTypeToIcon(e.eventType),
-        createdAt: e.createdAt,
-      })),
-      ...recentFeedbacks.map((f) => ({
-        type: "feedback_submit",
-        description: `Feedback submitted (${f.rating} star${f.rating !== 1 ? "s" : ""})`,
-        icon: "MessageSquare",
-        createdAt: f.createdAt,
-      })),
-      ...recentStamps.map((s) => ({
-        type: s.type,
-        description: stampTypeToLabel(s.type),
-        icon: stampTypeToIcon(s.type),
-        createdAt: s.createdAt,
-      })),
-    ]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 8);
+    // --- Process Guest Directory for Dashboard ---
+    const guests = guestDirectory.map((w) => ({
+      id: w.id,
+      name: w.customer?.displayName || `Guest ${w.anonymousBrowserId.slice(0, 6)}`,
+      email: w.customer?.email || null,
+      phone: w.customer?.phone || null,
+      status: w.status,
+      totalVisits: w._count.transactions,
+      activeRewards: w._count.rewards,
+      lastVisit: w.transactions[0]?.createdAt || w.createdAt,
+      joinedAt: w.createdAt,
+    }));
 
     return NextResponse.json({
       success: true,
@@ -369,67 +309,11 @@ export async function GET(
         ),
         heatmap: normalizedHeatmap,
         funnel,
-        recentActivity,
+        guests,
       },
     });
   } catch (err) {
     console.error("Dashboard API error:", err);
     return NextResponse.json({ success: false, error: "Failed to fetch dashboard data" }, { status: 500 });
   }
-}
-
-function eventTypeToLabel(eventType: string): string {
-  const labels: Record<string, string> = {
-    guest_page_view: "Guest scanned QR / visited page",
-    menu_click: "Digital menu viewed",
-    review_click: "Google Review page opened",
-    wifi_open: "Wi-Fi credentials viewed",
-    wifi_copy: "Wi-Fi password copied",
-    loyalty_open: "Loyalty card opened",
-    loyalty_stamp_earned: "Loyalty stamp earned",
-    feedback_submit: "Feedback submitted",
-    social_click: "Social link clicked",
-    game_open: "Game opened",
-    review_prompt_view: "Review prompt viewed",
-  };
-  return labels[eventType] || eventType.replace(/_/g, " ");
-}
-
-function eventTypeToIcon(eventType: string): string {
-  const icons: Record<string, string> = {
-    guest_page_view: "QrCode",
-    menu_click: "UtensilsCrossed",
-    review_click: "Star",
-    wifi_open: "Wifi",
-    wifi_copy: "Wifi",
-    loyalty_open: "Award",
-    loyalty_stamp_earned: "Award",
-    feedback_submit: "MessageSquare",
-    social_click: "Share2",
-    game_open: "Sparkles",
-    review_prompt_view: "Star",
-  };
-  return icons[eventType] || "Activity";
-}
-
-function stampTypeToLabel(type: string): string {
-  const labels: Record<string, string> = {
-    STAMP_EARNED: "Loyalty stamp earned",
-    STAMP_REVERSED: "Stamp reversed",
-    MILESTONE_UNLOCKED: "Milestone unlocked!",
-    REWARD_REDEEMED: "Reward redeemed",
-    REWARD_EXPIRED: "Reward expired",
-  };
-  return labels[type] || type;
-}
-
-function stampTypeToIcon(type: string): string {
-  const icons: Record<string, string> = {
-    STAMP_EARNED: "Award",
-    STAMP_REVERSED: "AlertCircle",
-    MILESTONE_UNLOCKED: "Gift",
-    REWARD_REDEEMED: "Gift",
-    REWARD_EXPIRED: "Clock",
-  };
-  return icons[type] || "Award";
 }

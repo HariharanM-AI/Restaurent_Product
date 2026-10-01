@@ -1,14 +1,53 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 
 interface AdminHeaderProps {
   restaurantName: string;
   restaurantSlug: string;
+  restaurants?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    logoUrl?: string | null;
+  }>;
 }
 
-export function AdminHeader({ restaurantName, restaurantSlug }: AdminHeaderProps) {
+export function AdminHeader({ restaurantName, restaurantSlug, restaurants = [] }: AdminHeaderProps) {
+  const pathname = usePathname();
+  const match = pathname.match(/\/admin\/restaurants\/([^/]+)/);
+  const activeId = match ? match[1] : null;
+  const activeFromList = restaurants.find((r) => r.id === activeId);
+
+  const initialName = activeFromList?.name || restaurantName;
+  const [currentName, setCurrentName] = useState(initialName);
+
+  useEffect(() => {
+    if (activeFromList) {
+      setCurrentName(activeFromList.name);
+    } else {
+      setCurrentName(restaurantName);
+    }
+  }, [activeFromList?.name, restaurantName]);
+
+  useEffect(() => {
+    const handleUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<{ id?: string; name: string }>;
+      if (customEvent.detail?.name && (!customEvent.detail.id || customEvent.detail.id === activeId)) {
+        setCurrentName(customEvent.detail.name);
+      }
+    };
+    window.addEventListener("restaurant-updated", handleUpdate);
+    return () => {
+      window.removeEventListener("restaurant-updated", handleUpdate);
+    };
+  }, [activeId]);
+
+  const activeSlug = activeFromList?.slug || restaurantSlug;
+
   return (
     <header className="hidden lg:block px-4 sm:px-6 lg:px-8 py-3 bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-2xs">
       <div className="w-full flex items-center justify-between">
@@ -18,7 +57,7 @@ export function AdminHeader({ restaurantName, restaurantSlug }: AdminHeaderProps
           </span>
           <span className="text-slate-300">•</span>
           <span className="text-xs font-extrabold text-slate-800">
-            {restaurantName}
+            {currentName}
           </span>
         </div>
 
@@ -43,17 +82,9 @@ export function AdminHeader({ restaurantName, restaurantSlug }: AdminHeaderProps
             </kbd>
           </div>
 
-          {/* Notifications Bell */}
-          <button className="relative p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition shadow-2xs">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white"></span>
-          </button>
-
           {/* View Guest Experience Button */}
           <Link
-            href={`/r/${restaurantSlug}`}
+            href={`/r/${activeSlug}`}
             target="_blank"
             className="inline-flex items-center gap-2 text-xs font-extrabold px-3.5 py-2 rounded-xl bg-[#111111] hover:bg-[#222222] text-white transition shadow-sm"
           >
