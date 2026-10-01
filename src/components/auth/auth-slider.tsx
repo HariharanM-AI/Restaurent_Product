@@ -92,17 +92,17 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
     (target: "signin" | "signup") => {
       if (animating || mode === target) return;
 
-      // On mobile / tablet screens: smooth state-driven transition without overlay DOM interference
+      // On mobile / tablet screens (< 1024px): state-driven transition with smooth popLayout
       if (isMobile()) {
         setAnimating(true);
         setMode(target);
         setTargetMode(null);
-        window.history.pushState(null, "", target === "signup" ? "/signup" : "/login");
-        setTimeout(() => setAnimating(false), 250);
+        window.history.replaceState(null, "", target === "signup" ? "/signup" : "/login");
+        setTimeout(() => setAnimating(false), 200);
         return;
       }
 
-      // On desktop screens: run the diagonal glowing seam wipe
+      // On desktop screens (>= 1024px): run the glowing diagonal seam wipe with pixel-perfect handoff
       setAnimating(true);
       setTargetMode(target);
 
@@ -115,7 +115,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
         setMode(target);
         setTargetMode(null);
         setAnimating(false);
-        window.history.pushState(null, "", target === "signup" ? "/signup" : "/login");
+        window.history.replaceState(null, "", target === "signup" ? "/signup" : "/login");
         return;
       }
 
@@ -148,15 +148,28 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
         if (t < 1) {
           animFrameIdRef.current = requestAnimationFrame(frame);
         } else {
-          setMode(target);
-          setTargetMode(null);
-          wipe.style.pointerEvents = "none";
-          wipe.style.clipPath = "polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)";
-          wipe.style.display = "none";
+          // Animation reached 100%
+          // Fade out the seams cleanly
           seamSharp.style.opacity = "0";
           seamSoft.style.opacity = "0";
-          setAnimating(false);
-          window.history.pushState(null, "", target === "signup" ? "/signup" : "/login");
+
+          // Expand wipe completely to cover entire card
+          wipe.style.clipPath = "none";
+
+          // Update React mode
+          setMode(target);
+          window.history.replaceState(null, "", target === "signup" ? "/signup" : "/login");
+
+          // Double requestAnimationFrame ensures React has committed and the browser
+          // has painted the new base face BEFORE hiding the wipe overlay.
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              wipe.style.display = "none";
+              wipe.style.pointerEvents = "none";
+              setTargetMode(null);
+              setAnimating(false);
+            });
+          });
         }
       };
 
@@ -396,21 +409,21 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
   // Render Sign In Form with Glassmorphism
   const renderSignInForm = () => {
     return (
-      <div className="bg-white/[0.88] backdrop-blur-2xl p-7 sm:p-9 lg:p-11 flex flex-col justify-center h-full overflow-y-auto">
+      <div className="bg-white/[0.06] lg:bg-white/[0.90] backdrop-blur-2xl p-6 sm:p-8 lg:p-11 flex flex-col justify-center h-full overflow-y-auto rounded-3xl lg:rounded-none border border-white/15 lg:border-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.35)] lg:shadow-none">
         {/* Segmented Switcher [Sign In | Sign Up] with Glassmorphism */}
         <div className="flex justify-center mb-6">
-          <div className="inline-flex p-1.5 rounded-2xl bg-slate-900/[0.05] backdrop-blur-md border border-slate-900/[0.08] shadow-inner gap-1">
+          <div className="inline-flex p-1.5 rounded-2xl bg-black/30 lg:bg-slate-900/[0.05] backdrop-blur-md border border-white/15 lg:border-slate-900/[0.08] shadow-inner gap-1">
             <button
               type="button"
               onClick={() => switchTo("signin")}
-              className="px-6 py-2 rounded-xl bg-gradient-to-r from-[#072F29] to-[#0A4B40] text-white font-extrabold text-xs shadow-md shadow-emerald-950/20 transition-all duration-300 scale-[1.02] cursor-default"
+              className="px-6 py-2 rounded-xl bg-gradient-to-r from-[#072F29] to-[#0A4B40] text-white font-extrabold text-xs shadow-md shadow-emerald-950/30 transition-all duration-300 scale-[1.02] cursor-default border border-white/20 lg:border-none"
             >
               Sign In
             </button>
             <button
               type="button"
               onClick={() => switchTo("signup")}
-              className="px-6 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white/70 font-semibold text-xs transition-all duration-200 hover:scale-105 active:scale-95"
+              className="px-6 py-2 rounded-xl text-emerald-100/70 hover:text-white hover:bg-white/10 lg:text-slate-600 lg:hover:text-slate-900 lg:hover:bg-white/70 font-semibold text-xs transition-all duration-200 hover:scale-105 active:scale-95"
             >
               Sign Up
             </button>
@@ -418,24 +431,24 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
         </div>
 
         <div className="text-center mb-6">
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-white lg:text-slate-900 tracking-tight drop-shadow-xs">
             Welcome back
           </h2>
-          <p className="text-xs text-slate-500 mt-1.5 font-medium">
+          <p className="text-xs text-emerald-100/80 lg:text-slate-500 mt-1.5 font-medium">
             Sign in to manage your guest experience hub.
           </p>
         </div>
 
         {loginError && (
-          <div className="mb-4 p-3.5 rounded-2xl bg-red-50/90 backdrop-blur-md border border-red-200 text-red-700 text-xs flex items-center gap-2.5 animate-in fade-in-50">
-            <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+          <div className="mb-4 p-3.5 rounded-2xl bg-red-500/20 lg:bg-red-50/90 backdrop-blur-md border border-red-400/40 lg:border-red-200 text-red-200 lg:text-red-700 text-xs flex items-center gap-2.5 animate-in fade-in-50">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-400 lg:text-red-600" />
             <span>{loginError}</span>
           </div>
         )}
 
         <form onSubmit={handleLoginSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+            <label className="block text-xs font-bold text-white/90 lg:text-slate-700 mb-1.5">
               Email address
             </label>
             <div className="relative">
@@ -445,14 +458,14 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
                 placeholder="you@yourbusiness.com"
-                className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200/90 hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-600 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-all duration-200 shadow-2xs"
+                className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-white/[0.12] lg:bg-white/80 backdrop-blur-md border border-white/25 lg:border-slate-200/90 hover:border-emerald-400/60 lg:hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 focus:border-emerald-400 lg:focus:border-emerald-600 focus:bg-white/[0.20] lg:focus:bg-white text-white lg:text-slate-900 placeholder:text-emerald-100/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] lg:shadow-2xs"
               />
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Mail className="w-4 h-4 text-emerald-200/70 lg:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+            <label className="block text-xs font-bold text-white/90 lg:text-slate-700 mb-1.5">
               Password
             </label>
             <div className="relative">
@@ -462,13 +475,13 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="w-full pl-10 pr-10 py-2.5 text-xs rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200/90 hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-600 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-all duration-200 shadow-2xs"
+                className="w-full pl-10 pr-10 py-2.5 text-xs rounded-xl bg-white/[0.12] lg:bg-white/80 backdrop-blur-md border border-white/25 lg:border-slate-200/90 hover:border-emerald-400/60 lg:hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 focus:border-emerald-400 lg:focus:border-emerald-600 focus:bg-white/[0.20] lg:focus:bg-white text-white lg:text-slate-900 placeholder:text-emerald-100/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] lg:shadow-2xs"
               />
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Lock className="w-4 h-4 text-emerald-200/70 lg:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <button
                 type="button"
                 onClick={() => setShowLoginPassword(!showLoginPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-200/70 hover:text-white lg:text-slate-400 lg:hover:text-slate-700 p-1 transition-colors"
                 aria-label="Toggle password visibility"
               >
                 {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -477,19 +490,19 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
           </div>
 
           <div className="flex items-center justify-between text-xs pt-0.5">
-            <label className="flex items-center gap-2 cursor-pointer text-slate-600 select-none group">
+            <label className="flex items-center gap-2 cursor-pointer text-emerald-100/90 lg:text-slate-600 select-none group">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600 cursor-pointer"
+                className="w-4 h-4 rounded border-white/30 bg-white/10 lg:border-slate-300 lg:bg-white text-emerald-500 focus:ring-emerald-400 cursor-pointer"
               />
-              <span className="group-hover:text-slate-900 transition-colors">Remember me</span>
+              <span className="group-hover:text-white lg:group-hover:text-slate-900 transition-colors">Remember me</span>
             </label>
             <button
               type="button"
               onClick={handleFillDemoLogin}
-              className="text-emerald-700 hover:text-emerald-800 font-bold hover:underline transition-colors"
+              className="text-emerald-300 hover:text-emerald-200 lg:text-emerald-700 lg:hover:text-emerald-800 font-bold hover:underline transition-colors"
             >
               Auto-fill demo
             </button>
@@ -498,7 +511,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
           <button
             type="submit"
             disabled={loginLoading}
-            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#072F29] via-[#0B3B36] to-[#0A4B40] hover:from-[#0B483E] hover:to-[#10705E] text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-emerald-950/25 hover:shadow-xl hover:shadow-emerald-800/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 group"
+            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#072F29] via-[#0B3B36] to-[#0A4B40] hover:from-[#0B483E] hover:to-[#10705E] text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-emerald-950/25 hover:shadow-xl hover:shadow-emerald-800/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 group border border-emerald-400/30 lg:border-none"
           >
             {loginLoading ? (
               <>
@@ -515,9 +528,9 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
         </form>
 
         <div className="my-5 flex items-center gap-3">
-          <div className="flex-1 h-px bg-slate-200/80" />
-          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Or continue with</span>
-          <div className="flex-1 h-px bg-slate-200/80" />
+          <div className="flex-1 h-px bg-white/20 lg:bg-slate-200/80" />
+          <span className="text-[10px] text-emerald-200/70 lg:text-slate-400 uppercase font-bold tracking-wider">Or continue with</span>
+          <div className="flex-1 h-px bg-white/20 lg:bg-slate-200/80" />
         </div>
 
         <button
@@ -546,12 +559,12 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
           <span>Sign in with Google</span>
         </button>
 
-        <p className="mt-5 text-center text-xs text-slate-500">
+        <p className="mt-5 text-center text-xs text-emerald-100/80 lg:text-slate-500">
           Don't have an account?{" "}
           <button
             type="button"
             onClick={() => switchTo("signup")}
-            className="text-emerald-700 font-extrabold hover:text-emerald-800 hover:underline transition-colors hover:scale-105 inline-block"
+            className="text-emerald-300 hover:text-emerald-200 lg:text-emerald-700 lg:hover:text-emerald-800 font-extrabold hover:underline transition-colors hover:scale-105 inline-block"
           >
             Sign Up
           </button>
@@ -563,21 +576,21 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
   // Render Sign Up Form with Glassmorphism
   const renderSignUpForm = () => {
     return (
-      <div className="bg-white/[0.88] backdrop-blur-2xl p-7 sm:p-9 lg:p-11 flex flex-col justify-center h-full overflow-y-auto">
+      <div className="bg-white/[0.06] lg:bg-white/[0.90] backdrop-blur-2xl p-6 sm:p-8 lg:p-11 flex flex-col justify-center h-full overflow-y-auto rounded-3xl lg:rounded-none border border-white/15 lg:border-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.35)] lg:shadow-none">
         {/* Segmented Switcher [Sign In | Sign Up] with Glassmorphism */}
         <div className="flex justify-center mb-5">
-          <div className="inline-flex p-1.5 rounded-2xl bg-slate-900/[0.05] backdrop-blur-md border border-slate-900/[0.08] shadow-inner gap-1">
+          <div className="inline-flex p-1.5 rounded-2xl bg-black/30 lg:bg-slate-900/[0.05] backdrop-blur-md border border-white/15 lg:border-slate-900/[0.08] shadow-inner gap-1">
             <button
               type="button"
               onClick={() => switchTo("signin")}
-              className="px-6 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white/70 font-semibold text-xs transition-all duration-200 hover:scale-105 active:scale-95"
+              className="px-6 py-2 rounded-xl text-emerald-100/70 hover:text-white hover:bg-white/10 lg:text-slate-600 lg:hover:text-slate-900 lg:hover:bg-white/70 font-semibold text-xs transition-all duration-200 hover:scale-105 active:scale-95"
             >
               Sign In
             </button>
             <button
               type="button"
               onClick={() => switchTo("signup")}
-              className="px-6 py-2 rounded-xl bg-gradient-to-r from-[#072F29] to-[#0A4B40] text-white font-extrabold text-xs shadow-md shadow-emerald-950/20 transition-all duration-300 scale-[1.02] cursor-default"
+              className="px-6 py-2 rounded-xl bg-gradient-to-r from-[#072F29] to-[#0A4B40] text-white font-extrabold text-xs shadow-md shadow-emerald-950/30 transition-all duration-300 scale-[1.02] cursor-default border border-white/20 lg:border-none"
             >
               Sign Up
             </button>
@@ -585,24 +598,24 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
         </div>
 
         <div className="text-center mb-4">
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-white lg:text-slate-900 tracking-tight drop-shadow-xs">
             Start your 30-day free trial
           </h2>
-          <p className="text-xs text-slate-500 mt-1 font-medium">
+          <p className="text-xs text-emerald-100/80 lg:text-slate-500 mt-1 font-medium">
             No credit card required. Instant venue setup.
           </p>
         </div>
 
         {signupError && (
-          <div className="mb-3.5 p-3.5 rounded-2xl bg-red-50/90 backdrop-blur-md border border-red-200 text-red-700 text-xs flex items-center gap-2.5 animate-in fade-in-50">
-            <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+          <div className="mb-3.5 p-3.5 rounded-2xl bg-red-500/20 lg:bg-red-50/90 backdrop-blur-md border border-red-400/40 lg:border-red-200 text-red-200 lg:text-red-700 text-xs flex items-center gap-2.5 animate-in fade-in-50">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-400 lg:text-red-600" />
             <span>{signupError}</span>
           </div>
         )}
 
         <form onSubmit={handleSignupSubmit} className="space-y-3">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
+            <label className="block text-xs font-bold text-white/90 lg:text-slate-700 mb-1">
               Full name
             </label>
             <div className="relative">
@@ -612,14 +625,14 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                 value={signupName}
                 onChange={(e) => setSignupName(e.target.value)}
                 placeholder="John Doe"
-                className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200/90 hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-600 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-all duration-200 shadow-2xs"
+                className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-white/[0.12] lg:bg-white/80 backdrop-blur-md border border-white/25 lg:border-slate-200/90 hover:border-emerald-400/60 lg:hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 focus:border-emerald-400 lg:focus:border-emerald-600 focus:bg-white/[0.20] lg:focus:bg-white text-white lg:text-slate-900 placeholder:text-emerald-100/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] lg:shadow-2xs"
               />
-              <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <User className="w-4 h-4 text-emerald-200/70 lg:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
+            <label className="block text-xs font-bold text-white/90 lg:text-slate-700 mb-1">
               Email address
             </label>
             <div className="relative">
@@ -629,15 +642,15 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                 value={signupEmail}
                 onChange={(e) => setSignupEmail(e.target.value)}
                 placeholder="you@yourbusiness.com"
-                className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200/90 hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-600 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-all duration-200 shadow-2xs"
+                className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-white/[0.12] lg:bg-white/80 backdrop-blur-md border border-white/25 lg:border-slate-200/90 hover:border-emerald-400/60 lg:hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 focus:border-emerald-400 lg:focus:border-emerald-600 focus:bg-white/[0.20] lg:focus:bg-white text-white lg:text-slate-900 placeholder:text-emerald-100/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] lg:shadow-2xs"
               />
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Mail className="w-4 h-4 text-emerald-200/70 lg:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-white/90 lg:text-slate-700 mb-1">
                 Password
               </label>
               <div className="relative">
@@ -647,13 +660,13 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                   value={signupPassword}
                   onChange={(e) => setSignupPassword(e.target.value)}
                   placeholder="At least 8 chars"
-                  className="w-full pl-9 pr-9 py-2 text-xs rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200/90 hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-600 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-all duration-200 shadow-2xs"
+                  className="w-full pl-9 pr-9 py-2 text-xs rounded-xl bg-white/[0.12] lg:bg-white/80 backdrop-blur-md border border-white/25 lg:border-slate-200/90 hover:border-emerald-400/60 lg:hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 focus:border-emerald-400 lg:focus:border-emerald-600 focus:bg-white/[0.20] lg:focus:bg-white text-white lg:text-slate-900 placeholder:text-emerald-100/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] lg:shadow-2xs"
                 />
-                <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Lock className="w-3.5 h-3.5 text-emerald-200/70 lg:text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <button
                   type="button"
                   onClick={() => setShowSignupPassword(!showSignupPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 transition-colors"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-emerald-200/70 hover:text-white lg:text-slate-400 lg:hover:text-slate-700 p-1 transition-colors"
                   aria-label="Toggle password visibility"
                 >
                   {showSignupPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -662,7 +675,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-white/90 lg:text-slate-700 mb-1">
                 Confirm password
               </label>
               <div className="relative">
@@ -672,9 +685,9 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                   value={signupConfirmPassword}
                   onChange={(e) => setSignupConfirmPassword(e.target.value)}
                   placeholder="Repeat password"
-                  className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200/90 hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-600 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-all duration-200 shadow-2xs"
+                  className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-white/[0.12] lg:bg-white/80 backdrop-blur-md border border-white/25 lg:border-slate-200/90 hover:border-emerald-400/60 lg:hover:border-emerald-500/40 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 focus:border-emerald-400 lg:focus:border-emerald-600 focus:bg-white/[0.20] lg:focus:bg-white text-white lg:text-slate-900 placeholder:text-emerald-100/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] lg:shadow-2xs"
                 />
-                <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Lock className="w-3.5 h-3.5 text-emerald-200/70 lg:text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               </div>
             </div>
           </div>
@@ -685,18 +698,18 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
               id="agreeTerms"
               checked={agreeTerms}
               onChange={(e) => setAgreeTerms(e.target.checked)}
-              className="w-3.5 h-3.5 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600 cursor-pointer"
+              className="w-3.5 h-3.5 rounded border-white/30 bg-white/10 lg:border-slate-300 lg:bg-white text-emerald-500 focus:ring-emerald-400 cursor-pointer"
             />
-            <label htmlFor="agreeTerms" className="text-slate-600 text-[11px] select-none cursor-pointer">
-              I agree to the <span className="text-emerald-700 font-bold hover:underline">Terms</span> and{" "}
-              <span className="text-emerald-700 font-bold hover:underline">Privacy</span>
+            <label htmlFor="agreeTerms" className="text-emerald-100/90 lg:text-slate-600 text-[11px] select-none cursor-pointer">
+              I agree to the <span className="text-emerald-300 lg:text-emerald-700 font-bold hover:underline">Terms</span> and{" "}
+              <span className="text-emerald-300 lg:text-emerald-700 font-bold hover:underline">Privacy</span>
             </label>
           </div>
 
           <button
             type="submit"
             disabled={signupLoading}
-            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#072F29] via-[#0B3B36] to-[#0A4B40] hover:from-[#0B483E] hover:to-[#10705E] text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-emerald-950/25 hover:shadow-xl hover:shadow-emerald-800/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 group mt-1"
+            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#072F29] via-[#0B3B36] to-[#0A4B40] hover:from-[#0B483E] hover:to-[#10705E] text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-emerald-950/25 hover:shadow-xl hover:shadow-emerald-800/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 group mt-1 border border-emerald-400/30 lg:border-none"
           >
             {signupLoading ? (
               <>
@@ -713,9 +726,9 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
         </form>
 
         <div className="my-4 flex items-center gap-3">
-          <div className="flex-1 h-px bg-slate-200/80" />
-          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Or continue with</span>
-          <div className="flex-1 h-px bg-slate-200/80" />
+          <div className="flex-1 h-px bg-white/20 lg:bg-slate-200/80" />
+          <span className="text-[10px] text-emerald-200/70 lg:text-slate-400 uppercase font-bold tracking-wider">Or continue with</span>
+          <div className="flex-1 h-px bg-white/20 lg:bg-slate-200/80" />
         </div>
 
         <button
@@ -744,12 +757,12 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
           <span>Sign up with Google</span>
         </button>
 
-        <p className="mt-4 text-center text-xs text-slate-500">
+        <p className="mt-4 text-center text-xs text-emerald-100/80 lg:text-slate-500">
           Already have an account?{" "}
           <button
             type="button"
             onClick={() => switchTo("signin")}
-            className="text-emerald-700 font-extrabold hover:text-emerald-800 hover:underline transition-colors hover:scale-105 inline-block"
+            className="text-emerald-300 hover:text-emerald-200 lg:text-emerald-700 lg:hover:text-emerald-800 font-extrabold hover:underline transition-colors hover:scale-105 inline-block"
           >
             Sign In
           </button>
@@ -761,22 +774,30 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
   // Render Full Face: Info + Form
   const renderFaceContent = (viewMode: "signin" | "signup") => {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full min-h-[620px] lg:min-h-[660px]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full min-h-[580px] lg:min-h-[660px]">
         {viewMode === "signin" ? (
           <>
             <div className="order-1 flex flex-col justify-center h-full">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key="signin-view"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.22, ease: "easeOut" }}
-                  className="h-full flex flex-col justify-center"
-                >
-                  {renderSignInForm()}
-                </motion.div>
-              </AnimatePresence>
+              {/* Mobile layout: Smooth simultaneous popLayout crossfade */}
+              <div className="block lg:hidden h-full">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.div
+                    key="signin-mobile"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    className="h-full flex flex-col justify-center"
+                  >
+                    {renderSignInForm()}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Desktop layout: Direct render for 100% flicker-free diagonal wipe handoff */}
+              <div className="hidden lg:flex flex-col justify-center h-full">
+                {renderSignInForm()}
+              </div>
             </div>
             <div className="order-2 hidden lg:block h-full">
               {renderSideInfo("signin")}
@@ -788,18 +809,26 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
               {renderSideInfo("signup")}
             </div>
             <div className="order-1 lg:order-2 flex flex-col justify-center h-full">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key="signup-view"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.22, ease: "easeOut" }}
-                  className="h-full flex flex-col justify-center"
-                >
-                  {renderSignUpForm()}
-                </motion.div>
-              </AnimatePresence>
+              {/* Mobile layout: Smooth simultaneous popLayout crossfade */}
+              <div className="block lg:hidden h-full">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.div
+                    key="signup-mobile"
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    className="h-full flex flex-col justify-center"
+                  >
+                    {renderSignUpForm()}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Desktop layout: Direct render for 100% flicker-free diagonal wipe handoff */}
+              <div className="hidden lg:flex flex-col justify-center h-full">
+                {renderSignUpForm()}
+              </div>
             </div>
           </>
         )}
@@ -859,7 +888,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
       <main className="w-full max-w-5xl mx-auto my-3 sm:my-5 z-10">
         <div
           ref={cardRef}
-          className="relative overflow-hidden rounded-[28px] sm:rounded-[32px] backdrop-blur-2xl bg-white/[0.12] shadow-[0_30px_90px_rgba(0,0,0,0.55),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-white/20 min-h-[580px] lg:min-h-[660px]"
+          className="relative overflow-hidden rounded-[28px] sm:rounded-[32px] backdrop-blur-2xl bg-white/[0.06] lg:bg-white/[0.12] shadow-[0_30px_90px_rgba(0,0,0,0.55),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-white/20 min-h-[580px] lg:min-h-[660px]"
         >
           {/* Base Face (Current Active Form / Info) */}
           <div className="relative w-full h-full z-[1]">
@@ -899,11 +928,6 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
             }}
           />
         </div>
-
-        {/* Subtle Hint Below Card */}
-        <p className="text-center mt-3 text-[11px] sm:text-xs text-emerald-100/60 select-none">
-          Try both directions — switch modes to send the glowing diagonal seam across the card.
-        </p>
       </main>
 
       {/* Bottom Footer - Glassmorphic Pill */}
