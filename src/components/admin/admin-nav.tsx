@@ -285,7 +285,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
       {/* ── Top Mobile Bar ── */}
       <header className="lg:hidden bg-[#111111] text-white px-5 py-3.5 flex items-center justify-between sticky top-0 z-40 border-b border-white/10">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-center shrink-0 overflow-hidden p-1 shadow-sm">
+          <div className="w-8 h-8 rounded-xl bg-white border border-white/20 flex items-center justify-center shrink-0 overflow-hidden p-0.5 shadow-xs">
             <img
               src="/images/Own brand logo.png"
               alt="Noura"
@@ -302,7 +302,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
               </span>
               <ChevronDown className="w-3 h-3 text-white/50" />
             </div>
-            <span className="text-[10px] text-emerald-300/70 block">Noura Control</span>
+            <span className="text-[10px] text-emerald-300/80 font-medium block">Turn Guests into Regulars</span>
           </div>
         </div>
 
@@ -344,7 +344,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
         {/* Toggle Button & Collapsed Brand Icon */}
         <div className={`flex pt-3.5 pb-2 shrink-0 ${isCollapsed ? "flex-col items-center gap-2 px-2" : "justify-end px-3"}`}>
           {isCollapsed && (
-            <div className="w-9 h-9 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-center p-1.5 shadow-sm shrink-0" title="Noura">
+            <div className="w-9 h-9 rounded-xl bg-white border border-white/20 flex items-center justify-center p-0.5 shadow-xs shrink-0 overflow-hidden" title="Noura">
               <img src="/images/Own brand logo.png" alt="Noura" className="w-full h-full object-contain" />
             </div>
           )}
@@ -377,7 +377,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
               <div className="pb-3 pt-1">
                 {/* Product Brand Header (Noura + Custom Brand Logo) */}
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-2xl bg-white/[0.08] border border-white/10 flex items-center justify-center shrink-0 overflow-hidden p-1 shadow-sm">
+                  <div className="w-9 h-9 rounded-2xl bg-white border border-white/20 flex items-center justify-center shrink-0 overflow-hidden p-0.5 shadow-xs">
                     <img
                       src="/images/Own brand logo.png"
                       alt="Noura Logo"
@@ -672,7 +672,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
             >
               <div className="p-5 border-b border-white/[0.06] flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-2xl bg-white/[0.08] border border-white/10 flex items-center justify-center shrink-0 overflow-hidden p-1 shadow-sm">
+                  <div className="w-9 h-9 rounded-2xl bg-white border border-white/20 flex items-center justify-center shrink-0 overflow-hidden p-0.5 shadow-xs">
                     <img
                       src="/images/Own brand logo.png"
                       alt="Noura"
@@ -683,8 +683,8 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                     <h2 className="font-extrabold text-sm text-white truncate">
                       {activeRestaurant.name}
                     </h2>
-                    <span className="text-[10px] text-white/40 block">
-                      /r/{activeRestaurant.slug}
+                    <span className="text-[10px] text-emerald-300/80 font-medium block">
+                      Turn Guests into Regulars
                     </span>
                   </div>
                 </div>

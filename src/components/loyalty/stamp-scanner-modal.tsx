@@ -13,6 +13,7 @@ import {
   UploadCloud,
   Keyboard,
 } from "lucide-react";
+import jsQR from "jsqr";
 import { broadcastActivity } from "@/lib/realtime/broadcast";
 
 interface StampScannerModalProps {
@@ -48,6 +49,8 @@ export function StampScannerModal({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isScanningRef = useRef<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Extract clean token from full URL or raw token string
   const extractToken = (rawInput: string): string => {
@@ -111,7 +114,7 @@ export function StampScannerModal({
     }
   };
 
-  // Camera handling
+  // Camera handling with universal jsQR decoder loop
   const startCamera = async () => {
     setCameraError(null);
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -122,43 +125,97 @@ export function StampScannerModal({
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
       });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.setAttribute("playsinline", "true");
         await videoRef.current.play();
       }
 
-      // Check for BarcodeDetector API
-      if ("BarcodeDetector" in window) {
-        const barcodeDetector = new (window as any).BarcodeDetector({
-          formats: ["qr_code"],
-        });
+      isScanningRef.current = true;
 
-        scanIntervalRef.current = setInterval(async () => {
-          if (!videoRef.current || isProcessing) return;
-          try {
-            const barcodes = await barcodeDetector.detect(videoRef.current);
-            if (barcodes.length > 0) {
-              const rawValue = barcodes[0].rawValue;
-              if (rawValue) {
-                clearInterval(scanIntervalRef.current!);
-                processToken(rawValue);
-              }
-            }
-          } catch {}
-        }, 500);
+      // Offscreen canvas for decoding frames
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+      // Hardware BarcodeDetector if browser has it (optional accelerator)
+      let barcodeDetector: any = null;
+      if (typeof window !== "undefined" && "BarcodeDetector" in window) {
+        try {
+          barcodeDetector = new (window as any).BarcodeDetector({
+            formats: ["qr_code"],
+          });
+        } catch {
+          barcodeDetector = null;
+        }
       }
+
+      const scanLoop = async () => {
+        if (!isScanningRef.current) return;
+        const video = videoRef.current;
+
+        if (
+          video &&
+          video.readyState >= video.HAVE_CURRENT_DATA &&
+          video.videoWidth > 0 &&
+          video.videoHeight > 0
+        ) {
+          // 1. Try native BarcodeDetector if available
+          if (barcodeDetector) {
+            try {
+              const barcodes = await barcodeDetector.detect(video);
+              if (barcodes.length > 0 && barcodes[0]?.rawValue) {
+                isScanningRef.current = false;
+                stopCamera();
+                processToken(barcodes[0].rawValue);
+                return;
+              }
+            } catch {}
+          }
+
+          // 2. Fall back to / standard jsQR frame-by-frame decoder (works 100% on iOS Safari, Android, WebKit)
+          if (ctx && isScanningRef.current) {
+            try {
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "attemptBoth",
+              });
+              if (code && code.data && code.data.trim()) {
+                isScanningRef.current = false;
+                stopCamera();
+                processToken(code.data);
+                return;
+              }
+            } catch {}
+          }
+        }
+
+        if (isScanningRef.current) {
+          scanIntervalRef.current = setTimeout(scanLoop, 150);
+        }
+      };
+
+      // Start scan loop
+      scanIntervalRef.current = setTimeout(scanLoop, 200);
     } catch (err: any) {
-      setCameraError("Camera access denied or unavailable. You can enter the code manually.");
+      setCameraError("Camera access denied or unavailable. You can upload a photo or enter the code.");
       setMode("manual");
     }
   };
 
   const stopCamera = () => {
+    isScanningRef.current = false;
     if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
+      clearTimeout(scanIntervalRef.current);
       scanIntervalRef.current = null;
     }
     if (streamRef.current) {
@@ -168,6 +225,48 @@ export function StampScannerModal({
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
+  };
+
+  // Handle photo upload / native camera snapshot
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessing(true);
+    setErrorMessage(null);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "attemptBoth",
+          });
+          if (code && code.data) {
+            processToken(code.data);
+          } else {
+            setIsProcessing(false);
+            setErrorMessage("Could not detect a QR code in the selected photo. Please ensure the QR is clear and well-lit.");
+          }
+        } else {
+          setIsProcessing(false);
+          setErrorMessage("Image processing error. Please try again.");
+        }
+      };
+      img.onerror = () => {
+        setIsProcessing(false);
+        setErrorMessage("Failed to process image file. Please try again.");
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   };
 
   useEffect(() => {
@@ -283,37 +382,60 @@ export function StampScannerModal({
               {/* Mode 1: Camera Scanner */}
               {mode === "camera" && (
                 <div className="space-y-3">
-                  <div className="relative aspect-square w-full rounded-2xl bg-black overflow-hidden flex items-center justify-center">
+                  <div className="relative aspect-square w-full rounded-2xl bg-black overflow-hidden flex items-center justify-center shadow-inner">
                     <video
                       ref={videoRef}
                       playsInline
+                      autoPlay
                       muted
                       className="w-full h-full object-cover"
                     />
 
                     {/* Viewfinder Overlay Frame */}
-                    <div className="absolute inset-8 border-2 border-white/60 rounded-2xl pointer-events-none flex flex-col justify-between p-2">
+                    <div className="absolute inset-8 border-2 border-white/60 rounded-2xl pointer-events-none flex flex-col justify-between p-2 overflow-hidden">
                       <div className="flex justify-between">
-                        <span className="w-3 h-3 border-t-2 border-l-2 border-white -mt-0.5 -ml-0.5" />
-                        <span className="w-3 h-3 border-t-2 border-r-2 border-white -mt-0.5 -mr-0.5" />
+                        <span className="w-3.5 h-3.5 border-t-3 border-l-3 border-emerald-400 -mt-0.5 -ml-0.5" />
+                        <span className="w-3.5 h-3.5 border-t-3 border-r-3 border-emerald-400 -mt-0.5 -mr-0.5" />
                       </div>
+
+                      {/* Animated Laser Scanning Beam */}
+                      <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_8px_#34d399] animate-pulse" />
+
                       <div className="flex justify-between">
-                        <span className="w-3 h-3 border-b-2 border-l-2 border-white -mb-0.5 -ml-0.5" />
-                        <span className="w-3 h-3 border-b-2 border-r-2 border-white -mb-0.5 -mr-0.5" />
+                        <span className="w-3.5 h-3.5 border-b-3 border-l-3 border-emerald-400 -mb-0.5 -ml-0.5" />
+                        <span className="w-3.5 h-3.5 border-b-3 border-r-3 border-emerald-400 -mb-0.5 -mr-0.5" />
                       </div>
                     </div>
 
                     {isProcessing && (
-                      <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white p-4">
-                        <Loader2 className="w-8 h-8 animate-spin text-teal-400 mb-2" />
+                      <div className="absolute inset-0 bg-black/75 backdrop-blur-xs flex flex-col items-center justify-center text-white p-4">
+                        <Loader2 className="w-8 h-8 animate-spin text-emerald-400 mb-2" />
                         <span className="text-xs font-semibold">Validating Stamp...</span>
                       </div>
                     )}
                   </div>
 
-                  <p className="text-[11px] text-center text-slate-400">
-                    Align the checkout QR code presented by staff inside the frame.
-                  </p>
+                  <div className="flex items-center justify-between gap-2 px-1">
+                    <p className="text-[11px] text-slate-500 leading-tight">
+                      Point camera at checkout QR code
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="shrink-0 text-[11px] font-bold text-teal-700 hover:text-teal-800 bg-teal-50 hover:bg-teal-100/70 border border-teal-200/80 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition"
+                    >
+                      <UploadCloud className="w-3.5 h-3.5" />
+                      <span>Snap or Upload</span>
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                    />
+                  </div>
                 </div>
               )}
 

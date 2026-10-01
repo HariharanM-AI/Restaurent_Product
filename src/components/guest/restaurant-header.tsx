@@ -37,7 +37,7 @@ export function RestaurantHeader({ restaurant }: RestaurantHeaderProps) {
       <div className="relative px-5 pt-0 pb-4">
         {/* Overlapping Logo */}
         <div className="-mt-14 mb-3 flex items-end justify-between">
-          <div className="relative w-24 h-24 rounded-2xl bg-white p-1 shadow-md border-2 border-white overflow-hidden">
+          <div className="relative w-24 h-24 rounded-2xl bg-white p-0.5 shadow-md border-2 border-white overflow-hidden flex items-center justify-center">
             {restaurant.logoUrl ? (
               <img
                 src={restaurant.logoUrl}

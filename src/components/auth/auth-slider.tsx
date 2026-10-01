@@ -823,7 +823,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
       {/* Top Header */}
       <header className="w-full max-w-5xl mx-auto flex items-center justify-between z-10 py-2">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-center p-1 shadow-sm">
+          <div className="w-9 h-9 rounded-xl bg-white border border-white/20 flex items-center justify-center p-0.5 shadow-xs overflow-hidden">
             <img src="/images/Own brand logo.png" alt="Noura" className="w-full h-full object-contain" />
           </div>
           <span className="text-white font-extrabold text-xl tracking-tight">Noura</span>

@@ -34,6 +34,7 @@
     "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",
     "framer-motion": "^13.4.0",
+    "jsqr": "^1.4.0",
     "lucide-react": "^1.16.0",
     "motion": "^12.4.7",
     "next": "^15.2.0",
