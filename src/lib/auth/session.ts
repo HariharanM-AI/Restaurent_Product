@@ -86,6 +86,43 @@ export async function verifyRestaurantAccess(
     return { authorized: false, error: "Unauthorized. Please sign in." };
   }
 
+  // If user is a platform super admin, grant full administrative access to any venue
+  if ((session.user as any)?.role === "PLATFORM_ADMIN") {
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+    });
+    if (!restaurant) {
+      return { authorized: false, error: "Restaurant not found." };
+    }
+    return {
+      authorized: true,
+      role: "PLATFORM_ADMIN",
+      restaurantId: restaurant.id,
+      restaurant,
+    };
+  }
+
+  // Also verify against database in case session role hasn't refreshed
+  const currentUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true },
+  });
+
+  if (currentUser?.role === "PLATFORM_ADMIN") {
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+    });
+    if (!restaurant) {
+      return { authorized: false, error: "Restaurant not found." };
+    }
+    return {
+      authorized: true,
+      role: "PLATFORM_ADMIN",
+      restaurantId: restaurant.id,
+      restaurant,
+    };
+  }
+
   const cacheKey = `${session.user.id}:${restaurantId}`;
   const now = Date.now();
   const cached = membershipCache.get(cacheKey);

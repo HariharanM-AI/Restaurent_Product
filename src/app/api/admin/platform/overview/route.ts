@@ -30,14 +30,29 @@ export async function GET(req: NextRequest) {
       totalShops,
       activeShops,
       totalEngagements,
-      totalLoyaltyStamps,
+      totalCustomers,
+      activeClientsWithPlan,
     ] = await Promise.all([
       prisma.clientAccount.count(),
       prisma.restaurant.count(),
       prisma.restaurant.count({ where: { status: "ACTIVE" } }),
       prisma.analyticsEvent.count(),
-      prisma.loyaltyStampTransaction.count(),
+      prisma.customer.count(),
+      prisma.clientAccount.findMany({
+        where: { status: "ACTIVE" },
+        select: { plan: true },
+      }),
     ]);
+
+    const planPrices: Record<string, number> = {
+      STARTER: 49,
+      GROWTH: 149,
+      ENTERPRISE: 299,
+    };
+    const estimatedMrr = activeClientsWithPlan.reduce(
+      (acc, c) => acc + (planPrices[c.plan] || 149),
+      0
+    );
 
     // 2. Fetch all clients with their respective shops
     const clientAccounts = await prisma.clientAccount.findMany({
@@ -101,7 +116,8 @@ export async function GET(req: NextRequest) {
           activeShops,
           suspendedShops: totalShops - activeShops,
           totalEngagements,
-          totalLoyaltyStamps,
+          totalCustomers,
+          estimatedMrr,
         },
         clients: clientAccounts.map((c) => ({
           id: c.id,
