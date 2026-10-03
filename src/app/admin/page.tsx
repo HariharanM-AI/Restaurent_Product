@@ -8,6 +8,15 @@ export default async function AdminRootPage() {
     redirect("/login");
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true },
+  });
+
+  if (user?.role === "PLATFORM_ADMIN") {
+    redirect("/admin/platform");
+  }
+
   const membership = await prisma.restaurantMember.findFirst({
     where: { userId: session.user.id },
     include: { restaurant: true },

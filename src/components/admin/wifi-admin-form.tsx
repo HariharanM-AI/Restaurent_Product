@@ -127,10 +127,9 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
         </p>
       </div>
 
-      {/* 2. Main Two Column Layout (Exact Match to Image 1) */}
-      <div className="flex flex-col xl:flex-row gap-8 items-start">
-        {/* Left Column: Form & Settings */}
-        <div className="flex-1 min-w-0 space-y-6">
+      {/* 2. Main Form Layout */}
+      <div className="w-full max-w-4xl mx-auto space-y-6">
+        <div className="space-y-6">
           {/* Card: Guest Network Credentials */}
           <div className="p-6 sm:p-7 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
@@ -293,101 +292,6 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
               <span>Explore Guest Actions</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
-          </div>
-        </div>
-
-        {/* Right Column: Live Guest Experience Preview Mockup (Fixed 380px Width) */}
-        <div className="w-full xl:w-[380px] shrink-0 sticky top-20 space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <Smartphone className="w-3.5 h-3.5" />
-              <span>GUEST EXPERIENCE PREVIEW</span>
-            </span>
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              Live
-            </span>
-          </div>
-
-          {/* Smartphone Mockup Frame */}
-          <div className="w-full rounded-[32px] bg-white border-[3px] border-slate-200 shadow-2xl overflow-hidden p-4 relative">
-            {/* Top Bar Header inside phone */}
-            <div className="rounded-2xl bg-[#082E27] text-white p-5 text-center relative overflow-hidden mb-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center mx-auto mb-2 text-emerald-300">
-                <Wifi className="w-5 h-5" />
-              </div>
-              <div className="text-sm font-extrabold text-white">Guest Wi-Fi</div>
-              <div className="text-[10px] text-emerald-200/70 mt-0.5">
-                Stay connected. Enjoy your dining experience.
-              </div>
-            </div>
-
-            {/* Network SSID and Password card */}
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 mb-3 space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  NETWORK SSID
-                </span>
-                <span className="font-extrabold text-slate-900 text-xs">
-                  {ssid || `${restaurant.name}_Guest`}
-                </span>
-              </div>
-              <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  PASSWORD
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs text-slate-700 font-bold">
-                    {showPreviewPassword ? (password || "None") : (password ? "••••••••••••" : "None")}
-                  </span>
-                  {password && (
-                    <button
-                      type="button"
-                      onClick={() => setShowPreviewPassword(!showPreviewPassword)}
-                      className="text-slate-400 hover:text-slate-600"
-                    >
-                      {showPreviewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* QR Code Auto-Connect Display */}
-            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 text-center mb-3">
-              {wifiQrUrl ? (
-                <img
-                  src={wifiQrUrl}
-                  alt="Auto-join Wi-Fi QR"
-                  className="w-36 h-36 mx-auto rounded-xl border border-slate-100 p-1"
-                />
-              ) : (
-                <div className="w-36 h-36 mx-auto rounded-xl bg-slate-50 border border-dashed border-slate-200 flex items-center justify-center text-xs text-slate-400">
-                  Enter SSID to generate QR
-                </div>
-              )}
-              <div className="text-[10px] font-bold text-slate-500 mt-2">
-                Scan with your camera to connect automatically
-              </div>
-            </div>
-
-            {/* Terms / Instructions */}
-            <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200/70 flex items-start gap-2.5 text-xs mb-4">
-              <Wifi className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
-              <div className="text-[11px] text-slate-600 leading-tight">
-                <span className="font-bold text-slate-800">
-                  Connect to {ssid || `${restaurant.name}_Guest`}.
-                </span>{" "}
-                {instructions || "Fast, complimentary access for all dining guests."}
-              </div>
-            </div>
-
-            {/* Botanical Brand Script */}
-            <div className="text-center pt-2 border-t border-slate-100">
-              <div className="font-serif italic text-xs text-emerald-800/80">
-                Good Food Better Connections
-              </div>
-            </div>
           </div>
         </div>
       </div>

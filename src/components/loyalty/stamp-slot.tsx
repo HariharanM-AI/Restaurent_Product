@@ -5,6 +5,7 @@ import { Check, Award } from "lucide-react";
 
 interface StampSlotProps {
   index: number;
+  visitNumber?: number;
   isFilled: boolean;
   isMilestone?: boolean;
   brandColor?: string;
@@ -12,10 +13,13 @@ interface StampSlotProps {
 
 export function StampSlot({
   index,
+  visitNumber,
   isFilled,
   isMilestone = false,
   brandColor = "#0F766E",
 }: StampSlotProps) {
+  const displayNum = visitNumber ?? index + 1;
+
   return (
     <div
       className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center transition-all ${
@@ -31,7 +35,7 @@ export function StampSlot({
             }
           : undefined
       }
-      aria-label={`Stamp ${index + 1}: ${isFilled ? "earned" : "unearned"}`}
+      aria-label={`Stamp ${displayNum}: ${isFilled ? "earned" : "unearned"}`}
     >
       {isFilled ? (
         <div className="flex flex-col items-center justify-center animate-stamp-pop">
@@ -41,13 +45,13 @@ export function StampSlot({
             <Check className="w-5 h-5 stroke-[2.5]" />
           )}
           <span className="text-[9px] font-bold tracking-tight uppercase opacity-90 mt-0.5">
-            Visit {index + 1}
+            Visit {displayNum}
           </span>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center">
           <span className="text-sm font-bold font-mono text-slate-400">
-            {index + 1}
+            {displayNum}
           </span>
           {isMilestone && (
             <span className="text-[9px] font-bold text-amber-600 uppercase tracking-tighter mt-0.5">

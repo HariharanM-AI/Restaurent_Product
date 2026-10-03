@@ -61,16 +61,41 @@ enum RewardStatus {
   EXPIRED
 }
 
+enum ClientPlan {
+  STARTER
+  GROWTH
+  ENTERPRISE
+}
+
 model User {
-  id           String             @id @default(cuid())
-  email        String             @unique
-  name         String?
-  phone        String?
-  address      String?
-  passwordHash String
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  memberships  RestaurantMember[]
+  id            String             @id @default(cuid())
+  email         String             @unique
+  name          String?
+  phone         String?
+  address       String?
+  role          Role               @default(OWNER)
+  status        String             @default("ACTIVE")
+  passwordHash  String
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  memberships   RestaurantMember[]
+  clientAccount ClientAccount?
+}
+
+model ClientAccount {
+  id          String        @id @default(cuid())
+  userId      String        @unique
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String
+  plan        ClientPlan    @default(GROWTH)
+  status      String        @default("ACTIVE") // ACTIVE, SUSPENDED, PENDING
+  maxShops    Int           @default(10)
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  shops       Restaurant[]
+
+  @@index([status])
 }
 
 model Restaurant {
@@ -91,6 +116,9 @@ model Restaurant {
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
+  clientId         String?
+  client           ClientAccount?     @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
   members          RestaurantMember[]
   actions          GuestAction[]
   wifiConfig       WifiConfig?
@@ -107,6 +135,7 @@ model Restaurant {
 
   @@index([slug])
   @@index([status])
+  @@index([clientId])
 }
 
 model RestaurantMember {
