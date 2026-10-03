@@ -105,6 +105,16 @@ export async function GET(req: NextRequest) {
             }
           : null,
         stampsNeededForNext: stampsNeeded,
+        milestones: milestones.map((m) => ({
+          id: m.id,
+          loyaltyProgramId: m.loyaltyProgramId,
+          stampRequirement: m.stampRequirement,
+          rewardTitle: m.rewardTitle,
+          rewardDescription: m.rewardDescription,
+          validityDays: m.validityDays,
+          enabled: m.enabled,
+          displayOrder: m.displayOrder,
+        })),
       },
     });
   } catch (error) {

@@ -84,6 +84,7 @@ export default function RewardsPage() {
             stampsNeeded={wallet.stampsNeededForNext || 0}
             restaurantName={restaurantName}
             brandColor={brandColor}
+            milestones={wallet.milestones || []}
           />
         ) : null}
 

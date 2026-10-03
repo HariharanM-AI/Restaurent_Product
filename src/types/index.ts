@@ -104,6 +104,7 @@ export interface LoyaltyWalletData {
   unlockedRewards: LoyaltyRewardData[];
   nextMilestone?: LoyaltyMilestoneData | null;
   stampsNeededForNext?: number;
+  milestones?: LoyaltyMilestoneData[];
 }
 
 export interface LoyaltyRewardData {

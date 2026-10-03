@@ -49,12 +49,17 @@ export function getNextUnlockedMilestone(
   milestones: MilestoneLike[],
   existingRewards: ExistingRewardLike[]
 ): MilestoneLike | null {
-  // Sort milestones ascending by requirement
   const sorted = [...milestones].sort((a, b) => a.stampRequirement - b.stampRequirement);
-  const unlockedMilestoneIds = new Set(existingRewards.map((r) => r.milestoneId));
 
   for (const milestone of sorted) {
-    if (lifetimeStamps >= milestone.stampRequirement && !unlockedMilestoneIds.has(milestone.id)) {
+    const reqInCycle = ((milestone.stampRequirement - 1) % 10) + 1;
+    const timesEarnable =
+      lifetimeStamps >= reqInCycle
+        ? Math.floor((lifetimeStamps - reqInCycle) / 10) + 1
+        : 0;
+    const timesUnlocked = existingRewards.filter((r) => r.milestoneId === milestone.id).length;
+
+    if (timesEarnable > timesUnlocked) {
       return milestone;
     }
   }
@@ -63,21 +68,35 @@ export function getNextUnlockedMilestone(
 }
 
 /**
- * Finds the upcoming milestone the customer is currently working towards.
+ * Finds the upcoming milestone the customer is currently working towards in the active 10-stamp card cycle.
  */
 export function getUpcomingMilestone(
   lifetimeStamps: number,
   milestones: MilestoneLike[]
 ): { nextMilestone: MilestoneLike | null; stampsNeeded: number } {
+  if (!milestones || milestones.length === 0) {
+    return { nextMilestone: null, stampsNeeded: 0 };
+  }
+
   const sorted = [...milestones].sort((a, b) => a.stampRequirement - b.stampRequirement);
+  const currentInCycle = lifetimeStamps % 10;
+
   for (const milestone of sorted) {
-    if (lifetimeStamps < milestone.stampRequirement) {
+    const reqInCycle = ((milestone.stampRequirement - 1) % 10) + 1;
+    if (currentInCycle < reqInCycle) {
       return {
         nextMilestone: milestone,
-        stampsNeeded: milestone.stampRequirement - lifetimeStamps,
+        stampsNeeded: reqInCycle - currentInCycle,
       };
     }
   }
 
-  return { nextMilestone: null, stampsNeeded: 0 };
+  // If all milestones in this 10-stamp card cycle are reached, point to the first milestone of the next cycle
+  const firstMilestone = sorted[0];
+  const firstReq = ((firstMilestone.stampRequirement - 1) % 10) + 1;
+  const stampsToCycleEnd = 10 - currentInCycle;
+  return {
+    nextMilestone: firstMilestone,
+    stampsNeeded: stampsToCycleEnd + firstReq,
+  };
 }
