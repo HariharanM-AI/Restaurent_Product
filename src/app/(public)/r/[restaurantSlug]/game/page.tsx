@@ -58,6 +58,27 @@ export default function SudokuGamePage() {
       .catch(() => {});
   }, [slug]);
 
+  // Lock body scroll while in the game page so mobile browser doesn't vertically scroll
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
+  // Auto-select first editable cell on mount so keypad is immediately active
+  useEffect(() => {
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (PUZZLES.easy.initial[r][c] === 0) {
+          setSelectedCell([r, c]);
+          return;
+        }
+      }
+    }
+  }, []);
+
   // Timer
   useEffect(() => {
     if (isWon) return;
@@ -68,36 +89,38 @@ export default function SudokuGamePage() {
   }, [isWon]);
 
   const handleCellClick = (r: number, c: number) => {
-    if (PUZZLES.easy.initial[r][c] !== 0) return; // initial clue, non-editable
     setSelectedCell([r, c]);
   };
 
-  const handleNumberInput = (num: number) => {
-    if (!selectedCell || isWon) return;
-    const [r, c] = selectedCell;
-    if (PUZZLES.easy.initial[r][c] !== 0) return;
+  const handleNumberInput = React.useCallback(
+    (num: number) => {
+      if (!selectedCell || isWon) return;
+      const [r, c] = selectedCell;
+      if (PUZZLES.easy.initial[r][c] !== 0) return; // Clue cells are fixed
 
-    const newGrid = grid.map((row) => [...row]);
-    newGrid[r][c] = num;
-    setGrid(newGrid);
+      const newGrid = grid.map((row) => [...row]);
+      newGrid[r][c] = num;
+      setGrid(newGrid);
 
-    // Check completion
-    let solved = true;
-    for (let i = 0; i < 9; i++) {
-      for (let j = 0; j < 9; j++) {
-        if (newGrid[i][j] !== PUZZLES.easy.solution[i][j]) {
-          solved = false;
-          break;
+      // Check completion
+      let solved = true;
+      for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+          if (newGrid[i][j] !== PUZZLES.easy.solution[i][j]) {
+            solved = false;
+            break;
+          }
         }
       }
-    }
 
-    if (solved) {
-      setIsWon(true);
-    }
-  };
+      if (solved) {
+        setIsWon(true);
+      }
+    },
+    [selectedCell, isWon, grid]
+  );
 
-  const handleErase = () => {
+  const handleErase = React.useCallback(() => {
     if (!selectedCell || isWon) return;
     const [r, c] = selectedCell;
     if (PUZZLES.easy.initial[r][c] !== 0) return;
@@ -105,14 +128,55 @@ export default function SudokuGamePage() {
     const newGrid = grid.map((row) => [...row]);
     newGrid[r][c] = 0;
     setGrid(newGrid);
-  };
+  }, [selectedCell, isWon, grid]);
 
   const handleRestart = () => {
     setGrid(PUZZLES.easy.initial.map((row) => [...row]));
-    setSelectedCell(null);
+    // Select first empty cell
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (PUZZLES.easy.initial[r][c] === 0) {
+          setSelectedCell([r, c]);
+          break;
+        }
+      }
+    }
     setSeconds(0);
     setIsWon(false);
   };
+
+  // Keyboard navigation & number input support
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isWon) return;
+
+      if (e.key >= "1" && e.key <= "9") {
+        handleNumberInput(parseInt(e.key, 10));
+        return;
+      }
+
+      if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") {
+        handleErase();
+        return;
+      }
+
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+        e.preventDefault();
+        setSelectedCell((prev) => {
+          if (!prev) return [0, 0];
+          let [r, c] = prev;
+          if (e.key === "ArrowUp") r = Math.max(0, r - 1);
+          if (e.key === "ArrowDown") r = Math.min(8, r + 1);
+          if (e.key === "ArrowLeft") c = Math.max(0, c - 1);
+          if (e.key === "ArrowRight") c = Math.min(8, c + 1);
+          return [r, c];
+        });
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleNumberInput, handleErase, isWon]);
 
   const formatTimer = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -120,133 +184,200 @@ export default function SudokuGamePage() {
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
+  const isClueSelected = selectedCell
+    ? PUZZLES.easy.initial[selectedCell[0]][selectedCell[1]] !== 0
+    : false;
+
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
-      {/* Top App Bar */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 flex items-center justify-between">
+    <div className="h-[100dvh] max-h-[100dvh] w-full flex flex-col justify-between overflow-hidden bg-slate-50 select-none touch-manipulation">
+      {/* 1. Compact Top Bar */}
+      <div className="flex-none bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-3 py-2 flex items-center justify-between z-20">
         <Link
           href={`/r/${slug}`}
-          className="p-2 -ml-2 rounded-xl text-slate-600 hover:bg-slate-100 transition flex items-center gap-1.5 text-xs font-semibold"
+          className="p-1.5 -ml-1 rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center gap-1 text-xs font-semibold"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back</span>
         </Link>
-        <span className="text-xs font-semibold text-slate-700 truncate max-w-[180px]">
+        <span className="text-xs font-bold text-slate-800 truncate max-w-[150px]">
           {restaurantName}
         </span>
-        <div className="w-8" />
+        <div className="flex items-center gap-2">
+          <div className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
+            {formatTimer(seconds)}
+          </div>
+          <button
+            onClick={handleRestart}
+            className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 transition"
+            title="Restart puzzle"
+            aria-label="Restart puzzle"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
-      <div className="flex-1 max-w-md mx-auto w-full p-4 flex flex-col justify-between">
-        {/* Game Stats Bar */}
-        <div>
-          <div className="flex items-center justify-between mb-3 px-1">
-            <div className="flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
+      {/* 2. Sub-Header: Game Title & Helper */}
+      <div className="flex-none px-3 pt-1.5 pb-0.5 flex items-center justify-between max-w-[380px] mx-auto w-full">
+        <div className="flex items-center gap-1.5">
+          <div
+            className="w-5 h-5 rounded-md flex items-center justify-center text-white shadow-xs"
+            style={{ backgroundColor: brandColor }}
+          >
+            <Gamepad2 className="w-3 h-3" />
+          </div>
+          <span className="text-xs font-bold text-slate-900">Sudoku</span>
+          <span className="text-[10px] text-slate-500 font-medium bg-slate-100 px-1.5 py-0.5 rounded">
+            Casual
+          </span>
+        </div>
+        {selectedCell && (
+          <span className="text-[11px] text-slate-500 font-medium">
+            {isClueSelected ? "Fixed clue" : "Tap number to place"}
+          </span>
+        )}
+      </div>
+
+      {/* 3. Sudoku Grid (Flex-1, auto-centered, dynamically scaled to never overflow) */}
+      <div className="flex-1 min-h-0 flex items-center justify-center px-2 py-1">
+        <div
+          className="aspect-square bg-slate-900 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl shadow-md grid grid-cols-9 gap-[1px]"
+          style={{
+            width: "min(360px, calc(100vw - 1.25rem), calc(100dvh - 200px))",
+            height: "min(360px, calc(100vw - 1.25rem), calc(100dvh - 200px))",
+          }}
+        >
+          {grid.map((row, r) =>
+            row.map((val, c) => {
+              const isInitial = PUZZLES.easy.initial[r][c] !== 0;
+              const isSelected = selectedCell?.[0] === r && selectedCell?.[1] === c;
+              const selectedVal = selectedCell ? grid[selectedCell[0]][selectedCell[1]] : 0;
+              const isSameNumber = selectedVal !== 0 && val === selectedVal && !isSelected;
+              const inSameRowOrCol =
+                selectedCell && (selectedCell[0] === r || selectedCell[1] === c);
+              const inSameBox =
+                selectedCell &&
+                Math.floor(selectedCell[0] / 3) === Math.floor(r / 3) &&
+                Math.floor(selectedCell[1] / 3) === Math.floor(c / 3);
+
+              // Thick borders for 3x3 blocks
+              const borderRight =
+                (c + 1) % 3 === 0 && c !== 8 ? "border-r-2 border-slate-700" : "";
+              const borderBottom =
+                (r + 1) % 3 === 0 && r !== 8 ? "border-b-2 border-slate-700" : "";
+
+              return (
+                <button
+                  key={`${r}-${c}`}
+                  type="button"
+                  onClick={() => handleCellClick(r, c)}
+                  style={isSelected ? { backgroundColor: brandColor } : undefined}
+                  className={`aspect-square flex items-center justify-center text-sm sm:text-base font-semibold transition-colors ${borderRight} ${borderBottom} ${
+                    isSelected
+                      ? "text-white font-black ring-2 ring-white/70 ring-inset shadow-inner"
+                      : isSameNumber
+                      ? "bg-amber-100 text-amber-950 font-black ring-1 ring-amber-300"
+                      : inSameRowOrCol || inSameBox
+                      ? "bg-slate-100 text-slate-800"
+                      : "bg-white text-slate-900"
+                  } ${isInitial ? "text-slate-950 font-black" : "text-teal-700 font-bold"}`}
+                >
+                  {val !== 0 ? val : ""}
+                </button>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* 4. Number Keypad (Flex-none, always at bottom, clearly visible) */}
+      <div className="flex-none px-3 pb-3 pt-1 max-w-[380px] mx-auto w-full">
+        <div className="grid grid-cols-5 gap-1.5 mb-1.5">
+          {[1, 2, 3, 4, 5].map((num) => {
+            const isCurrentlySelectedNum =
+              selectedCell && grid[selectedCell[0]][selectedCell[1]] === num;
+            return (
+              <button
+                key={num}
+                type="button"
+                onClick={() => handleNumberInput(num)}
+                disabled={!selectedCell || isClueSelected || isWon}
+                className={`h-10 sm:h-11 rounded-xl text-base sm:text-lg font-bold border transition-all active:scale-95 flex items-center justify-center select-none shadow-sm ${
+                  isCurrentlySelectedNum
+                    ? "bg-teal-50 border-teal-500 text-teal-800 ring-1 ring-teal-400"
+                    : "bg-white hover:bg-slate-50 border-slate-200 text-slate-800 active:bg-slate-100"
+                } disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100`}
+              >
+                {num}
+              </button>
+            );
+          })}
+        </div>
+        <div className="grid grid-cols-5 gap-1.5">
+          {[6, 7, 8, 9].map((num) => {
+            const isCurrentlySelectedNum =
+              selectedCell && grid[selectedCell[0]][selectedCell[1]] === num;
+            return (
+              <button
+                key={num}
+                type="button"
+                onClick={() => handleNumberInput(num)}
+                disabled={!selectedCell || isClueSelected || isWon}
+                className={`h-10 sm:h-11 rounded-xl text-base sm:text-lg font-bold border transition-all active:scale-95 flex items-center justify-center select-none shadow-sm ${
+                  isCurrentlySelectedNum
+                    ? "bg-teal-50 border-teal-500 text-teal-800 ring-1 ring-teal-400"
+                    : "bg-white hover:bg-slate-50 border-slate-200 text-slate-800 active:bg-slate-100"
+                } disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100`}
+              >
+                {num}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={handleErase}
+            disabled={!selectedCell || isClueSelected || isWon}
+            className="h-10 sm:h-11 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-700 transition-all active:scale-95 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+            title="Erase cell"
+            aria-label="Erase cell"
+          >
+            <Eraser className="w-4 h-4 mr-1" />
+            <span className="text-xs font-semibold">Clear</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 5. Victory Celebration Modal (Overlay so it never disrupts grid layout) */}
+      {isWon && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 max-w-xs w-full shadow-2xl text-center border border-slate-100 animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 shadow-inner">
+              <Trophy className="w-8 h-8 animate-bounce" />
+            </div>
+            <h3 className="text-xl font-extrabold text-slate-900 mb-1">Puzzle Solved!</h3>
+            <p className="text-xs text-slate-500 mb-4">
+              Awesome job! You completed the Sudoku in{" "}
+              <span className="font-bold text-slate-800">{formatTimer(seconds)}</span>.
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={handleRestart}
+                className="w-full py-2.5 px-4 rounded-xl text-white font-bold text-sm shadow-md transition active:scale-95"
                 style={{ backgroundColor: brandColor }}
               >
-                <Gamepad2 className="w-4 h-4" />
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-slate-900 leading-tight">Sudoku</h2>
-                <span className="text-[10px] text-slate-500 font-medium">Casual Difficulty</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="text-xs font-mono font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">
-                {formatTimer(seconds)}
-              </div>
-              <button
-                onClick={handleRestart}
-                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition"
-                title="Restart puzzle"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
+                Play Again
               </button>
+              <Link
+                href={`/r/${slug}`}
+                className="w-full py-2 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition text-center"
+              >
+                Back to Restaurant
+              </Link>
             </div>
-          </div>
-
-          {/* Victory Alert */}
-          {isWon && (
-            <div className="mb-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center animate-in zoom-in-95 duration-200">
-              <Trophy className="w-8 h-8 text-emerald-600 mx-auto mb-1.5" />
-              <h3 className="font-bold text-sm text-emerald-900">Puzzle Solved!</h3>
-              <p className="text-xs text-emerald-700">Completed in {formatTimer(seconds)}.</p>
-            </div>
-          )}
-
-          {/* Sudoku 9x9 Grid */}
-          <div className="aspect-square w-full max-w-[370px] mx-auto bg-slate-900 p-1.5 rounded-2xl shadow-md grid grid-cols-9 gap-[1px]">
-            {grid.map((row, r) =>
-              row.map((val, c) => {
-                const isInitial = PUZZLES.easy.initial[r][c] !== 0;
-                const isSelected = selectedCell?.[0] === r && selectedCell?.[1] === c;
-                const inSameRowOrCol =
-                  selectedCell && (selectedCell[0] === r || selectedCell[1] === c);
-
-                // Thick borders for 3x3 blocks
-                const borderRight = (c + 1) % 3 === 0 && c !== 8 ? "border-r-2 border-slate-700" : "";
-                const borderBottom = (r + 1) % 3 === 0 && r !== 8 ? "border-b-2 border-slate-700" : "";
-
-                return (
-                  <button
-                    key={`${r}-${c}`}
-                    type="button"
-                    onClick={() => handleCellClick(r, c)}
-                    className={`aspect-square flex items-center justify-center text-sm font-semibold transition-colors ${borderRight} ${borderBottom} ${
-                      isSelected
-                        ? "bg-teal-500 text-white font-bold"
-                        : inSameRowOrCol
-                        ? "bg-slate-100 text-slate-900"
-                        : "bg-white text-slate-900"
-                    } ${isInitial ? "text-slate-900 font-bold" : "text-teal-700 font-medium"}`}
-                  >
-                    {val !== 0 ? val : ""}
-                  </button>
-                );
-              })
-            )}
           </div>
         </div>
-
-        {/* Number Keypad & Controls */}
-        <div className="py-4">
-          <div className="grid grid-cols-5 gap-2 max-w-[370px] mx-auto mb-2">
-            {[1, 2, 3, 4, 5].map((num) => (
-              <button
-                key={num}
-                onClick={() => handleNumberInput(num)}
-                disabled={!selectedCell || isWon}
-                className="h-12 rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-200 text-base font-bold text-slate-900 shadow-sm transition disabled:opacity-40"
-              >
-                {num}
-              </button>
-            ))}
-          </div>
-          <div className="grid grid-cols-5 gap-2 max-w-[370px] mx-auto">
-            {[6, 7, 8, 9].map((num) => (
-              <button
-                key={num}
-                onClick={() => handleNumberInput(num)}
-                disabled={!selectedCell || isWon}
-                className="h-12 rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-200 text-base font-bold text-slate-900 shadow-sm transition disabled:opacity-40"
-              >
-                {num}
-              </button>
-            ))}
-            <button
-              onClick={handleErase}
-              disabled={!selectedCell || isWon}
-              className="h-12 rounded-xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 border border-slate-200 flex items-center justify-center text-slate-700 shadow-sm transition disabled:opacity-40"
-              title="Erase cell"
-            >
-              <Eraser className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
