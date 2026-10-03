@@ -58,13 +58,9 @@ export default function SudokuGamePage() {
       .catch(() => {});
   }, [slug]);
 
-  // Lock body scroll while in the game page so mobile browser doesn't vertically scroll
+  // Ensure the page always starts scrolled to the top on navigation
   useEffect(() => {
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, []);
 
   // Auto-select first editable cell on mount so keypad is immediately active
@@ -189,26 +185,28 @@ export default function SudokuGamePage() {
     : false;
 
   return (
-    <div className="h-[100dvh] max-h-[100dvh] w-full flex flex-col justify-between overflow-hidden bg-slate-50 select-none touch-manipulation">
-      {/* 1. Compact Top Bar */}
-      <div className="flex-none bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-3 py-2 flex items-center justify-between z-20">
+    <div className="min-h-screen sm:min-h-[100dvh] h-[100dvh] w-full flex flex-col justify-between bg-slate-50 select-none touch-manipulation overflow-y-auto overscroll-none pb-2">
+      {/* 1. Sticky Top Bar (Always pinned at top, visible on all screens) */}
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-3 py-2 flex items-center justify-between w-full shadow-2xs">
         <Link
           href={`/r/${slug}`}
-          className="p-1.5 -ml-1 rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center gap-1 text-xs font-semibold"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition active:scale-95 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back</span>
         </Link>
-        <span className="text-xs font-bold text-slate-800 truncate max-w-[150px]">
+        <span className="text-xs font-bold text-slate-800 truncate max-w-[130px] sm:max-w-[160px] text-center">
           {restaurantName}
         </span>
-        <div className="flex items-center gap-2">
-          <div className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
-            {formatTimer(seconds)}
+        <div className="flex items-center gap-1.5">
+          <div className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 border border-slate-200/80 shadow-2xs flex items-center gap-1">
+            <span className="text-[10px] text-slate-400 font-sans font-medium">Time:</span>
+            <span>{formatTimer(seconds)}</span>
           </div>
           <button
+            type="button"
             onClick={handleRestart}
-            className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 transition"
+            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-600 transition cursor-pointer"
             title="Restart puzzle"
             aria-label="Restart puzzle"
           >
@@ -238,13 +236,13 @@ export default function SudokuGamePage() {
         )}
       </div>
 
-      {/* 3. Sudoku Grid (Flex-1, auto-centered, dynamically scaled to never overflow) */}
+      {/* 3. Sudoku Grid (Auto-centered, scaled to fit comfortably without overflowing) */}
       <div className="flex-1 min-h-0 flex items-center justify-center px-2 py-1">
         <div
           className="aspect-square bg-slate-900 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl shadow-md grid grid-cols-9 gap-[1px]"
           style={{
-            width: "min(360px, calc(100vw - 1.25rem), calc(100dvh - 200px))",
-            height: "min(360px, calc(100vw - 1.25rem), calc(100dvh - 200px))",
+            width: "min(340px, calc(100vw - 1.5rem), calc(100dvh - 240px))",
+            height: "min(340px, calc(100vw - 1.5rem), calc(100dvh - 240px))",
           }}
         >
           {grid.map((row, r) =>
@@ -290,8 +288,8 @@ export default function SudokuGamePage() {
         </div>
       </div>
 
-      {/* 4. Number Keypad (Flex-none, always at bottom, clearly visible) */}
-      <div className="flex-none px-3 pb-3 pt-1 max-w-[380px] mx-auto w-full">
+      {/* 4. Number Keypad (Flex-none, always visible at bottom) */}
+      <div className="flex-none px-3 pb-2 pt-1 max-w-[380px] mx-auto w-full">
         <div className="grid grid-cols-5 gap-1.5 mb-1.5">
           {[1, 2, 3, 4, 5].map((num) => {
             const isCurrentlySelectedNum =
@@ -302,7 +300,7 @@ export default function SudokuGamePage() {
                 type="button"
                 onClick={() => handleNumberInput(num)}
                 disabled={!selectedCell || isClueSelected || isWon}
-                className={`h-10 sm:h-11 rounded-xl text-base sm:text-lg font-bold border transition-all active:scale-95 flex items-center justify-center select-none shadow-sm ${
+                className={`h-9 sm:h-10 rounded-xl text-base sm:text-lg font-bold border transition-all active:scale-95 flex items-center justify-center select-none shadow-xs ${
                   isCurrentlySelectedNum
                     ? "bg-teal-50 border-teal-500 text-teal-800 ring-1 ring-teal-400"
                     : "bg-white hover:bg-slate-50 border-slate-200 text-slate-800 active:bg-slate-100"
@@ -323,7 +321,7 @@ export default function SudokuGamePage() {
                 type="button"
                 onClick={() => handleNumberInput(num)}
                 disabled={!selectedCell || isClueSelected || isWon}
-                className={`h-10 sm:h-11 rounded-xl text-base sm:text-lg font-bold border transition-all active:scale-95 flex items-center justify-center select-none shadow-sm ${
+                className={`h-9 sm:h-10 rounded-xl text-base sm:text-lg font-bold border transition-all active:scale-95 flex items-center justify-center select-none shadow-xs ${
                   isCurrentlySelectedNum
                     ? "bg-teal-50 border-teal-500 text-teal-800 ring-1 ring-teal-400"
                     : "bg-white hover:bg-slate-50 border-slate-200 text-slate-800 active:bg-slate-100"
@@ -337,7 +335,7 @@ export default function SudokuGamePage() {
             type="button"
             onClick={handleErase}
             disabled={!selectedCell || isClueSelected || isWon}
-            className="h-10 sm:h-11 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-700 transition-all active:scale-95 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+            className="h-9 sm:h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-700 transition-all active:scale-95 shadow-xs disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
             title="Erase cell"
             aria-label="Erase cell"
           >
