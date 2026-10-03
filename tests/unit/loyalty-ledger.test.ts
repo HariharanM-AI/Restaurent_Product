@@ -74,4 +74,36 @@ describe("Loyalty Ledger Engine", () => {
     expect(nextMilestone?.id).toBe("m1");
     expect(stampsNeeded).toBe(2); // 5 - 3 = 2 more stamps needed
   });
+
+  it("calculates continuous upcoming milestones for consecutive cards (e.g. 12/15 and 16/20)", () => {
+    const milestones = [
+      {
+        id: "m1",
+        stampRequirement: 5,
+        rewardTitle: "Free Drink",
+        validityDays: 30,
+      },
+      {
+        id: "m2",
+        stampRequirement: 10,
+        rewardTitle: "Free Dessert",
+        validityDays: 30,
+      },
+    ];
+
+    // At 12 stamps: next reward is at 15 stamps, 3 needed (12/15)
+    const at12 = getUpcomingMilestone(12, milestones);
+    expect(at12.nextMilestone?.stampRequirement).toBe(15);
+    expect(at12.stampsNeeded).toBe(3);
+
+    // At 16 stamps: next reward is at 20 stamps, 4 needed (16/20)
+    const at16 = getUpcomingMilestone(16, milestones);
+    expect(at16.nextMilestone?.stampRequirement).toBe(20);
+    expect(at16.stampsNeeded).toBe(4);
+
+    // At 10 stamps (first 10 finished): next card cycle starts, reward target is 15 stamps, 5 needed
+    const at10 = getUpcomingMilestone(10, milestones);
+    expect(at10.nextMilestone?.stampRequirement).toBe(15);
+    expect(at10.stampsNeeded).toBe(5);
+  });
 });

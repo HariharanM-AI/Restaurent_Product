@@ -79,14 +79,19 @@ export function getUpcomingMilestone(
   }
 
   const sorted = [...milestones].sort((a, b) => a.stampRequirement - b.stampRequirement);
-  const currentInCycle = lifetimeStamps % 10;
+  const cycleIndex = Math.floor(lifetimeStamps / 10);
+  const baseOffset = cycleIndex * 10;
 
   for (const milestone of sorted) {
     const reqInCycle = ((milestone.stampRequirement - 1) % 10) + 1;
-    if (currentInCycle < reqInCycle) {
+    const absoluteTarget = baseOffset + reqInCycle;
+    if (lifetimeStamps < absoluteTarget) {
       return {
-        nextMilestone: milestone,
-        stampsNeeded: reqInCycle - currentInCycle,
+        nextMilestone: {
+          ...milestone,
+          stampRequirement: absoluteTarget,
+        },
+        stampsNeeded: absoluteTarget - lifetimeStamps,
       };
     }
   }
@@ -94,9 +99,12 @@ export function getUpcomingMilestone(
   // If all milestones in this 10-stamp card cycle are reached, point to the first milestone of the next cycle
   const firstMilestone = sorted[0];
   const firstReq = ((firstMilestone.stampRequirement - 1) % 10) + 1;
-  const stampsToCycleEnd = 10 - currentInCycle;
+  const nextCycleTarget = baseOffset + 10 + firstReq;
   return {
-    nextMilestone: firstMilestone,
-    stampsNeeded: stampsToCycleEnd + firstReq,
+    nextMilestone: {
+      ...firstMilestone,
+      stampRequirement: nextCycleTarget,
+    },
+    stampsNeeded: nextCycleTarget - lifetimeStamps,
   };
 }

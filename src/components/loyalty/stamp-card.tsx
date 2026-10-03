@@ -24,15 +24,40 @@ export function StampCard({
   brandColor = "var(--brand-primary, #0F766E)",
   milestones = [],
 }: StampCardProps) {
-  // A fresh card contains exactly 10 stamps (slots 1 to 10).
-  // When 10 finishes, it resets to a fresh next 10 loyalty stamps.
-  const currentCardStamps = totalLifetimeStamps % 10;
+  // Continuous 10-stamp card numbering:
+  // Card 1: 1 to 10
+  // Card 2: 11 to 20
+  // Card 3: 21 to 30, etc.
+  const cycleIndex = Math.floor(totalLifetimeStamps / 10);
+  const baseOffset = cycleIndex * 10;
 
-  // The target stamps counter acts dynamically according to the upcoming reward preferred by the client
-  // (e.g. 5 stamps for Milestone 1, 10 stamps for Milestone 2, or custom client requirement)
-  const targetStamps = nextMilestone
-    ? ((nextMilestone.stampRequirement - 1) % 10) + 1
-    : 10;
+  // Active milestone targets in the current 10-stamp card cycle
+  const activeMilestones =
+    milestones.length > 0
+      ? milestones
+      : [
+          { stampRequirement: 5, rewardTitle: "Reward Milestone" },
+          { stampRequirement: 10, rewardTitle: "Reward Milestone" },
+        ];
+
+  const milestoneRequirementsInCycle = activeMilestones
+    .map((m) => {
+      const reqInCard = ((m.stampRequirement - 1) % 10) + 1;
+      return baseOffset + reqInCard;
+    })
+    .sort((a, b) => a - b);
+
+  // Dynamic target stamp requirement for upcoming reward
+  // For example: 12/15 when user needs 3 more to achieve reward, 16/20 when user needs 4 more
+  const targetRewardStamp =
+    nextMilestone?.stampRequirement ??
+    milestoneRequirementsInCycle.find((req) => req > totalLifetimeStamps) ??
+    (baseOffset + 10);
+
+  const displayStampsNeeded =
+    stampsNeeded > 0
+      ? stampsNeeded
+      : Math.max(0, targetRewardStamp - totalLifetimeStamps);
 
   const isHex = brandColor.startsWith("#");
   const badgeBg = isHex ? `${brandColor}18` : "color-mix(in srgb, var(--brand-primary) 15%, transparent)";
@@ -46,7 +71,7 @@ export function StampCard({
       />
 
       {/* Card Header: Title on Left, Dynamic Upcoming Reward Badge on Right */}
-      <div className="flex items-start justify-between gap-3 mb-3">
+      <div className="flex items-center justify-between gap-3 mb-3">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
             Digital Stamp Card
@@ -55,19 +80,16 @@ export function StampCard({
             {restaurantName}
           </h3>
         </div>
-        <div className="flex flex-col items-end">
+        <div className="flex items-center">
           <div
-            className="px-3 py-1 rounded-full text-xs font-bold font-mono shrink-0 shadow-xs"
+            className="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-extrabold font-mono shrink-0 shadow-xs"
             style={{
               backgroundColor: badgeBg,
               color: brandColor,
             }}
           >
-            {currentCardStamps} / {targetStamps} Stamps
+            {totalLifetimeStamps} / {targetRewardStamp} Stamps
           </div>
-          <span className="text-[10px] font-medium text-slate-400 mt-1">
-            {totalLifetimeStamps} Total Lifetime Stamps
-          </span>
         </div>
       </div>
 
@@ -79,9 +101,9 @@ export function StampCard({
           </div>
           <div className="min-w-0">
             <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 block">
-              {stampsNeeded === 0
+              {displayStampsNeeded === 0
                 ? "Milestone Reached!"
-                : `${stampsNeeded} more ${stampsNeeded === 1 ? "stamp" : "stamps"} to unlock:`}
+                : `${displayStampsNeeded} more ${displayStampsNeeded === 1 ? "stamp" : "stamps"} to unlock:`}
             </span>
             <span className="text-xs font-bold text-slate-900 block truncate">
               {nextMilestone.rewardTitle}
@@ -95,19 +117,12 @@ export function StampCard({
         </div>
       )}
 
-      {/* Stamp Slots Grid (Always 10 fresh slots: 5 columns x 2 rows, numbered 1 to 10) */}
+      {/* Stamp Slots Grid (Continuous numbering: 1-10, 11-20, 21-30, etc.) */}
       <div className="grid grid-cols-5 gap-2 my-2">
         {Array.from({ length: 10 }).map((_, idx) => {
-          const slotNum = idx + 1;
-          const isFilled = slotNum <= currentCardStamps;
-
-          // Check if this slot corresponds to a client-configured milestone reward
-          const isMilestone =
-            milestones.length > 0
-              ? milestones.some((m) => ((m.stampRequirement - 1) % 10) + 1 === slotNum)
-              : nextMilestone && targetStamps === slotNum
-              ? true
-              : slotNum === 5 || slotNum === 10;
+          const slotNum = baseOffset + idx + 1;
+          const isFilled = slotNum <= totalLifetimeStamps;
+          const isMilestone = milestoneRequirementsInCycle.includes(slotNum);
 
           return (
             <StampSlot
