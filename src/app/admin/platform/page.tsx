@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
@@ -17,7 +16,6 @@ import {
   ChevronDown,
   ChevronUp,
   Shield,
-  Sliders,
   Check,
   AlertCircle,
   X,
@@ -37,6 +35,7 @@ interface ShopData {
   id: string;
   name: string;
   slug: string;
+  logoUrl?: string | null;
   primaryColor: string;
   status: string;
   address: string | null;
@@ -227,7 +226,7 @@ export default function PlatformAdminDashboardPage() {
       {/* 1. Header (Fluid width, fitted to screen on all zoom levels) */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs w-full">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-3 flex items-center justify-between gap-4">
-          {/* Left: Brand Logo, Noura name, Platform Administration & SUPER ADMIN */}
+          {/* Left: Brand Logo & Noura Administration */}
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white border border-slate-200/90 overflow-hidden p-1 shadow-xs flex items-center justify-center shrink-0">
               <img
@@ -237,40 +236,20 @@ export default function PlatformAdminDashboardPage() {
               />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-extrabold tracking-tight text-base sm:text-xl text-slate-900 leading-none">
-                  Noura
-                </span>
-                <span className="text-sm sm:text-base font-bold text-slate-800 leading-none">
-                  Platform Administration
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 uppercase tracking-wider">
-                  SUPER ADMIN
-                </span>
-              </div>
+              <h1 className="font-extrabold tracking-tight text-base sm:text-xl text-slate-900 leading-none">
+                Noura Administration
+              </h1>
               <p className="text-[10.5px] sm:text-xs text-slate-500 font-medium mt-1 truncate">
                 Multi-Tenant Client Venues & Platform Distribution Management
               </p>
             </div>
           </div>
 
-          {/* Right: /r/hari2-cafe Link, Actions, Refresh, Sign Out */}
+          {/* Right: Actions, Refresh, Sign Out */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Direct /r/hari2-cafe Quick Access */}
-            <Link
-              href="/r/hari2-cafe"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold transition shadow-2xs group"
-              title="Open Hari2 Cafe Diner Hub"
-            >
-              <ExternalLink className="w-3.5 h-3.5 text-teal-700 group-hover:translate-x-0.5 transition-transform" />
-              <span className="font-mono text-[11.5px]">/r/hari2-cafe</span>
-            </Link>
-
             <button
               onClick={fetchData}
-              className="p-2 sm:p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition"
+              className="p-2 sm:p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition cursor-pointer"
               title="Refresh Data"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-teal-700" : ""}`} />
@@ -594,9 +573,17 @@ export default function PlatformAdminDashboardPage() {
                         transition={{ duration: 0.25, ease: "easeInOut" }}
                         className="bg-slate-50/70 border-t border-slate-200/80 px-5 py-4"
                       >
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                            Venues Managed by {client.companyName} ({client.shops.length})
+                        <div className="flex items-center justify-between mb-3.5">
+                          <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 rounded-md bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-[10px]">
+                              {client.companyName.charAt(0).toUpperCase()}
+                            </div>
+                            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              Venues Managed by {client.companyName}
+                            </span>
+                          </div>
+                          <span className="text-[11px] font-semibold text-slate-500 bg-white px-2.5 py-0.5 rounded-full border border-slate-200">
+                            {client.shops.length} {client.shops.length === 1 ? "Venue" : "Venues"}
                           </span>
                         </div>
 
@@ -609,77 +596,97 @@ export default function PlatformAdminDashboardPage() {
                             {client.shops.map((shop) => (
                               <div
                                 key={shop.id}
-                                className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3 transition-all hover:border-slate-300"
+                                className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3.5 transition-all hover:shadow-md hover:border-slate-300"
                               >
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <div
-                                      className="w-3.5 h-3.5 rounded-full shrink-0 border border-black/10"
-                                      style={{ backgroundColor: shop.primaryColor }}
-                                    />
+                                <div className="flex items-start justify-between gap-2.5">
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-11 h-11 rounded-xl bg-white border border-slate-200/90 shadow-2xs overflow-hidden p-1 flex items-center justify-center shrink-0">
+                                      {shop.logoUrl ? (
+                                        <img
+                                          src={shop.logoUrl}
+                                          alt={shop.name}
+                                          className="w-full h-full object-contain"
+                                        />
+                                      ) : (
+                                        <div
+                                          className="w-full h-full rounded-lg text-white font-extrabold text-xs flex items-center justify-center tracking-tight shadow-2xs"
+                                          style={{
+                                            backgroundColor: shop.primaryColor || "#0F766E",
+                                          }}
+                                        >
+                                          {shop.name.slice(0, 2).toUpperCase()}
+                                        </div>
+                                      )}
+                                    </div>
                                     <div className="min-w-0">
                                       <h4 className="text-sm font-bold text-slate-900 leading-tight truncate">
                                         {shop.name}
                                       </h4>
-                                      <span className="text-[11px] font-mono text-slate-400 truncate block">
-                                        /r/{shop.slug}
-                                      </span>
+                                      <a
+                                        href={`/r/${shop.slug}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-[11px] font-mono text-teal-700 hover:text-teal-800 hover:underline flex items-center gap-1 mt-0.5 truncate"
+                                      >
+                                        <span>/r/{shop.slug}</span>
+                                        <ExternalLink className="w-2.5 h-2.5 shrink-0 opacity-70" />
+                                      </a>
                                     </div>
                                   </div>
                                   <span
-                                    className={`px-2 py-0.5 rounded-full text-[9px] font-bold shrink-0 ${
+                                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 shadow-2xs flex items-center gap-1.5 ${
                                       shop.status === "ACTIVE"
                                         ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
                                         : "bg-rose-50 text-rose-800 border border-rose-200"
                                     }`}
                                   >
+                                    {shop.status === "ACTIVE" && (
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                                    )}
                                     {shop.status}
                                   </span>
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-1.5 py-2 border-y border-slate-100 text-center text-[10px]">
+                                <div className="grid grid-cols-3 gap-2 py-2.5 px-3 rounded-xl bg-slate-50/90 border border-slate-100 text-center">
                                   <div>
-                                    <span className="font-bold text-slate-800 block font-mono">
+                                    <span className="font-extrabold text-slate-900 block font-mono text-xs sm:text-sm">
                                       {shop.actionsCount}
                                     </span>
-                                    <span className="text-slate-400">Touchpoints</span>
+                                    <span className="text-[10px] text-slate-500 font-medium">Touchpoints</span>
                                   </div>
-                                  <div>
-                                    <span className="font-bold text-slate-800 block font-mono">
+                                  <div className="border-x border-slate-200/70">
+                                    <span className="font-extrabold text-slate-900 block font-mono text-xs sm:text-sm">
                                       {shop.customersCount}
                                     </span>
-                                    <span className="text-slate-400">Customers</span>
+                                    <span className="text-[10px] text-slate-500 font-medium">Customers</span>
                                   </div>
                                   <div>
-                                    <span className="font-bold text-slate-800 block font-mono">
+                                    <span className="font-extrabold text-slate-900 block font-mono text-xs sm:text-sm">
                                       {shop.feedbacksCount}
                                     </span>
-                                    <span className="text-slate-400">Feedback</span>
+                                    <span className="text-[10px] text-slate-500 font-medium">Feedback</span>
                                   </div>
                                 </div>
 
                                 {/* Action Buttons */}
                                 <div className="flex items-center gap-2 pt-1">
-                                  <Link
-                                    href={`/admin/restaurants/${shop.id}/dashboard`}
-                                    className="flex-1 py-1.5 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold text-center transition flex items-center justify-center gap-1.5"
-                                    title="Open and manage venue dashboard"
-                                  >
-                                    <Sliders className="w-3.5 h-3.5" />
-                                    <span>Manage Venue</span>
-                                  </Link>
                                   <a
                                     href={`/r/${shop.slug}`}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition"
+                                    className="flex-1 py-2 px-3 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold text-center transition flex items-center justify-center gap-1.5 shadow-2xs group cursor-pointer"
                                     title="Open Live Guest Page"
                                   >
-                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    <span>Visit Public Hub</span>
+                                    <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                                   </a>
                                   <button
                                     onClick={() => handleToggleShopStatus(shop.id, shop.status)}
-                                    className="px-2 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 text-[10px] font-semibold transition"
+                                    className={`px-3 py-2 rounded-xl border text-xs font-bold transition cursor-pointer ${
+                                      shop.status === "ACTIVE"
+                                        ? "border-slate-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-slate-600"
+                                        : "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                                    }`}
                                     title="Toggle operational status"
                                   >
                                     {shop.status === "ACTIVE" ? "Suspend" : "Activate"}
