@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RestaurantData, GuestActionData, SocialLinkData } from "@/types";
 import { SaaSCard } from "@/components/ui/saas-card";
 import { Button } from "@/components/ui/button";
+import { signOut } from "next-auth/react";
 import {
   Check,
   Palette,
@@ -28,6 +29,10 @@ import {
   Image as ImageIcon,
   RefreshCw,
   Trash2,
+  KeyRound,
+  Eye,
+  EyeOff,
+  LogOut,
 } from "lucide-react";
 import { broadcastActivity } from "@/lib/realtime/broadcast";
 
@@ -35,6 +40,12 @@ interface RestaurantProfileTabsProps {
   restaurant: RestaurantData;
   actions?: GuestActionData[];
   initialSocialLinks?: SocialLinkData[];
+  adminUser?: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
 }
 
 export const ACCENT_PRESETS = [
@@ -162,6 +173,7 @@ export function RestaurantProfileTabs({
   restaurant,
   actions = [],
   initialSocialLinks = [],
+  adminUser,
 }: RestaurantProfileTabsProps) {
   const router = useRouter();
   const [customerThemeMode, setCustomerThemeMode] = useState<"light" | "dark">(
@@ -185,6 +197,34 @@ export function RestaurantProfileTabs({
   const [primaryColor, setPrimaryColor] = useState(restaurant.primaryColor || "#0F766E");
   const [secondaryColor, setSecondaryColor] = useState(restaurant.secondaryColor || "#F8FAFC");
 
+  // Admin Profile Photo State
+  const [adminPhotoUrl, setAdminPhotoUrl] = useState<string | null>(adminUser?.image || null);
+  const [isUploadingAdminPhoto, setIsUploadingAdminPhoto] = useState(false);
+  const [adminPhotoError, setAdminPhotoError] = useState<string | null>(null);
+  const adminPhotoInputRef = useRef<HTMLInputElement>(null);
+
+  // Password & Security State (Zero autofill, strict manual entry)
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  // Active Sessions & Sign out of all devices state
+  const [isSigningOutAll, setIsSigningOutAll] = useState(false);
+  const [signOutAllError, setSignOutAllError] = useState<string | null>(null);
+
+  const adminInitials = (adminUser?.name || "Admin")
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "AD";
+
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [logoUploadError, setLogoUploadError] = useState<string | null>(null);
@@ -195,6 +235,159 @@ export function RestaurantProfileTabs({
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleAdminPhotoUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      setAdminPhotoError("Invalid image file. Please upload PNG, JPG, or WebP.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setAdminPhotoError("File size exceeds 10MB limit.");
+      return;
+    }
+    setAdminPhotoError(null);
+    setIsUploadingAdminPhoto(true);
+
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("restaurantId", restaurant.id);
+      fd.append("category", "general");
+
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const json = await res.json();
+
+      if (res.ok && json.success) {
+        const uploadedUrl = json.data.url;
+        setAdminPhotoUrl(uploadedUrl);
+
+        // Update admin user profile in database
+        const profileRes = await fetch("/api/user/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: uploadedUrl }),
+        });
+
+        if (profileRes.ok) {
+          setSuccessMessage("Admin profile photo updated successfully.");
+          setTimeout(() => setSuccessMessage(null), 4000);
+
+          // Dispatch event so sidebar & header immediately show the new photo
+          window.dispatchEvent(
+            new CustomEvent("admin-profile-updated", {
+              detail: { image: uploadedUrl },
+            })
+          );
+        } else {
+          setAdminPhotoError("Photo uploaded, but could not link to profile.");
+        }
+      } else {
+        setAdminPhotoError(json.error?.message || "Upload failed. Please try again.");
+      }
+    } catch {
+      setAdminPhotoError("Network connection error.");
+    } finally {
+      setIsUploadingAdminPhoto(false);
+    }
+  };
+
+  const handleRemoveAdminPhoto = async () => {
+    setIsUploadingAdminPhoto(true);
+    setAdminPhotoError(null);
+    try {
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: null }),
+      });
+      if (res.ok) {
+        setAdminPhotoUrl(null);
+        setSuccessMessage("Admin profile photo removed.");
+        setTimeout(() => setSuccessMessage(null), 4000);
+        window.dispatchEvent(
+          new CustomEvent("admin-profile-updated", {
+            detail: { image: null },
+          })
+        );
+      } else {
+        setAdminPhotoError("Failed to remove profile photo.");
+      }
+    } catch {
+      setAdminPhotoError("Network error. Please try again.");
+    } finally {
+      setIsUploadingAdminPhoto(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordSuccess(null);
+    setPasswordError(null);
+
+    if (!currentPassword) {
+      setPasswordError("Please enter your current password.");
+      return;
+    }
+    if (!newPassword || newPassword.length < 8) {
+      setPasswordError("New password must be at least 8 characters long.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New passwords do not match.");
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      const res = await fetch("/api/user/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          confirmPassword,
+        }),
+      });
+
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setPasswordSuccess("Password updated successfully! You will stay signed in on this device.");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setTimeout(() => setPasswordSuccess(null), 5000);
+      } else {
+        setPasswordError(json.error || "Failed to update password.");
+      }
+    } catch {
+      setPasswordError("Network connection error. Please try again.");
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
+  const handleSignOutAllDevices = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to sign out on all devices? This will invalidate all active sessions including this browser."
+    );
+    if (!confirmed) return;
+
+    setIsSigningOutAll(true);
+    setSignOutAllError(null);
+    try {
+      const res = await fetch("/api/auth/signout-all", { method: "POST" });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        await signOut({ callbackUrl: "/login" });
+      } else {
+        setSignOutAllError(json.error || "Failed to terminate all sessions.");
+        setIsSigningOutAll(false);
+      }
+    } catch {
+      setSignOutAllError("Network error while terminating sessions.");
+      setIsSigningOutAll(false);
+    }
+  };
 
   const handleLogoUpload = async (file: File) => {
     if (!file.type.startsWith("image/")) {
@@ -453,6 +646,92 @@ export function RestaurantProfileTabs({
                     placeholder="e.g. Locally sourced rustic kitchen & craft cocktail lounge"
                     className="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white dark:focus:bg-slate-800 transition"
                   />
+                </div>
+
+                {/* Admin Profile Photo Upload (Appears as admin profile image) */}
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                  <FieldLabel icon={User} label="Admin Profile Photo" hint="Appears as admin avatar across dashboard" />
+                  <div className="p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-1">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="relative shrink-0">
+                        <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-emerald-500/40 shadow-xs flex items-center justify-center overflow-hidden">
+                          {adminPhotoUrl ? (
+                            <img src={adminPhotoUrl} alt="Admin Profile" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-bold text-base flex items-center justify-center">
+                              {adminInitials}
+                            </div>
+                          )}
+                        </div>
+                        {isUploadingAdminPhoto && (
+                          <div className="absolute inset-0 rounded-full bg-black/50 backdrop-blur-xs flex items-center justify-center">
+                            <Loader2 className="w-4 h-4 text-white animate-spin" />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="min-w-0">
+                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block truncate">
+                          {adminUser?.name || "Admin Account Photo"}
+                        </span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate">
+                          JPG, PNG, WebP up to 10MB • Appears in navigation & profile
+                        </span>
+                        {adminPhotoError && (
+                          <span className="text-xs text-red-600 dark:text-red-400 block mt-0.5 font-medium">
+                            {adminPhotoError}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                      <input
+                        ref={adminPhotoInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleAdminPhotoUpload(file);
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={isUploadingAdminPhoto}
+                        onClick={() => adminPhotoInputRef.current?.click()}
+                        className="dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 cursor-pointer"
+                        icon={
+                          isUploadingAdminPhoto ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Camera className="w-3.5 h-3.5" />
+                          )
+                        }
+                      >
+                        {isUploadingAdminPhoto
+                          ? "Uploading..."
+                          : adminPhotoUrl
+                          ? "Change Photo"
+                          : "Upload Photo"}
+                      </Button>
+                      {adminPhotoUrl && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={isUploadingAdminPhoto}
+                          onClick={handleRemoveAdminPhoto}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30 cursor-pointer"
+                          icon={<Trash2 className="w-3.5 h-3.5" />}
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </SaaSCard>
@@ -1050,8 +1329,12 @@ export function RestaurantProfileTabs({
               subtitle="Your restaurant portal credentials and account details."
             >
               <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700/60 mt-2">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-md shrink-0">
-                  <User className="w-5 h-5 text-white" />
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-md shrink-0 overflow-hidden">
+                  {adminPhotoUrl ? (
+                    <img src={adminPhotoUrl} alt="Admin Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-5 h-5 text-white" />
+                  )}
                 </div>
                 <div>
                   <div className="text-sm font-bold text-slate-900 dark:text-slate-100">{restaurant.name}</div>
@@ -1068,26 +1351,109 @@ export function RestaurantProfileTabs({
               </div>
             </SaaSCard>
 
+            {/* Password & Security Card - Strict Manual Entry without Autofill */}
             <SaaSCard
               title="Password & Security"
-              subtitle="Manage your account password to ensure your restaurant data remains protected."
+              subtitle="Use at least 8 characters. You will stay signed in on this device after changing it."
             >
-              <div className="space-y-4 pt-2">
-                {[
-                  { id: "current-pass", label: "Current Password", placeholder: "Enter your current password" },
-                  { id: "new-pass", label: "New Password", placeholder: "Minimum 8 characters" },
-                  { id: "confirm-pass", label: "Confirm New Password", placeholder: "Re-enter your new password" },
-                ].map(({ id, label, placeholder }) => (
-                  <div key={id}>
-                    <FieldLabel icon={Lock} label={label} />
+              <form onSubmit={handleUpdatePassword} className="space-y-4 pt-2">
+                {/* Dummy hidden input to deter browser autofill */}
+                <input
+                  type="password"
+                  name="prevent_browser_autofill_dummy"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  className="hidden"
+                  aria-hidden="true"
+                />
+
+                {passwordSuccess && (
+                  <AlertBanner type="success" message={passwordSuccess} />
+                )}
+                {passwordError && (
+                  <AlertBanner type="error" message={passwordError} />
+                )}
+
+                {/* Current Password Field - Empty by default, admin must manually enter */}
+                <div>
+                  <FieldLabel icon={Lock} label="Current Password" required />
+                  <div className="relative">
                     <input
-                      id={id}
-                      type="password"
-                      placeholder={placeholder}
-                      className="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white dark:focus:bg-slate-800 transition"
+                      id="current-password-manual-input"
+                      name="security_current_password_manual"
+                      type={showCurrentPass ? "text" : "password"}
+                      autoComplete="new-password"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Enter your current password"
+                      className="w-full h-11 pl-3.5 pr-10 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white dark:focus:bg-slate-800 transition"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPass(!showCurrentPass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 cursor-pointer"
+                      tabIndex={-1}
+                      aria-label={showCurrentPass ? "Hide current password" : "Show current password"}
+                    >
+                      {showCurrentPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
-                ))}
+                </div>
+
+                {/* New Password Field */}
+                <div>
+                  <FieldLabel icon={KeyRound} label="New Password" hint="Minimum 8 characters" required />
+                  <div className="relative">
+                    <input
+                      id="new-password-field"
+                      name="security_new_password"
+                      type={showNewPass ? "text" : "password"}
+                      autoComplete="new-password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Minimum 8 characters"
+                      className="w-full h-11 pl-3.5 pr-10 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white dark:focus:bg-slate-800 transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPass(!showNewPass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 cursor-pointer"
+                      tabIndex={-1}
+                      aria-label={showNewPass ? "Hide new password" : "Show new password"}
+                    >
+                      {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm New Password Field */}
+                <div>
+                  <FieldLabel icon={KeyRound} label="Confirm New Password" required />
+                  <div className="relative">
+                    <input
+                      id="confirm-password-field"
+                      name="security_confirm_password"
+                      type={showConfirmPass ? "text" : "password"}
+                      autoComplete="new-password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter your new password"
+                      className="w-full h-11 pl-3.5 pr-10 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white dark:focus:bg-slate-800 transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPass(!showConfirmPass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 cursor-pointer"
+                      tabIndex={-1}
+                      aria-label={showConfirmPass ? "Hide confirm password" : "Show confirm password"}
+                    >
+                      {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
 
                 <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-xl mt-3">
                   <div className="flex items-start gap-2.5">
@@ -1100,29 +1466,74 @@ export function RestaurantProfileTabs({
 
                 <div className="pt-2">
                   <button
-                    type="button"
-                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-sm transition shadow-md"
+                    type="submit"
+                    disabled={isUpdatingPassword}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-sm transition shadow-md disabled:opacity-60 cursor-pointer"
                   >
-                    <Lock className="w-4 h-4" />
-                    Update Password
+                    {isUpdatingPassword ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Lock className="w-4 h-4" />
+                    )}
+                    {isUpdatingPassword ? "Updating Password..." : "Update Password"}
                   </button>
                 </div>
-              </div>
+              </form>
             </SaaSCard>
 
+            {/* Active Sessions Card - Matching 3rd Image Page */}
             <SaaSCard
               title="Active Sessions"
               subtitle="Devices and browsers currently authenticated to this restaurant account."
             >
-              <div className="flex items-center justify-between p-4 bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800/40 rounded-xl mt-2">
-                <div>
-                  <div className="text-sm font-bold text-slate-900 dark:text-slate-100">Current Active Session</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">This browser • Active right now</div>
+              <div className="space-y-4 pt-2">
+                {signOutAllError && (
+                  <AlertBanner type="error" message={signOutAllError} />
+                )}
+
+                <div className="flex items-center justify-between p-4 bg-teal-50/80 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800/40 rounded-xl">
+                  <div>
+                    <div className="text-sm font-bold text-slate-900 dark:text-slate-100">Current Active Session</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">This browser • Active right now</div>
+                  </div>
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 dark:text-teal-300">
+                    <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
+                    Connected
+                  </span>
                 </div>
-                <span className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 dark:text-teal-300">
-                  <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
-                  Connected
-                </span>
+
+                {/* Whatbro-style Active Sessions Sign-Out Card matching Image 3 */}
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 rounded-2xl space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                      <LogOut className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                        Sign Out on All Devices
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                        Sign out of every device where you&apos;re logged in — including this one. Useful if you lost a laptop or shared your password.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      disabled={isSigningOutAll}
+                      onClick={handleSignOutAllDevices}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-red-50 hover:border-red-300 hover:text-red-700 dark:hover:bg-red-950/30 dark:hover:border-red-800 dark:hover:text-red-300 text-slate-800 dark:text-slate-200 font-semibold text-xs transition shadow-xs disabled:opacity-60 cursor-pointer"
+                    >
+                      {isSigningOutAll ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+                      ) : (
+                        <LogOut className="w-4 h-4" />
+                      )}
+                      <span>{isSigningOutAll ? "Signing out of all devices..." : "Sign out of all devices"}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </SaaSCard>
           </motion.div>

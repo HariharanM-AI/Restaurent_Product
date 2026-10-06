@@ -36,6 +36,16 @@ export default async function BrandingPage({
     notFound();
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+    },
+  });
+
   return (
     <div className="w-full animate-in fade-in duration-200">
       <PageHeader
@@ -52,6 +62,7 @@ export default async function BrandingPage({
         restaurant={restaurant}
         actions={restaurant.actions}
         initialSocialLinks={restaurant.socialLinks}
+        adminUser={user || undefined}
       />
     </div>
   );

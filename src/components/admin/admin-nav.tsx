@@ -61,6 +61,7 @@ interface AdminNavProps {
     email?: string | null;
     phone?: string | null;
     address?: string | null;
+    image?: string | null;
   };
 }
 
@@ -83,6 +84,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
   const [profileName, setProfileName] = useState(user.name || "Marcus Vance");
   const [profilePhone, setProfilePhone] = useState(user.phone || "");
   const [profileAddress, setProfileAddress] = useState(user.address || "");
+  const [profileImage, setProfileImage] = useState<string | null>(user.image || null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -116,9 +118,10 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
     if (user.name) setProfileName(user.name);
     if (user.phone) setProfilePhone(user.phone);
     if (user.address) setProfileAddress(user.address);
-  }, [user.name, user.phone, user.address]);
+    if (user.image !== undefined) setProfileImage(user.image || null);
+  }, [user.name, user.phone, user.address, user.image]);
 
-  // Listen for real-time restaurant profile updates (name or logoUrl)
+  // Listen for real-time restaurant profile updates and admin avatar updates
   useEffect(() => {
     const handleUpdate = (e: Event) => {
       const customEvent = e as CustomEvent<{ id?: string; name?: string; logoUrl?: string | null }>;
@@ -138,9 +141,24 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
         );
       }
     };
+
+    const handleAdminProfileUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<{ image?: string | null; name?: string | null }>;
+      if (customEvent.detail) {
+        if (customEvent.detail.image !== undefined) {
+          setProfileImage(customEvent.detail.image || null);
+        }
+        if (customEvent.detail.name) {
+          setProfileName(customEvent.detail.name);
+        }
+      }
+    };
+
     window.addEventListener("restaurant-updated", handleUpdate);
+    window.addEventListener("admin-profile-updated", handleAdminProfileUpdate);
     return () => {
       window.removeEventListener("restaurant-updated", handleUpdate);
+      window.removeEventListener("admin-profile-updated", handleAdminProfileUpdate);
     };
   }, [activeRestaurant.id]);
 
@@ -628,10 +646,14 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
           >
             <div className={`flex items-center min-w-0 ${isCollapsed ? "" : "gap-2.5"}`}>
               <div
-                className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-500/40 group-hover:scale-105 transition-transform"
+                className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-500/40 group-hover:scale-105 transition-transform overflow-hidden shadow-xs"
                 title={profileName}
               >
-                {userInitials}
+                {profileImage ? (
+                  <img src={profileImage} alt={profileName} className="w-full h-full object-cover" />
+                ) : (
+                  userInitials
+                )}
               </div>
               {!isCollapsed && (
                 <motion.div
@@ -1003,8 +1025,12 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
               {/* Header Banner */}
               <div className="p-6 bg-gradient-to-r from-emerald-50 via-slate-50 to-white dark:from-emerald-950/40 dark:via-[#18181b] dark:to-[#141416] border-b border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-800 border border-emerald-400/30 text-white font-bold text-sm flex items-center justify-center shadow-md shrink-0">
-                    {userInitials}
+                  <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-800 border border-emerald-400/30 text-white font-bold text-sm flex items-center justify-center shadow-md shrink-0">
+                    {profileImage ? (
+                      <img src={profileImage} alt={profileName} className="w-full h-full object-cover" />
+                    ) : (
+                      userInitials
+                    )}
                   </div>
                   <div>
                     <div className="flex items-center gap-2.5">

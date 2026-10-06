@@ -17,6 +17,7 @@ export async function GET() {
         email: true,
         phone: true,
         address: true,
+        image: true,
         createdAt: true,
         memberships: {
           include: {
@@ -39,6 +40,7 @@ export async function GET() {
         email: user.email,
         phone: user.phone,
         address: user.address,
+        image: user.image,
         createdAt: user.createdAt,
         venues: user.memberships.map((m) => ({
           ...m.restaurant,
@@ -60,7 +62,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, phone, address } = body;
+    const { name, phone, address, image } = body;
 
     const updated = await prisma.user.update({
       where: { id: session.user.id },
@@ -68,6 +70,7 @@ export async function PATCH(req: NextRequest) {
         name: name !== undefined ? (name?.trim() || null) : undefined,
         phone: phone !== undefined ? (phone?.trim() || null) : undefined,
         address: address !== undefined ? (address?.trim() || null) : undefined,
+        image: image !== undefined ? (image || null) : undefined,
       },
       select: {
         id: true,
@@ -75,6 +78,7 @@ export async function PATCH(req: NextRequest) {
         email: true,
         phone: true,
         address: true,
+        image: true,
       },
     });
 

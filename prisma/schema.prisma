@@ -71,6 +71,8 @@ model User {
   id            String             @id @default(cuid())
   email         String             @unique
   name          String?
+  image         String?
+  tokenVersion  Int                @default(0)
   phone         String?
   address       String?
   role          Role               @default(OWNER)

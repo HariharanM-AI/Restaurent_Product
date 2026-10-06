@@ -1,4 +1,4 @@
-﻿import { redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
@@ -31,6 +31,7 @@ export default async function RestaurantDashboardLayout({
       phone: true,
       address: true,
       role: true,
+      image: true,
     },
   });
 
@@ -99,6 +100,7 @@ export default async function RestaurantDashboardLayout({
           email: user?.email || session.user.email,
           phone: user?.phone,
           address: user?.address,
+          image: user?.image || null,
         }}
       />
       <div className="flex-1 min-w-0 flex flex-col min-h-screen bg-[#F8FAFC] dark:bg-slate-950 overflow-x-hidden">

@@ -21,8 +21,18 @@ export async function getCurrentUser() {
       id: true,
       email: true,
       name: true,
+      image: true,
+      tokenVersion: true,
     },
   });
+
+  if (!user) return null;
+
+  // Check if session token was invalidated
+  const sessionTokenVersion = (session.user as any)?.tokenVersion;
+  if (sessionTokenVersion !== undefined && sessionTokenVersion < user.tokenVersion) {
+    return null;
+  }
 
   return user;
 }
@@ -86,29 +96,23 @@ export async function verifyRestaurantAccess(
     return { authorized: false, error: "Unauthorized. Please sign in." };
   }
 
-  // If user is a platform super admin, grant full administrative access to any venue
-  if ((session.user as any)?.role === "PLATFORM_ADMIN") {
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { id: restaurantId },
-    });
-    if (!restaurant) {
-      return { authorized: false, error: "Restaurant not found." };
-    }
-    return {
-      authorized: true,
-      role: "PLATFORM_ADMIN",
-      restaurantId: restaurant.id,
-      restaurant,
-    };
-  }
-
-  // Also verify against database in case session role hasn't refreshed
+  // Also verify against database in case session role hasn't refreshed or token was invalidated across devices
   const currentUser = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { role: true },
+    select: { role: true, tokenVersion: true },
   });
 
-  if (currentUser?.role === "PLATFORM_ADMIN") {
+  if (!currentUser) {
+    return { authorized: false, error: "Account not found." };
+  }
+
+  const sessionTokenVersion = (session.user as any)?.tokenVersion;
+  if (sessionTokenVersion !== undefined && sessionTokenVersion < currentUser.tokenVersion) {
+    return { authorized: false, error: "Your session was signed out on all devices. Please sign in again." };
+  }
+
+  // If user is a platform super admin, grant full administrative access to any venue
+  if ((session.user as any)?.role === "PLATFORM_ADMIN" || currentUser?.role === "PLATFORM_ADMIN") {
     const restaurant = await prisma.restaurant.findUnique({
       where: { id: restaurantId },
     });
