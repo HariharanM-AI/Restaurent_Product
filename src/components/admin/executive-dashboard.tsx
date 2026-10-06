@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { subscribeToActivity } from "@/lib/realtime/broadcast";
+import { useTheme } from "@/components/providers/theme-provider";
 import {
   Users,
   Award,
@@ -110,14 +111,14 @@ function DynamicIcon({ name, className }: { name: string; className?: string }) 
 /* ─── Skeleton Loader ─── */
 function SkeletonCard() {
   return (
-    <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs animate-pulse">
+    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs animate-pulse">
       <div className="flex items-start justify-between">
-        <div className="w-10 h-10 rounded-xl bg-slate-100" />
+        <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800" />
       </div>
       <div className="mt-4 space-y-2">
-        <div className="h-3 w-24 bg-slate-100 rounded" />
-        <div className="h-7 w-16 bg-slate-100 rounded" />
-        <div className="h-3 w-32 bg-slate-100 rounded" />
+        <div className="h-3 w-24 bg-slate-100 dark:bg-slate-800 rounded" />
+        <div className="h-7 w-16 bg-slate-100 dark:bg-slate-800 rounded" />
+        <div className="h-3 w-32 bg-slate-100 dark:bg-slate-800 rounded" />
       </div>
     </div>
   );
@@ -125,7 +126,7 @@ function SkeletonCard() {
 
 function SkeletonBlock({ className = "h-72" }: { className?: string }) {
   return (
-    <div className={`rounded-[24px] bg-white border border-slate-200/80 shadow-xs animate-pulse ${className}`} />
+    <div className={`rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs animate-pulse ${className}`} />
   );
 }
 
@@ -211,18 +212,18 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
   const periodLabel = PERIODS.find((p) => p.key === period)?.label || "30 Days";
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 w-full">
       {/* 1. Header + Date Filter */}
       <div className="flex flex-col gap-4">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+            <div className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
               Overview
             </div>
-            <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               {greeting}, {restaurant.name}
             </h1>
-            <p className="text-xs lg:text-sm text-slate-500 mt-1">
+            <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 mt-1">
               {loading
                 ? "Loading your dashboard..."
                 : `Here's how your guest experience performed — ${periodLabel}`}
@@ -245,8 +246,8 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
               }}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 period === p.key
-                  ? "bg-[#0B3B36] text-white shadow-sm"
-                  : "bg-white border border-slate-200 text-slate-600 hover:border-emerald-400 hover:text-emerald-700"
+                  ? "bg-[#0B3B36] dark:bg-emerald-600 text-white shadow-sm"
+                  : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-emerald-400 dark:hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400"
               }`}
             >
               {p.key === "custom" && <Calendar className="w-3 h-3 inline mr-1.5 -mt-px" />}
@@ -260,19 +261,19 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
                 type="date"
                 value={customFrom}
                 onChange={(e) => setCustomFrom(e.target.value)}
-                className="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+                className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
               />
-              <span className="text-xs text-slate-400">to</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">to</span>
               <input
                 type="date"
                 value={customTo}
                 onChange={(e) => setCustomTo(e.target.value)}
-                className="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+                className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
               />
             </div>
           )}
 
-          {loading && <Loader2 className="w-4 h-4 text-emerald-600 animate-spin ml-2" />}
+          {loading && <Loader2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 animate-spin ml-2" />}
         </div>
       </div>
 
@@ -311,7 +312,7 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <KPICard
               icon={<Users className="w-5 h-5" />}
-              iconBg="bg-emerald-50 text-emerald-700"
+              iconBg="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
               label="Guest Engagements"
               value={fmt(data.kpis.visits.current)}
               change={data.kpis.visits.change}
@@ -321,7 +322,7 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
             />
             <KPICard
               icon={<Award className="w-5 h-5" />}
-              iconBg="bg-blue-50 text-blue-700"
+              iconBg="bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/40"
               label="Loyalty Stamps"
               value={fmt(data.kpis.stamps.current)}
               change={data.kpis.stamps.change}
@@ -331,7 +332,7 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
             />
             <KPICard
               icon={<MessageSquare className="w-5 h-5" />}
-              iconBg="bg-purple-50 text-purple-700"
+              iconBg="bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/40"
               label="Guest Feedback"
               value={fmt(data.kpis.feedbacks.current)}
               change={data.kpis.feedbacks.change}
@@ -341,7 +342,7 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
             />
             <KPICard
               icon={<TrendingUp className="w-5 h-5" />}
-              iconBg="bg-amber-50 text-amber-700"
+              iconBg="bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
               label="Returning Guests"
               value={`${data.kpis.returningPct}%`}
               change={0}
@@ -413,23 +414,23 @@ function KPICard({
 }) {
   const isPositive = change >= 0;
   return (
-    <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs relative overflow-hidden flex flex-col justify-between">
+    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs relative overflow-hidden flex flex-col justify-between">
       <div className="flex items-start justify-between">
         <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center`}>
           {icon}
         </div>
       </div>
       <div className="mt-4">
-        <div className="text-xs font-bold text-slate-500">{label}</div>
-        <div className="text-2xl font-black text-slate-900 tracking-tight mt-1">{value}</div>
+        <div className="text-xs font-bold text-slate-500 dark:text-slate-400">{label}</div>
+        <div className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1">{value}</div>
         {change !== 0 && (
-          <div className={`flex items-center gap-1.5 mt-2 text-xs font-bold ${isPositive ? "text-emerald-600" : "text-red-500"}`}>
+          <div className={`flex items-center gap-1.5 mt-2 text-xs font-bold ${isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
             <span>{isPositive ? "↑" : "↓"} {Math.abs(change)}%</span>
-            <span className="text-slate-400 font-normal text-[11px]">vs previous period</span>
+            <span className="text-slate-400 dark:text-slate-500 font-normal text-[11px]">vs previous period</span>
           </div>
         )}
         {change === 0 && (
-          <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-slate-400">
+          <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-slate-400 dark:text-slate-500">
             <span>No previous data</span>
           </div>
         )}
@@ -461,6 +462,8 @@ function EngagementChart({
 }: {
   timeSeries: { date: string; current: number; previous: number }[];
 }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const currentData = timeSeries.map((d) => d.current);
@@ -519,21 +522,25 @@ function EngagementChart({
     }
   }
 
+  const primaryStroke = isDark ? "#2DD4BF" : "#0F766E";
+  const prevStroke = isDark ? "#475569" : "#94A3B8";
+  const gridStroke = isDark ? "#1E293B" : "#F1F5F9";
+
   return (
-    <div className="lg:col-span-2 p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+    <div className="lg:col-span-2 p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900">Guest Engagement</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Guest interactions over the selected period.</p>
+          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Guest Engagement</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Guest interactions over the selected period.</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1.5 font-bold text-slate-700">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#0F766E]" />
+            <span className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#0F766E] dark:bg-teal-400" />
               Current period
             </span>
-            <span className="flex items-center gap-1.5 font-medium text-slate-400">
-              <span className="w-3 border-t-2 border-dashed border-slate-300" />
+            <span className="flex items-center gap-1.5 font-medium text-slate-400 dark:text-slate-500">
+              <span className="w-3 border-t-2 border-dashed border-slate-300 dark:border-slate-600" />
               Previous period
             </span>
           </div>
@@ -543,7 +550,7 @@ function EngagementChart({
       {/* Main Chart Area */}
       <div className="flex gap-3 items-stretch relative select-none">
         {/* Y-Axis Column pinned to the far left */}
-        <div className="w-8 shrink-0 flex flex-col justify-between text-right text-[11px] font-semibold text-slate-400 select-none pb-7 pt-1">
+        <div className="w-8 shrink-0 flex flex-col justify-between text-right text-[11px] font-semibold text-slate-400 dark:text-slate-500 select-none pb-7 pt-1">
           {yTicks.map((val, idx) => (
             <span key={idx} className="leading-none">{fmt(val)}</span>
           ))}
@@ -554,24 +561,24 @@ function EngagementChart({
           {/* Tooltip */}
           {hoveredIdx !== null && timeSeries[hoveredIdx] && (
             <div
-              className="absolute -top-3 z-30 bg-white rounded-xl p-3 shadow-xl border border-slate-100 pointer-events-none text-center animate-in fade-in zoom-in-95 duration-150 whitespace-nowrap"
+              className="absolute -top-3 z-30 bg-white dark:bg-slate-800 rounded-xl p-3 shadow-xl border border-slate-100 dark:border-slate-700 pointer-events-none text-center animate-in fade-in zoom-in-95 duration-150 whitespace-nowrap"
               style={{
                 left: `${(hoveredIdx / Math.max(timeSeries.length - 1, 1)) * 100}%`,
                 transform: "translateX(-50%) translateY(-100%)",
               }}
             >
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 {new Date(timeSeries[hoveredIdx].date).toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
                 })}
               </div>
-              <div className="text-sm font-black text-slate-900 mt-0.5">
+              <div className="text-sm font-black text-slate-900 dark:text-white mt-0.5">
                 {timeSeries[hoveredIdx].current.toLocaleString()} engagements
               </div>
               {timeSeries[hoveredIdx].previous > 0 && (
-                <div className="text-[11px] font-bold text-slate-400 mt-0.5">
+                <div className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mt-0.5">
                   vs {timeSeries[hoveredIdx].previous.toLocaleString()} prev
                 </div>
               )}
@@ -588,8 +595,8 @@ function EngagementChart({
             >
               <defs>
                 <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#0F766E" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#0F766E" stopOpacity="0.0" />
+                  <stop offset="0%" stopColor={primaryStroke} stopOpacity="0.25" />
+                  <stop offset="100%" stopColor={primaryStroke} stopOpacity="0.0" />
                 </linearGradient>
               </defs>
 
@@ -603,7 +610,7 @@ function EngagementChart({
                     y1={y}
                     x2={svgW}
                     y2={y}
-                    stroke="#F1F5F9"
+                    stroke={gridStroke}
                     strokeWidth="1"
                     vectorEffect="non-scaling-stroke"
                   />
@@ -615,7 +622,7 @@ function EngagementChart({
                 <path
                   d={prevPath}
                   fill="none"
-                  stroke="#94A3B8"
+                  stroke={prevStroke}
                   strokeWidth="1.5"
                   strokeDasharray="4 4"
                   vectorEffect="non-scaling-stroke"
@@ -629,7 +636,7 @@ function EngagementChart({
                   <path
                     d={currentPath}
                     fill="none"
-                    stroke="#0F766E"
+                    stroke={primaryStroke}
                     strokeWidth="2.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -646,7 +653,7 @@ function EngagementChart({
                     y1={toY(currentData[hoveredIdx] || 0)}
                     x2={toX(hoveredIdx)}
                     y2={svgH - padBottom}
-                    stroke="#0F766E"
+                    stroke={primaryStroke}
                     strokeWidth="1.5"
                     strokeDasharray="3 3"
                     vectorEffect="non-scaling-stroke"
@@ -655,8 +662,8 @@ function EngagementChart({
                     cx={toX(hoveredIdx)}
                     cy={toY(currentData[hoveredIdx] || 0)}
                     r="5"
-                    fill="#0F766E"
-                    stroke="#FFFFFF"
+                    fill={primaryStroke}
+                    stroke={isDark ? "#0F172A" : "#FFFFFF"}
                     strokeWidth="2"
                     vectorEffect="non-scaling-stroke"
                   />
@@ -686,7 +693,7 @@ function EngagementChart({
               return (
                 <span
                   key={dl.idx}
-                  className="absolute text-[11px] font-semibold text-slate-400 whitespace-nowrap"
+                  className="absolute text-[11px] font-semibold text-slate-400 dark:text-slate-500 whitespace-nowrap"
                   style={{
                     left: `${pct}%`,
                     transform:
@@ -711,33 +718,33 @@ function EngagementChart({
 /* ─── Guest Actions Breakdown ─── */
 function GuestActionsBreakdown({ actions }: { actions: DashboardData["actionBreakdown"] }) {
   return (
-    <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900">Guest Actions</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Which features your guests interact with most.</p>
+          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Guest Actions</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Which features your guests interact with most.</p>
         </div>
       </div>
 
       <div className="space-y-4">
         {actions.length === 0 && (
-          <div className="text-center text-sm text-slate-400 py-8">No action data yet</div>
+          <div className="text-center text-sm text-slate-400 dark:text-slate-500 py-8">No action data yet</div>
         )}
         {actions.map((item) => (
           <div key={item.action}>
-            <div className="flex items-center justify-between text-xs mb-1.5 font-bold text-slate-700">
+            <div className="flex items-center justify-between text-xs mb-1.5 font-bold text-slate-700 dark:text-slate-200">
               <div className="flex items-center gap-2">
-                <DynamicIcon name={item.icon} className="w-4 h-4 text-emerald-700" />
+                <DynamicIcon name={item.icon} className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                 <span>{item.action}</span>
               </div>
-              <div className="flex items-center gap-2 font-mono text-slate-900">
+              <div className="flex items-center gap-2 font-mono text-slate-900 dark:text-slate-100">
                 <span>{item.count.toLocaleString()}</span>
-                <span className="text-slate-400 font-normal">{item.percentage}%</span>
+                <span className="text-slate-400 dark:text-slate-500 font-normal">{item.percentage}%</span>
               </div>
             </div>
-            <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+            <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
               <div
-                className="h-full rounded-full bg-[#0F766E] transition-all duration-500"
+                className="h-full rounded-full bg-[#0F766E] dark:bg-emerald-500 transition-all duration-500"
                 style={{ width: `${Math.max(item.percentage, 1)}%` }}
               />
             </div>
@@ -762,47 +769,47 @@ function LoyaltyPerformance({
   const maxBar = Math.max(...barData, 1);
 
   return (
-    <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900">Loyalty Performance</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Track how your loyalty program is performing.</p>
+          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Loyalty Performance</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Track how your loyalty program is performing.</p>
         </div>
         <Link
           href={`/admin/restaurants/${restaurantId}/loyalty`}
-          className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1"
+          className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1"
         >
           <span>View details</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 border-y border-slate-100">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 border-y border-slate-100 dark:border-slate-800">
         <div>
-          <div className="text-[11px] font-semibold text-slate-400">Active Wallets</div>
-          <div className="text-base font-black text-slate-900 mt-0.5">{loyalty.activeWallets.toLocaleString()}</div>
+          <div className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">Active Wallets</div>
+          <div className="text-base font-black text-slate-900 dark:text-white mt-0.5">{loyalty.activeWallets.toLocaleString()}</div>
         </div>
         <div>
-          <div className="text-[11px] font-semibold text-slate-400">Stamps Issued</div>
-          <div className="text-base font-black text-slate-900 mt-0.5">{loyalty.stampsIssued.toLocaleString()}</div>
+          <div className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">Stamps Issued</div>
+          <div className="text-base font-black text-slate-900 dark:text-white mt-0.5">{loyalty.stampsIssued.toLocaleString()}</div>
         </div>
         <div>
-          <div className="text-[11px] font-semibold text-slate-400">Milestones</div>
-          <div className="text-base font-black text-slate-900 mt-0.5">{loyalty.milestonesUnlocked.toLocaleString()}</div>
+          <div className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">Milestones</div>
+          <div className="text-base font-black text-slate-900 dark:text-white mt-0.5">{loyalty.milestonesUnlocked.toLocaleString()}</div>
         </div>
         <div>
-          <div className="text-[11px] font-semibold text-slate-400">Redeemed</div>
-          <div className="text-base font-black text-slate-900 mt-0.5">{loyalty.rewardsRedeemed.toLocaleString()}</div>
+          <div className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">Redeemed</div>
+          <div className="text-base font-black text-slate-900 dark:text-white mt-0.5">{loyalty.rewardsRedeemed.toLocaleString()}</div>
         </div>
       </div>
 
       <div className="mt-4">
-        <div className="text-[11px] font-bold text-slate-500 mb-2">Activity trend</div>
+        <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2">Activity trend</div>
         <div className="h-20 flex items-end gap-1">
           {barData.map((val, idx) => (
             <div
               key={idx}
-              className="flex-1 rounded-t-xs bg-emerald-600 hover:bg-emerald-700 transition"
+              className="flex-1 rounded-t-xs bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400 transition"
               style={{ height: `${Math.max((val / maxBar) * 100, 2)}%` }}
             />
           ))}
@@ -820,17 +827,19 @@ function CustomerInsights({
   insights: DashboardData["customerInsights"];
   restaurantId: string;
 }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const newPct = insights.newGuestsPct || 0;
   const retPct = insights.returningPct || 0;
   const newDash = (newPct / 100) * 88;
   const retDash = (retPct / 100) * 88;
 
   return (
-    <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900">Customer Insights</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Understand your guest base.</p>
+          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Customer Insights</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Understand your guest base.</p>
         </div>
       </div>
 
@@ -838,10 +847,10 @@ function CustomerInsights({
         {/* Donut */}
         <div className="relative w-36 h-36 shrink-0">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-            <circle cx="18" cy="18" r="14" fill="none" stroke="#E2E8F0" strokeWidth="4" />
+            <circle cx="18" cy="18" r="14" fill="none" stroke={isDark ? "#334155" : "#E2E8F0"} strokeWidth="4" />
             <circle
               cx="18" cy="18" r="14" fill="none"
-              stroke="#0F766E"
+              stroke={isDark ? "#2DD4BF" : "#0F766E"}
               strokeWidth="4"
               strokeDasharray={`${newDash} ${88 - newDash}`}
               strokeDashoffset="0"
@@ -857,47 +866,47 @@ function CustomerInsights({
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2">
-            <span className="text-sm font-black text-slate-900 leading-tight">{insights.totalGuests.toLocaleString()}</span>
-            <span className="text-[10px] text-slate-400 font-medium">Total Guests</span>
+            <span className="text-sm font-black text-slate-900 dark:text-white leading-tight">{insights.totalGuests.toLocaleString()}</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Total Guests</span>
           </div>
         </div>
 
         {/* Breakdown */}
         <div className="flex-1 space-y-2.5 text-xs">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-slate-700 font-semibold">
-              <span className="w-2.5 h-2.5 rounded-sm bg-[#0F766E]" />
+            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold">
+              <span className="w-2.5 h-2.5 rounded-sm bg-[#0F766E] dark:bg-teal-400" />
               <span>New Guests</span>
             </div>
-            <div className="font-mono text-slate-900 font-bold">
+            <div className="font-mono text-slate-900 dark:text-slate-100 font-bold">
               {(insights.totalGuests - (insights.totalGuests * retPct / 100)).toFixed(0)}{" "}
-              <span className="text-slate-400 font-normal text-[11px]">{newPct}%</span>
+              <span className="text-slate-400 dark:text-slate-500 font-normal text-[11px]">{newPct}%</span>
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-slate-700 font-semibold">
+            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold">
               <span className="w-2.5 h-2.5 rounded-sm bg-[#34D399]" />
               <span>Returning Guests</span>
             </div>
-            <div className="font-mono text-slate-900 font-bold">
+            <div className="font-mono text-slate-900 dark:text-slate-100 font-bold">
               {Math.round(insights.totalGuests * retPct / 100)}{" "}
-              <span className="text-slate-400 font-normal text-[11px]">{retPct}%</span>
+              <span className="text-slate-400 dark:text-slate-500 font-normal text-[11px]">{retPct}%</span>
             </div>
           </div>
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-slate-500 font-medium">Identified Guests</span>
-            <span className="font-mono text-slate-900 font-bold">
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Identified Guests</span>
+            <span className="font-mono text-slate-900 dark:text-slate-100 font-bold">
               {insights.identifiedGuests.toLocaleString()}{" "}
-              <span className="text-slate-400 font-normal text-[11px]">
+              <span className="text-slate-400 dark:text-slate-500 font-normal text-[11px]">
                 {insights.totalGuests > 0 ? Math.round((insights.identifiedGuests / insights.totalGuests) * 100) : 0}%
               </span>
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-slate-500 font-medium">Anonymous Guests</span>
-            <span className="font-mono text-slate-900 font-bold">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Anonymous Guests</span>
+            <span className="font-mono text-slate-900 dark:text-slate-100 font-bold">
               {insights.anonymousGuests.toLocaleString()}{" "}
-              <span className="text-slate-400 font-normal text-[11px]">
+              <span className="text-slate-400 dark:text-slate-500 font-normal text-[11px]">
                 {insights.totalGuests > 0 ? Math.round((insights.anonymousGuests / insights.totalGuests) * 100) : 0}%
               </span>
             </span>
@@ -921,15 +930,15 @@ function FeedbackOverview({
   restaurantId: string;
 }) {
   return (
-    <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900">Feedback Overview</h2>
-          <p className="text-xs text-slate-500 mt-0.5">See what your guests are saying.</p>
+          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Feedback Overview</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">See what your guests are saying.</p>
         </div>
         <Link
           href={`/admin/restaurants/${restaurantId}/feedback`}
-          className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1"
+          className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1"
         >
           <span>View all</span>
           <ArrowRight className="w-3.5 h-3.5" />
@@ -939,25 +948,25 @@ function FeedbackOverview({
       <div className="space-y-3 my-2">
         {distribution.map((item) => (
           <div key={item.stars} className="flex items-center gap-3 text-xs">
-            <span className="w-14 font-semibold text-slate-600 shrink-0">
+            <span className="w-14 font-semibold text-slate-600 dark:text-slate-300 shrink-0">
               {item.stars} star{item.stars !== 1 ? "s" : ""}
             </span>
-            <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+            <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
               <div
-                className="h-full rounded-full bg-[#0F766E] transition-all duration-500"
+                className="h-full rounded-full bg-[#0F766E] dark:bg-emerald-500 transition-all duration-500"
                 style={{ width: `${item.percentage}%` }}
               />
             </div>
-            <span className="w-8 text-right font-mono text-slate-400 shrink-0">{item.percentage}%</span>
+            <span className="w-8 text-right font-mono text-slate-400 dark:text-slate-500 shrink-0">{item.percentage}%</span>
           </div>
         ))}
       </div>
 
-      <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+      <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
         <span>
-          Average: <strong className="text-slate-900 font-black">{averageRating > 0 ? averageRating.toFixed(1) : "—"} / 5.0</strong>
+          Average: <strong className="text-slate-900 dark:text-white font-black">{averageRating > 0 ? averageRating.toFixed(1) : "—"} / 5.0</strong>
         </span>
-        <span className="text-emerald-600 font-bold">{positivePct}% Positive</span>
+        <span className="text-emerald-600 dark:text-emerald-400 font-bold">{positivePct}% Positive</span>
       </div>
     </div>
   );
@@ -965,23 +974,32 @@ function FeedbackOverview({
 
 /* ─── Peak Activity Heatmap ─── */
 function PeakActivityHeatmap({ heatmap }: { heatmap: number[][] }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const timeSlots = ["Morning", "Afternoon", "Evening", "Night"];
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const intensityClasses = [
-    "bg-emerald-100",
-    "bg-emerald-300",
-    "bg-emerald-500",
-    "bg-[#07352F]",
-  ];
+  const intensityClasses = isDark
+    ? [
+        "bg-emerald-950/70 border border-emerald-900/60",
+        "bg-emerald-800",
+        "bg-emerald-600",
+        "bg-emerald-400",
+      ]
+    : [
+        "bg-emerald-100",
+        "bg-emerald-300",
+        "bg-emerald-500",
+        "bg-[#07352F]",
+      ];
 
   return (
-    <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
+    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900">Peak Guest Activity</h2>
-          <p className="text-xs text-slate-500 mt-0.5">When your guests are most active.</p>
+          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Peak Guest Activity</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">When your guests are most active.</p>
         </div>
-        <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
+        <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500">
           <span>Less</span>
           <div className="flex gap-0.5">
             {intensityClasses.map((c, i) => (
@@ -993,7 +1011,7 @@ function PeakActivityHeatmap({ heatmap }: { heatmap: number[][] }) {
       </div>
 
       <div className="space-y-2 mt-3">
-        <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 pl-16">
+        <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 pl-16">
           {days.map((d) => (
             <span key={d} className="flex-1 text-center">{d}</span>
           ))}
@@ -1001,7 +1019,7 @@ function PeakActivityHeatmap({ heatmap }: { heatmap: number[][] }) {
 
         {heatmap.map((row, rowIdx) => (
           <div key={rowIdx} className="flex items-center gap-1.5">
-            <span className="w-14 text-[10px] font-bold text-slate-400 text-right shrink-0">
+            <span className="w-14 text-[10px] font-bold text-slate-400 dark:text-slate-500 text-right shrink-0">
               {timeSlots[rowIdx]}
             </span>
             {row.map((val, colIdx) => (
@@ -1021,18 +1039,18 @@ function PeakActivityHeatmap({ heatmap }: { heatmap: number[][] }) {
 /* ─── Review Journey Funnel ─── */
 function ReviewFunnel({ funnel }: { funnel: DashboardData["funnel"] }) {
   return (
-    <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
       <div className="mb-4">
-        <h2 className="text-base font-extrabold text-slate-900">Review Journey</h2>
-        <p className="text-xs text-slate-500 mt-0.5">From guest interaction to feedback.</p>
+        <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Review Journey</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">From guest interaction to feedback.</p>
       </div>
 
       <div className="grid grid-cols-4 gap-2 text-center my-auto">
         {funnel.map((stage) => (
-          <div key={stage.label} className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-            <div className="text-sm font-black text-slate-900">{stage.count.toLocaleString()}</div>
-            <div className="text-[10px] text-slate-400 mt-0.5 leading-tight">{stage.label}</div>
-            <div className="mt-2 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
+          <div key={stage.label} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700/60">
+            <div className="text-sm font-black text-slate-900 dark:text-white">{stage.count.toLocaleString()}</div>
+            <div className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5 leading-tight">{stage.label}</div>
+            <div className="mt-2 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border dark:border-emerald-800/40">
               {stage.percentage}%
             </div>
           </div>

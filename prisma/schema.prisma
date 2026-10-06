@@ -107,6 +107,7 @@ model Restaurant {
   tagline        String?
   primaryColor   String             @default("#0F766E")
   secondaryColor String             @default("#F8FAFC")
+  themeMode      String             @default("light")
   address        String?
   phone          String?
   website        String?

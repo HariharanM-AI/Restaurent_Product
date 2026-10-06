@@ -1,9 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { getSession, verifyRestaurantAccess } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
-import { BrandingEditorForm } from "@/components/admin/branding-editor-form";
+import { RestaurantProfileTabs } from "@/components/admin/restaurant-profile-tabs";
 import { PageHeader } from "@/components/ui/page-header";
-import { StatusBadge } from "@/components/ui/status-badge";
 
 export default async function BrandingPage({
   params,
@@ -41,7 +40,7 @@ export default async function BrandingPage({
     <div className="w-full animate-in fade-in duration-200">
       <PageHeader
         title="Restaurant Profile"
-        description="Manage restaurant identity, logo, cover photography, brand color palette, operating schedule, and contact channels."
+        description="Manage your restaurant identity, branding, contact details, and account security."
         breadcrumbs={[
           { label: "Restaurants", href: "/admin" },
           { label: restaurant.name, href: `/admin/restaurants/${restaurant.id}/dashboard` },
@@ -49,7 +48,7 @@ export default async function BrandingPage({
         ]}
       />
 
-      <BrandingEditorForm
+      <RestaurantProfileTabs
         restaurant={restaurant}
         actions={restaurant.actions}
         initialSocialLinks={restaurant.socialLinks}

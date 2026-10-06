@@ -37,7 +37,7 @@ export default async function LoyaltyAdminPage({
   if (!restaurant) notFound();
 
   return (
-    <div className="animate-in fade-in duration-200">
+    <div className="w-full animate-in fade-in duration-200">
       <LoyaltyAdminDashboard
         restaurantId={restaurantId}
         restaurantSlug={restaurant.slug}

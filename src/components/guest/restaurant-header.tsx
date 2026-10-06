@@ -18,7 +18,7 @@ export function RestaurantHeader({ restaurant }: RestaurantHeaderProps) {
   }, []);
 
   return (
-    <div className="relative w-full bg-white border-b border-slate-100 shadow-sm">
+    <div className="relative w-full bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
       {/* Cover Banner with Gradient Overlay */}
       <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-800">
         {restaurant.coverImageUrl ? (
@@ -43,7 +43,7 @@ export function RestaurantHeader({ restaurant }: RestaurantHeaderProps) {
       <div className="relative px-5 pt-0 pb-4">
         {/* Overlapping Logo */}
         <div className="-mt-14 mb-3 flex items-end justify-between">
-          <div className="relative w-24 h-24 rounded-2xl bg-white p-0.5 shadow-md border-2 border-white overflow-hidden flex items-center justify-center">
+          <div className="relative w-24 h-24 rounded-2xl bg-white dark:bg-slate-900 p-0.5 shadow-md border-2 border-white dark:border-slate-800 overflow-hidden flex items-center justify-center">
             {restaurant.logoUrl ? (
               <img
                 src={restaurant.logoUrl}
@@ -64,7 +64,7 @@ export function RestaurantHeader({ restaurant }: RestaurantHeaderProps) {
           {(restaurant.address || restaurant.phone || restaurant.website || restaurant.openingHours) && (
             <button
               onClick={() => setIsInfoExpanded(!isInfoExpanded)}
-              className="mb-1 text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1.5 transition"
+              className="mb-1 text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition"
               aria-expanded={isInfoExpanded}
             >
               <span>{isInfoExpanded ? "Hide Details" : "Location & Hours"}</span>
@@ -74,18 +74,18 @@ export function RestaurantHeader({ restaurant }: RestaurantHeaderProps) {
         </div>
 
         {/* Title & Tagline */}
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 leading-tight">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
           {restaurant.name}
         </h1>
         {restaurant.tagline && (
-          <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-normal font-normal">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 leading-normal font-normal">
             {restaurant.tagline}
           </p>
         )}
 
         {/* Collapsible Info Drawer */}
         {isInfoExpanded && (
-          <div className="mt-3.5 pt-3 border-t border-slate-100 space-y-2 text-xs text-slate-600 animate-in fade-in-50 duration-200">
+          <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 text-xs text-slate-600 dark:text-slate-300 animate-in fade-in-50 duration-200">
             {restaurant.address && (
               <div className="flex items-start gap-2">
                 <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
@@ -124,7 +124,7 @@ export function RestaurantHeader({ restaurant }: RestaurantHeaderProps) {
                 </a>
               </div>
             )}
-            <div className="flex items-center gap-2 text-slate-500">
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <span>{restaurant.openingHours || "Open Today: 11:30 AM – 10:00 PM"}</span>
             </div>

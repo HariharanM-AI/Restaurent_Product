@@ -27,7 +27,7 @@ export function Tabs({
 }: TabsProps) {
   if (variant === "underline") {
     return (
-      <div className={cn("flex items-center gap-6 border-b border-slate-200 overflow-x-auto no-scrollbar", className)}>
+      <div className={cn("flex items-center gap-6 border-b border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar", className)}>
         {items.map((tab) => {
           const isActive = tab.id === activeId;
           return (
@@ -38,8 +38,8 @@ export function Tabs({
               className={cn(
                 "pb-3 text-xs sm:text-sm font-medium transition-all relative shrink-0 flex items-center gap-2",
                 isActive
-                  ? "text-slate-900 border-b-2 border-primary font-semibold"
-                  : "text-slate-500 hover:text-slate-800"
+                  ? "text-slate-900 dark:text-white border-b-2 border-primary font-semibold"
+                  : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
               )}
             >
               {tab.icon && <span className="shrink-0">{tab.icon}</span>}
@@ -48,7 +48,7 @@ export function Tabs({
                 <span
                   className={cn(
                     "text-[10px] px-1.5 py-0.5 rounded-full",
-                    isActive ? "bg-teal-50 text-teal-800 font-semibold" : "bg-slate-100 text-slate-500"
+                    isActive ? "bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 font-semibold" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                   )}
                 >
                   {tab.count}
@@ -64,7 +64,7 @@ export function Tabs({
   return (
     <div
       className={cn(
-        "inline-flex items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200/60 overflow-x-auto no-scrollbar",
+        "inline-flex items-center p-1 bg-slate-100/90 dark:bg-slate-800/90 rounded-xl border border-slate-200/60 dark:border-slate-700/60 overflow-x-auto no-scrollbar",
         className
       )}
     >
@@ -78,8 +78,8 @@ export function Tabs({
             className={cn(
               "px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 shrink-0 select-none",
               isActive
-                ? "bg-white text-slate-900 shadow-sm font-semibold"
-                : "text-slate-500 hover:text-slate-900 hover:bg-white/40"
+                ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm font-semibold"
+                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white/40 dark:hover:bg-slate-800/50"
             )}
           >
             {tab.icon && <span className="shrink-0">{tab.icon}</span>}
@@ -88,7 +88,7 @@ export function Tabs({
               <span
                 className={cn(
                   "text-[10px] px-1.5 py-0.2 rounded-full",
-                  isActive ? "bg-slate-100 text-slate-700" : "bg-slate-200/70 text-slate-600"
+                  isActive ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300" : "bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
                 )}
               >
                 {tab.count}

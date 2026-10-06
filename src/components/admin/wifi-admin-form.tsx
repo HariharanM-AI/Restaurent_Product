@@ -107,46 +107,46 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="w-full space-y-6 pb-12">
       {/* 1. Header with Breadcrumbs & Status (Exact Match to Image 1) */}
       <div>
-        <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400">
+        <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 dark:text-slate-500">
           <span>Restaurants</span>
           <span>/</span>
           <span>{restaurant.name}</span>
           <span>/</span>
-          <span className="text-slate-600">Wi-Fi</span>
+          <span className="text-slate-600 dark:text-slate-300">Wi-Fi</span>
         </div>
         <div className="mt-1">
-          <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Guest Wi-Fi Configuration
           </h1>
         </div>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
           Configure guest wireless credentials, connection instructions, auto-join QR, and display status.
         </p>
       </div>
 
       {/* 2. Main Form Layout */}
-      <div className="w-full max-w-4xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
         <div className="space-y-6">
           {/* Card: Guest Network Credentials */}
-          <div className="p-6 sm:p-7 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+          <div className="p-6 sm:p-7 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40 flex items-center justify-center shrink-0">
                   <Wifi className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-extrabold text-slate-900">
+                  <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
                     Guest Network Credentials
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Broadcast SSID and access passkey for in-venue dining guests.
                   </p>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                 Active in Guest Hub
               </span>
@@ -156,14 +156,14 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
               <div
                 className={`mb-5 p-3.5 rounded-xl border text-xs flex items-center gap-2.5 ${
                   isError
-                    ? "bg-red-50 border-red-200 text-red-700"
-                    : "bg-emerald-50 border-emerald-200 text-emerald-800 font-bold"
+                    ? "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300"
+                    : "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 font-bold"
                 }`}
               >
                 {isError ? (
                   <AlertCircle className="w-4 h-4 shrink-0" />
                 ) : (
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 )}
                 <span>{statusMessage}</span>
               </div>
@@ -172,7 +172,7 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Network Name (SSID) */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Network Name (SSID) <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -182,7 +182,7 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
                     value={ssid}
                     onChange={(e) => setSsid(e.target.value)}
                     placeholder={`e.g. ${restaurant.name.replace(/\s+/g, "_")}_Guest`}
-                    className="w-full pl-4 pr-10 py-3 text-xs rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 font-semibold"
+                    className="w-full pl-4 pr-10 py-3 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 dark:text-slate-100 font-semibold"
                   />
                   <Wifi className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
                 </div>
@@ -190,7 +190,7 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Network Passkey / Password
                 </label>
                 <div className="relative">
@@ -199,17 +199,17 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter network password"
-                    className="w-full pl-4 pr-10 py-3 text-xs rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 font-mono"
+                    className="w-full pl-4 pr-10 py-3 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 dark:text-slate-100 font-mono"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
                   Leave blank if your guest Wi-Fi operates without a security password.
                 </p>
               </div>
@@ -217,10 +217,10 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
               {/* Instructions / Terms */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-bold text-slate-700">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                     Connection Instructions or Terms
                   </label>
-                  <span className="text-[10px] text-slate-400 font-mono">
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
                     {instructions.length}/300
                   </span>
                 </div>
@@ -230,15 +230,15 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
                   value={instructions}
                   onChange={(e) => setInstructions(e.target.value)}
                   placeholder={`Connect to ${ssid || restaurant.name + " Wi-Fi"}. Fast, complimentary access for all dining guests.`}
-                  className="w-full px-4 py-3 text-xs rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 leading-relaxed resize-none"
+                  className="w-full px-4 py-3 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 dark:text-slate-100 leading-relaxed resize-none"
                 />
               </div>
 
               {/* Security Alert Banner */}
-              <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-start gap-3">
-                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                <div className="text-xs text-slate-600 leading-relaxed">
-                  <span className="font-bold text-slate-800">
+              <div className="p-4 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/50 flex items-start gap-3">
+                <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  <span className="font-bold text-slate-800 dark:text-slate-100">
                     This network will be visible to guests on your mobile landing hub.
                   </span>{" "}
                   Keep the connection simple and secure. Avoid using sensitive internal networks.
@@ -250,14 +250,14 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-2xs"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition shadow-2xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-6 py-2.5 rounded-xl bg-[#0B3B36] hover:bg-[#072B26] text-white text-xs font-bold transition flex items-center gap-2 shadow-sm disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl bg-[#0B3B36] hover:bg-[#072B26] dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white text-xs font-bold transition flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -271,23 +271,23 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
           </div>
 
           {/* Bottom Card: Enhance Guest Engagement */}
-          <div className="p-5 rounded-[20px] bg-white border border-slate-200/80 shadow-xs flex items-center justify-between gap-4">
+          <div className="p-5 rounded-[20px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-xs font-extrabold text-slate-900">
+                <h3 className="text-xs font-extrabold text-slate-900 dark:text-white">
                   Enhance Guest Engagement
                 </h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                   Combine Wi-Fi with loyalty, feedback, and special offers to turn first-time guests into regulars.
                 </p>
               </div>
             </div>
             <Link
               href={`/admin/restaurants/${restaurant.id}/actions`}
-              className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold inline-flex items-center gap-1.5 shrink-0 transition shadow-2xs"
+              className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold inline-flex items-center gap-1.5 shrink-0 transition shadow-2xs"
             >
               <span>Explore Guest Actions</span>
               <ArrowRight className="w-3.5 h-3.5" />

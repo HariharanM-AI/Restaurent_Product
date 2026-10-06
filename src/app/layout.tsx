@@ -41,13 +41,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         <link rel="icon" href="/images/Own brand logo.png" />
         <link rel="shortcut icon" href="/images/Own brand logo.png" />
         <link rel="apple-touch-icon" href="/images/Own brand logo.png" />
       </head>
-      <body className="min-h-screen bg-surface font-sans text-foreground antialiased selection:bg-teal-100 selection:text-teal-900">
+      <body
+        className="min-h-screen bg-surface font-sans text-foreground antialiased selection:bg-teal-100 selection:text-teal-900"
+        suppressHydrationWarning
+      >
         <Providers>{children}</Providers>
       </body>
     </html>

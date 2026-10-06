@@ -28,7 +28,7 @@ export default async function WifiAdminPage({
   });
 
   return (
-    <div className="animate-in fade-in duration-200">
+    <div className="w-full animate-in fade-in duration-200">
       <WifiAdminForm
         restaurant={restaurant}
         initialConfig={wifiConfig}

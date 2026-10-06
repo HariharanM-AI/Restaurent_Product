@@ -20,6 +20,20 @@
     --destructive: #DC2626;
   }
 
+  .dark {
+    --background: #0F172A;
+    --foreground: #F1F5F9;
+    --muted: #94A3B8;
+    --muted-foreground: #64748B;
+    --surface: #1E293B;
+    --surface-foreground: #F1F5F9;
+    --border: #334155;
+    --primary: #14B8A6;
+    --brand-primary: #14B8A6;
+    --brand-secondary: #1E293B;
+    --brand-text: #F1F5F9;
+  }
+
   * {
     @apply border-border;
     box-sizing: border-box;
@@ -52,3 +66,4 @@ button, a, input, select, textarea {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+

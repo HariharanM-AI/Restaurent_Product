@@ -86,11 +86,11 @@ function timeAgo(dateStr: string): string {
 /* ─── Skeleton ─── */
 function SkeletonCard() {
   return (
-    <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs animate-pulse">
-      <div className="w-10 h-10 rounded-xl bg-slate-100 mb-3" />
-      <div className="h-3 w-24 bg-slate-100 rounded mb-2" />
-      <div className="h-7 w-16 bg-slate-100 rounded mb-2" />
-      <div className="h-3 w-32 bg-slate-100 rounded" />
+    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs animate-pulse">
+      <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 mb-3" />
+      <div className="h-3 w-24 bg-slate-100 dark:bg-slate-800 rounded mb-2" />
+      <div className="h-7 w-16 bg-slate-100 dark:bg-slate-800 rounded mb-2" />
+      <div className="h-3 w-32 bg-slate-100 dark:bg-slate-800 rounded" />
     </div>
   );
 }
@@ -254,21 +254,21 @@ export function LoyaltyAdminDashboard({
   const periodLabel = PERIODS.find((p) => p.key === period)?.label || "30 Days";
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="w-full space-y-6 pb-12">
       {/* 1. Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 mb-1">
+          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1">
             <span>Restaurants</span>
             <span>/</span>
             <span>Control Center</span>
             <span>/</span>
-            <span className="text-slate-600">Loyalty & Rewards</span>
+            <span className="text-slate-600 dark:text-slate-300">Loyalty & Rewards</span>
           </div>
-          <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Loyalty & Rewards Program
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {loading
               ? "Loading loyalty data..."
               : `Turn first-time guests into loyal regulars — ${periodLabel}`}
@@ -278,7 +278,7 @@ export function LoyaltyAdminDashboard({
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMilestoneModalOpen(true)}
-            className="px-4 py-2 rounded-xl bg-[#0B3B36] hover:bg-[#072B26] text-white text-xs font-bold transition flex items-center gap-2 shadow-sm"
+            className="px-4 py-2 rounded-xl bg-[#0B3B36] hover:bg-[#072B26] dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white text-xs font-bold transition flex items-center gap-2 shadow-sm"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Create Reward</span>
@@ -297,8 +297,8 @@ export function LoyaltyAdminDashboard({
             }}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
               period === p.key
-                ? "bg-[#0B3B36] text-white shadow-sm"
-                : "bg-white border border-slate-200 text-slate-600 hover:border-emerald-400 hover:text-emerald-700"
+                ? "bg-[#0B3B36] dark:bg-emerald-700 text-white shadow-sm"
+                : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-400 dark:hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400"
             }`}
           >
             {p.key === "custom" && <Calendar className="w-3 h-3 inline mr-1.5 -mt-px" />}
@@ -312,19 +312,19 @@ export function LoyaltyAdminDashboard({
               type="date"
               value={customFrom}
               onChange={(e) => setCustomFrom(e.target.value)}
-              className="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+              className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
             />
             <span className="text-xs text-slate-400">to</span>
             <input
               type="date"
               value={customTo}
               onChange={(e) => setCustomTo(e.target.value)}
-              className="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+              className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
             />
           </div>
         )}
 
-        {loading && <Loader2 className="w-4 h-4 text-emerald-600 animate-spin ml-2" />}
+        {loading && <Loader2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 animate-spin ml-2" />}
       </div>
 
       {/* Error State */}
@@ -388,14 +388,14 @@ export function LoyaltyAdminDashboard({
           {/* 4. Stamps Chart + Reward Status */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Stamps Time-Series Chart */}
-            <div className="lg:col-span-2 p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
+            <div className="lg:col-span-2 p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-base font-extrabold text-slate-900">Stamps Activity</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">Stamps issued over time</p>
+                  <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Stamps Activity</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Stamps issued over time</p>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="flex items-center gap-1.5 font-bold text-slate-700">
+                  <span className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-300">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#0F766E]" />
                     Stamps earned
                   </span>
@@ -406,10 +406,10 @@ export function LoyaltyAdminDashboard({
             </div>
 
             {/* Reward Status Card */}
-            <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+            <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
               <div>
-                <h2 className="text-base font-extrabold text-slate-900 mb-1">Reward Status</h2>
-                <p className="text-xs text-slate-500 mb-4">Breakdown of all rewards</p>
+                <h2 className="text-base font-extrabold text-slate-900 dark:text-white mb-1">Reward Status</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Breakdown of all rewards</p>
               </div>
 
               <div className="space-y-4">
@@ -423,15 +423,15 @@ export function LoyaltyAdminDashboard({
                   return (
                     <div key={item.label}>
                       <div className="flex items-center justify-between text-xs mb-1.5">
-                        <div className="flex items-center gap-2 font-bold text-slate-700">
+                        <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300">
                           <span className={`w-2.5 h-2.5 rounded-sm ${item.color}`} />
                           <span>{item.label}</span>
                         </div>
-                        <span className="font-mono text-slate-900 font-bold">
-                          {item.count} <span className="text-slate-400 font-normal">{pct}%</span>
+                        <span className="font-mono text-slate-900 dark:text-white font-bold">
+                          {item.count} <span className="text-slate-400 dark:text-slate-500 font-normal">{pct}%</span>
                         </span>
                       </div>
-                      <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                      <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                         <div
                           className={`h-full rounded-full ${item.color} transition-all duration-500`}
                           style={{ width: `${Math.max(pct, 1)}%` }}
@@ -442,8 +442,8 @@ export function LoyaltyAdminDashboard({
                 })}
               </div>
 
-              <div className="pt-3 mt-3 border-t border-slate-100 text-xs text-slate-500">
-                Total rewards: <strong className="text-slate-900">
+              <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+                Total rewards: <strong className="text-slate-900 dark:text-white">
                   {(stats.rewardStatus.available + stats.rewardStatus.redeemed + stats.rewardStatus.expired).toLocaleString()}
                 </strong>
               </div>
@@ -455,14 +455,14 @@ export function LoyaltyAdminDashboard({
       {/* 5. QR Generator */}
       <div className="w-full">
         {/* QR Generator */}
-        <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
+        <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
               <QrCode className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-slate-900">Digital Stamp Card Generator</h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Digital Stamp Card Generator</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Generate a unique QR code. Guests scan to join and start earning rewards.
               </p>
             </div>
@@ -472,12 +472,12 @@ export function LoyaltyAdminDashboard({
             {/* Controls */}
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">QR Expiration</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">QR Expiration</label>
                 <div className="relative">
                   <select
                     value={expirationPeriod}
                     onChange={(e) => setExpirationPeriod(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 appearance-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 appearance-none"
                   >
                     <option value="30 days">30 days (Recommended)</option>
                     <option value="7 days">7 days</option>
@@ -487,7 +487,7 @@ export function LoyaltyAdminDashboard({
                   </select>
                   <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
                   {expirationPeriod === "immediate"
                     ? "This QR code will be invalidated after a single scan."
                     : "The QR code will expire automatically after the selected period."}
@@ -505,16 +505,16 @@ export function LoyaltyAdminDashboard({
             </div>
 
             {/* QR Display */}
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center text-center">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col items-center text-center">
               {activeQrUrl ? (
-                <img src={activeQrUrl} alt="Loyalty QR Code" className="w-36 h-36 rounded-xl border border-slate-200 bg-white p-2 shadow-xs" />
+                <img src={activeQrUrl} alt="Loyalty QR Code" className="w-36 h-36 rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-2 shadow-xs" />
               ) : (
-                <div className="w-36 h-36 rounded-xl bg-white border border-slate-200 flex items-center justify-center">
+                <div className="w-36 h-36 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
                   <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
                 </div>
               )}
-              <div className="mt-2 text-xs font-bold text-slate-900">Scan to Join</div>
-              <p className="text-[10px] text-slate-500 mt-0.5 max-w-[200px]">
+              <div className="mt-2 text-xs font-bold text-slate-900 dark:text-white">Scan to Join</div>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 max-w-[200px]">
                 Let your guests scan this QR code to join your loyalty program.
               </p>
 
@@ -522,9 +522,9 @@ export function LoyaltyAdminDashboard({
                 <a
                   href={activeQrUrl}
                   download={`loyalty-qr-${restaurantSlug}.png`}
-                  className="flex-1 py-1.5 px-3 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-[11px] font-bold flex items-center justify-center gap-1.5 shadow-2xs"
+                  className="flex-1 py-1.5 px-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold flex items-center justify-center gap-1.5 shadow-2xs"
                 >
-                  <Download className="w-3 h-3 text-slate-500" />
+                  <Download className="w-3 h-3 text-slate-500 dark:text-slate-400" />
                   <span>Download</span>
                 </a>
                 <button
@@ -537,9 +537,9 @@ export function LoyaltyAdminDashboard({
                       setTimeout(() => setHasCopied(false), 1500);
                     }
                   }}
-                  className="flex-1 py-1.5 px-3 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-[11px] font-bold flex items-center justify-center gap-1.5 shadow-2xs"
+                  className="flex-1 py-1.5 px-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold flex items-center justify-center gap-1.5 shadow-2xs"
                 >
-                  {hasCopied ? <Check className="w-3 h-3 text-emerald-600" /> : <Share2 className="w-3 h-3 text-slate-500" />}
+                  {hasCopied ? <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <Share2 className="w-3 h-3 text-slate-500 dark:text-slate-400" />}
                   <span>{hasCopied ? "Copied" : "Share"}</span>
                 </button>
               </div>
@@ -547,7 +547,7 @@ export function LoyaltyAdminDashboard({
               <Link
                 href={`/r/${restaurantSlug}/rewards?preview=true`}
                 target="_blank"
-                className="mt-2 text-[11px] font-bold text-emerald-700 hover:underline flex items-center gap-1"
+                className="mt-2 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1"
               >
                 <span>Preview Guest View</span>
                 <ExternalLink className="w-3 h-3" />
@@ -561,34 +561,34 @@ export function LoyaltyAdminDashboard({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Activity */}
         {stats && (
-          <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
+          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-base font-extrabold text-slate-900">Recent Activity</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Latest loyalty transactions</p>
+                <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Recent Activity</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Latest loyalty transactions</p>
               </div>
             </div>
 
             <div className="space-y-3">
               {stats.recentActivity.length === 0 && (
-                <div className="text-center text-sm text-slate-400 py-6">No recent activity</div>
+                <div className="text-center text-sm text-slate-400 dark:text-slate-500 py-6">No recent activity</div>
               )}
               {stats.recentActivity.map((item) => (
                 <div key={item.id} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2.5">
-                    {item.type === "STAMP_EARNED" && <Award className="w-4 h-4 text-emerald-700 shrink-0" />}
-                    {item.type === "MILESTONE_UNLOCKED" && <Gift className="w-4 h-4 text-amber-600 shrink-0" />}
-                    {item.type === "REWARD_REDEEMED" && <Gift className="w-4 h-4 text-purple-600 shrink-0" />}
+                    {item.type === "STAMP_EARNED" && <Award className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />}
+                    {item.type === "MILESTONE_UNLOCKED" && <Gift className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />}
+                    {item.type === "REWARD_REDEEMED" && <Gift className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />}
                     {item.type === "STAMP_REVERSED" && <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />}
                     {!["STAMP_EARNED", "MILESTONE_UNLOCKED", "REWARD_REDEEMED", "STAMP_REVERSED"].includes(item.type) && (
                       <Clock className="w-4 h-4 text-slate-400 shrink-0" />
                     )}
                     <div>
-                      <div className="font-semibold text-slate-700">{item.description}</div>
-                      <div className="text-[10px] text-slate-400">{item.customerName}</div>
+                      <div className="font-semibold text-slate-700 dark:text-slate-300">{item.description}</div>
+                      <div className="text-[10px] text-slate-400 dark:text-slate-500">{item.customerName}</div>
                     </div>
                   </div>
-                  <span className="text-[11px] text-slate-400 shrink-0 ml-2">{timeAgo(item.createdAt)}</span>
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0 ml-2">{timeAgo(item.createdAt)}</span>
                 </div>
               ))}
             </div>
@@ -596,15 +596,15 @@ export function LoyaltyAdminDashboard({
         )}
 
         {/* Milestones Table */}
-        <div className="lg:col-span-2 p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
+        <div className="lg:col-span-2 p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                 <Gift className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-base font-extrabold text-slate-900">Reward Milestones & Tier Benefits</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Configure stamp milestones and rewards.</p>
+                <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Reward Milestones & Tier Benefits</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Configure stamp milestones and rewards.</p>
               </div>
             </div>
 
@@ -620,31 +620,31 @@ export function LoyaltyAdminDashboard({
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-100 text-slate-400 uppercase font-bold text-[10px] tracking-wider">
+                <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 uppercase font-bold text-[10px] tracking-wider">
                   <th className="pb-3 pl-2">Reward Title & Description</th>
                   <th className="pb-3 text-center">Requirement</th>
                   <th className="pb-3 pr-2 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {milestones.length > 0 ? (
                   milestones.map((m) => (
-                    <tr key={m.id} className="hover:bg-slate-50/70 transition">
+                    <tr key={m.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition">
                       <td className="py-3.5 pl-2">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                          <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
                             <Gift className="w-4 h-4" />
                           </div>
                           <div>
-                            <div className="font-extrabold text-slate-900">{m.rewardTitle}</div>
-                            <div className="text-[11px] text-slate-400 mt-0.5">
+                            <div className="font-extrabold text-slate-900 dark:text-white">{m.rewardTitle}</div>
+                            <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                               {m.rewardDescription || "Special patron reward"}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="py-3.5 text-center">
-                        <span className="inline-block font-bold text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                        <span className="inline-block font-bold text-xs px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                           {m.stampRequirement} Stamps
                         </span>
                       </td>
@@ -656,7 +656,7 @@ export function LoyaltyAdminDashboard({
                             setStampRequirement(m.stampRequirement);
                             setIsMilestoneModalOpen(true);
                           }}
-                          className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-bold text-[11px] inline-flex items-center gap-1 shadow-2xs"
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[11px] inline-flex items-center gap-1 shadow-2xs"
                         >
                           <Edit2 className="w-3 h-3" />
                           <span>Edit</span>
@@ -666,7 +666,7 @@ export function LoyaltyAdminDashboard({
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={3} className="py-8 text-center text-sm text-slate-400">
+                    <td colSpan={3} className="py-8 text-center text-sm text-slate-400 dark:text-slate-500">
                       No milestones configured yet. Click "Add Milestone" to create your first reward tier.
                     </td>
                   </tr>
@@ -680,12 +680,12 @@ export function LoyaltyAdminDashboard({
       {/* Add / Edit Milestone Modal */}
       {isMilestoneModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-          <div className="bg-white rounded-[28px] max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200">
+          <div className="bg-white dark:bg-slate-900 rounded-[28px] max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-extrabold text-slate-900">Configure Milestone Reward</h3>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Configure Milestone Reward</h3>
               <button
                 onClick={() => setIsMilestoneModalOpen(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 aria-label="Close dialog"
               >
                 <X className="w-4 h-4" />
@@ -694,30 +694,30 @@ export function LoyaltyAdminDashboard({
 
             <form onSubmit={handleAddMilestone} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Reward Title</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Reward Title</label>
                 <input
                   type="text"
                   required
                   value={rewardTitle}
                   onChange={(e) => setRewardTitle(e.target.value)}
                   placeholder="e.g. Free House Dessert"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Description</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Description</label>
                 <input
                   type="text"
                   value={rewardDescription}
                   onChange={(e) => setRewardDescription(e.target.value)}
                   placeholder="e.g. Choice of any artisan dessert"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Stamps Required</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Stamps Required</label>
                 <input
                   type="number"
                   min="1"
@@ -725,7 +725,7 @@ export function LoyaltyAdminDashboard({
                   required
                   value={stampRequirement}
                   onChange={(e) => setStampRequirement(Number(e.target.value))}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>
 
@@ -733,7 +733,7 @@ export function LoyaltyAdminDashboard({
                 <button
                   type="button"
                   onClick={() => setIsMilestoneModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   Cancel
                 </button>
@@ -776,22 +776,22 @@ function KPICard({
 }) {
   const isPositive = change >= 0;
   return (
-    <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
       <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center mb-3`}>
         {icon}
       </div>
-      <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">{label}</div>
-      <div className="text-2xl font-black text-slate-900 tracking-tight mt-1">{value}</div>
+      <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</div>
+      <div className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1">{value}</div>
       {change !== 0 ? (
-        <div className={`text-xs font-bold mt-2 ${isPositive ? "text-emerald-600" : "text-red-500"}`}>
+        <div className={`text-xs font-bold mt-2 ${isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
           {isPositive ? "↑" : "↓"} {Math.abs(change)}%{" "}
-          <span className="text-slate-400 font-normal text-[11px]">vs previous period</span>
+          <span className="text-slate-400 dark:text-slate-500 font-normal text-[11px]">vs previous period</span>
           {periodValue !== null && (
-            <span className="text-slate-400 font-normal text-[11px] ml-1">({periodValue} in period)</span>
+            <span className="text-slate-400 dark:text-slate-500 font-normal text-[11px] ml-1">({periodValue} in period)</span>
           )}
         </div>
       ) : (
-        <div className="text-xs font-bold text-slate-400 mt-2">No previous data</div>
+        <div className="text-xs font-bold text-slate-400 dark:text-slate-500 mt-2">No previous data</div>
       )}
     </div>
   );
@@ -806,7 +806,7 @@ function StampsChart({ timeSeries }: { timeSeries: { date: string; stamps: numbe
 
   if (data.length === 0) {
     return (
-      <div className="h-48 flex items-center justify-center text-sm text-slate-400">
+      <div className="h-48 flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">
         No stamp activity in this period
       </div>
     );
@@ -845,14 +845,14 @@ function StampsChart({ timeSeries }: { timeSeries: { date: string; stamps: numbe
 
             {/* Tooltip */}
             {hoveredIdx === idx && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-white rounded-lg p-2 shadow-xl border border-slate-100 z-20 pointer-events-none whitespace-nowrap">
-                <div className="text-[10px] font-bold text-slate-400">
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-white dark:bg-slate-800 rounded-lg p-2 shadow-xl border border-slate-100 dark:border-slate-700 z-20 pointer-events-none whitespace-nowrap">
+                <div className="text-[10px] font-bold text-slate-400 dark:text-slate-400">
                   {new Date(timeSeries[idx].date).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
                   })}
                 </div>
-                <div className="text-xs font-black text-slate-900">{val} stamps</div>
+                <div className="text-xs font-black text-slate-900 dark:text-white">{val} stamps</div>
               </div>
             )}
           </div>

@@ -40,6 +40,7 @@ export interface RestaurantData {
   tagline?: string | null;
   primaryColor: string;
   secondaryColor: string;
+  themeMode?: string;
   address?: string | null;
   phone?: string | null;
   website?: string | null;

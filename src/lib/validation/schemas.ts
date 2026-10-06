@@ -24,6 +24,7 @@ export const restaurantUpdateSchema = z.object({
   coverImageUrl: z.string().max(2000).optional().nullable().or(z.literal("")),
   primaryColor: z.string().regex(hexColorRegex, "Invalid primary hex color (e.g. #0F766E)").optional(),
   secondaryColor: z.string().regex(hexColorRegex, "Invalid secondary hex color (e.g. #F8FAFC)").optional(),
+  themeMode: z.enum(["light", "dark"]).optional(),
   address: z.string().max(250).optional().nullable(),
   phone: z.string().max(50).optional().nullable(),
   website: z.string().max(1000).optional().nullable().or(z.literal("")),

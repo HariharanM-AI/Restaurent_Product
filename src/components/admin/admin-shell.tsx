@@ -26,7 +26,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarContext.Provider value={{ isCollapsed, toggle, setCollapsed }}>
-      <div className="min-h-screen bg-[#F8FAFC] flex flex-col lg:flex-row">
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex flex-col lg:flex-row">
         {children}
       </div>
     </SidebarContext.Provider>

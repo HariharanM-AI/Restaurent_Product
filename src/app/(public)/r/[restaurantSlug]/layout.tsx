@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
+import { CustomerThemeSync } from "@/components/guest/customer-theme-sync";
 
 export async function generateViewport({
   params,
@@ -62,8 +63,10 @@ export default async function RestaurantGuestLayout({
     where: { slug: restaurantSlug },
     select: {
       id: true,
+      slug: true,
       primaryColor: true,
       secondaryColor: true,
+      themeMode: true,
     },
   });
 
@@ -73,10 +76,11 @@ export default async function RestaurantGuestLayout({
 
   const primary = restaurant.primaryColor || "#0F766E";
   const secondary = restaurant.secondaryColor || "#F8FAFC";
+  const themeMode = (restaurant.themeMode as "light" | "dark") || "light";
 
   return (
     <>
-      {/* Inline SSR style ensures zero flash of green during initial paint */}
+      {/* Inline SSR style ensures dynamic primary and secondary brand variables */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -88,20 +92,15 @@ export default async function RestaurantGuestLayout({
           `,
         }}
       />
-      <div
-        className="min-h-screen bg-slate-100 flex flex-col justify-start"
-        style={
-          {
-            "--primary": primary,
-            "--brand-primary": primary,
-            "--brand-secondary": secondary,
-          } as React.CSSProperties
-        }
+      <CustomerThemeSync
+        restaurantId={restaurant.id}
+        slug={restaurant.slug}
+        initialThemeMode={themeMode}
+        initialPrimaryColor={primary}
+        initialSecondaryColor={secondary}
       >
-        <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-2xl border-x border-slate-200/60 flex flex-col">
-          {children}
-        </div>
-      </div>
+        {children}
+      </CustomerThemeSync>
     </>
   );
 }

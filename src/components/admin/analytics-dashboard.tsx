@@ -112,21 +112,21 @@ function fmt(n: number): string {
 /* ─── Skeleton ─── */
 function SkeletonCard() {
   return (
-    <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs animate-pulse">
-      <div className="w-10 h-10 rounded-xl bg-slate-100 mb-3" />
-      <div className="h-3 w-24 bg-slate-100 rounded mb-2" />
-      <div className="h-7 w-16 bg-slate-100 rounded mb-2" />
-      <div className="h-3 w-32 bg-slate-100 rounded" />
+    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs animate-pulse">
+      <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 mb-3" />
+      <div className="h-3 w-24 bg-slate-100 dark:bg-slate-800 rounded mb-2" />
+      <div className="h-7 w-16 bg-slate-100 dark:bg-slate-800 rounded mb-2" />
+      <div className="h-3 w-32 bg-slate-100 dark:bg-slate-800 rounded" />
     </div>
   );
 }
 
 /* ─── Change Badge ─── */
 function ChangeBadge({ change, suffix = "%" }: { change: number; suffix?: string }) {
-  if (change === 0) return <span className="text-[11px] text-slate-400 font-medium">No change</span>;
+  if (change === 0) return <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">No change</span>;
   const isPositive = change > 0;
   return (
-    <span className={`inline-flex items-center gap-0.5 text-[11px] font-bold ${isPositive ? "text-emerald-600" : "text-red-500"}`}>
+    <span className={`inline-flex items-center gap-0.5 text-[11px] font-bold ${isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
       {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
       {Math.abs(change)}{suffix}
     </span>
@@ -191,10 +191,10 @@ export function AnalyticsDashboard({ restaurantId }: AnalyticsDashboardProps) {
   const periodLabel = PERIODS.find((p) => p.key === period)?.label || "30 Days";
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="w-full space-y-6 pb-12">
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
           {loading ? "Loading analytics..." : `Engagement data for ${periodLabel} — vs previous period`}
         </p>
       </div>
@@ -207,8 +207,8 @@ export function AnalyticsDashboard({ restaurantId }: AnalyticsDashboardProps) {
             onClick={() => { setPeriod(p.key); setShowCustom(p.key === "custom"); }}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
               period === p.key
-                ? "bg-[#0B3B36] text-white shadow-sm"
-                : "bg-white border border-slate-200 text-slate-600 hover:border-emerald-400 hover:text-emerald-700"
+                ? "bg-[#0B3B36] dark:bg-emerald-700 text-white shadow-sm"
+                : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-400 dark:hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400"
             }`}
           >
             {p.key === "custom" && <Calendar className="w-3 h-3 inline mr-1.5 -mt-px" />}
@@ -218,17 +218,17 @@ export function AnalyticsDashboard({ restaurantId }: AnalyticsDashboardProps) {
         {showCustom && period === "custom" && (
           <div className="flex items-center gap-2 ml-2">
             <input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)}
-              className="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none" />
-            <span className="text-xs text-slate-400">to</span>
+              className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none" />
+            <span className="text-xs text-slate-400 dark:text-slate-500">to</span>
             <input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)}
-              className="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none" />
+              className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none" />
           </div>
         )}
-        {loading && <Loader2 className="w-4 h-4 text-emerald-600 animate-spin ml-2" />}
+        {loading && <Loader2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 animate-spin ml-2" />}
       </div>
 
       {error && (
-        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium flex items-center gap-2">
+        <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-400 text-sm font-medium flex items-center gap-2">
           <AlertCircle className="w-4 h-4" />
           <span>{error}</span>
           <button onClick={() => fetchData()} className="ml-auto text-xs font-bold underline">Retry</button>
@@ -245,13 +245,13 @@ export function AnalyticsDashboard({ restaurantId }: AnalyticsDashboardProps) {
         <>
           {/* KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <KPICard icon={<Eye className="w-5 h-5" />} iconBg="bg-indigo-50 text-indigo-600"
+            <KPICard icon={<Eye className="w-5 h-5" />} iconBg="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400"
               label="Total Visits" value={fmt(data.kpis.totalVisits.current)} change={data.kpis.totalVisits.change} />
-            <KPICard icon={<Users className="w-5 h-5" />} iconBg="bg-teal-50 text-teal-600"
+            <KPICard icon={<Users className="w-5 h-5" />} iconBg="bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400"
               label="Unique Guests" value={fmt(data.kpis.uniqueGuests.current)} change={data.kpis.uniqueGuests.change} />
-            <KPICard icon={<Zap className="w-5 h-5" />} iconBg="bg-orange-50 text-orange-600"
+            <KPICard icon={<Zap className="w-5 h-5" />} iconBg="bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400"
               label="Feature Interactions" value={fmt(data.kpis.totalInteractions.current)} change={data.kpis.totalInteractions.change} />
-            <KPICard icon={<TrendingUp className="w-5 h-5" />} iconBg="bg-emerald-50 text-emerald-600"
+            <KPICard icon={<TrendingUp className="w-5 h-5" />} iconBg="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
               label="Conversion Rate" value={`${data.kpis.conversionRate.current}%`} change={data.kpis.conversionRate.change} suffix="pts" />
           </div>
 
@@ -282,15 +282,15 @@ function KPICard({ icon, iconBg, label, value, change, suffix = "%" }: {
   icon: React.ReactNode; iconBg: string; label: string; value: string; change: number; suffix?: string;
 }) {
   return (
-    <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
       <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center mb-3`}>
         {icon}
       </div>
-      <div className="text-xs font-bold text-slate-500">{label}</div>
-      <div className="text-2xl font-black text-slate-900 tracking-tight mt-1">{value}</div>
+      <div className="text-xs font-bold text-slate-500 dark:text-slate-400">{label}</div>
+      <div className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1">{value}</div>
       <div className="mt-2 flex items-center gap-1.5">
         <ChangeBadge change={change} suffix={suffix} />
-        <span className="text-[11px] text-slate-400">vs previous period</span>
+        <span className="text-[11px] text-slate-400 dark:text-slate-500">vs previous period</span>
       </div>
     </div>
   );
@@ -299,11 +299,11 @@ function KPICard({ icon, iconBg, label, value, change, suffix = "%" }: {
 /* ─── Engagement Funnel ─── */
 function EngagementFunnel({ funnel, totalVisits }: { funnel: AnalyticsAPIData["funnel"]; totalVisits: number }) {
   return (
-    <div className="lg:col-span-8 p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
+    <div className="lg:col-span-8 p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900">Action Engagement Funnel</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Action Engagement Funnel</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             How guests interact with each feature — conversion from page view to action.
           </p>
         </div>
@@ -311,7 +311,7 @@ function EngagementFunnel({ funnel, totalVisits }: { funnel: AnalyticsAPIData["f
 
       <div className="space-y-4">
         {funnel.length === 0 && (
-          <div className="py-8 text-center text-sm text-slate-400">
+          <div className="py-8 text-center text-sm text-slate-400 dark:text-slate-500">
             No feature interactions recorded in this period.
           </div>
         )}
@@ -323,7 +323,7 @@ function EngagementFunnel({ funnel, totalVisits }: { funnel: AnalyticsAPIData["f
           return (
             <div key={item.eventType} className="group">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                <span className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-200">
                   <span className={`w-7 h-7 rounded-lg ${colors.bg} ${colors.text} flex items-center justify-center`}>
                     <Icon className="w-3.5 h-3.5" />
                   </span>
@@ -331,16 +331,16 @@ function EngagementFunnel({ funnel, totalVisits }: { funnel: AnalyticsAPIData["f
                 </span>
                 <div className="flex items-center gap-3">
                   <ChangeBadge change={item.change} />
-                  <span className="font-mono font-bold text-slate-900 text-xs min-w-[28px] text-right">{item.count}</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white text-xs min-w-[28px] text-right">{item.count}</span>
                 </div>
               </div>
-              <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                 <div
                   className={`h-full rounded-full ${colors.bar} transition-all duration-700 ease-out`}
                   style={{ width: `${barWidth}%` }}
                 />
               </div>
-              <div className="text-[10px] text-slate-400 mt-0.5 font-medium">
+              <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
                 {item.pct}% of visitors used this feature
               </div>
             </div>
@@ -354,35 +354,35 @@ function EngagementFunnel({ funnel, totalVisits }: { funnel: AnalyticsAPIData["f
 /* ─── Touchpoint Distribution ─── */
 function TouchpointDistribution({ touchpoints }: { touchpoints: AnalyticsAPIData["touchpoints"] }) {
   const items = [
-    { key: "qr", label: "Table QR Code", desc: "Physical tabletop stands", icon: QrCode, data: touchpoints.qr, colors: "bg-teal-50 border-teal-200/60 text-teal-700" },
-    { key: "nfc", label: "NFC Touchpoint", desc: "Tap-to-connect tags", icon: Radio, data: touchpoints.nfc, colors: "bg-indigo-50 border-indigo-200/60 text-indigo-700" },
-    { key: "direct", label: "Direct / Online", desc: "Browser & shared links", icon: ExternalLink, data: touchpoints.direct, colors: "bg-slate-100 border-slate-200 text-slate-600" },
+    { key: "qr", label: "Table QR Code", desc: "Physical tabletop stands", icon: QrCode, data: touchpoints.qr, colors: "bg-teal-50 dark:bg-teal-950/40 border-teal-200/60 dark:border-teal-800/40 text-teal-700 dark:text-teal-400" },
+    { key: "nfc", label: "NFC Touchpoint", desc: "Tap-to-connect tags", icon: Radio, data: touchpoints.nfc, colors: "bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200/60 dark:border-indigo-800/40 text-indigo-700 dark:text-indigo-400" },
+    { key: "direct", label: "Direct / Online", desc: "Browser & shared links", icon: ExternalLink, data: touchpoints.direct, colors: "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300" },
   ];
 
   return (
-    <div className="lg:col-span-4 p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+    <div className="lg:col-span-4 p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
       <div>
-        <h2 className="text-base font-extrabold text-slate-900">Touchpoint Distribution</h2>
-        <p className="text-xs text-slate-500 mt-0.5">Physical QR vs NFC vs Web Direct</p>
+        <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Touchpoint Distribution</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Physical QR vs NFC vs Web Direct</p>
 
         <div className="space-y-3 mt-5">
           {items.map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.key} className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between">
+              <div key={item.key} className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 rounded-xl flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className={`w-9 h-9 rounded-lg border flex items-center justify-center ${item.colors}`}>
                     <Icon className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="font-semibold text-xs text-slate-800 block">{item.label}</span>
-                    <span className="text-[10px] text-slate-400">{item.desc}</span>
+                    <span className="font-semibold text-xs text-slate-800 dark:text-slate-200 block">{item.label}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500">{item.desc}</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="font-mono font-bold text-slate-900 text-sm block">{item.data.count}</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white text-sm block">{item.data.count}</span>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-semibold text-slate-500">{item.data.pct}%</span>
+                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{item.data.pct}%</span>
                     <ChangeBadge change={item.data.change} />
                   </div>
                 </div>
@@ -396,7 +396,7 @@ function TouchpointDistribution({ touchpoints }: { touchpoints: AnalyticsAPIData
       <div className="flex items-center justify-center my-4">
         <div className="relative w-28 h-28">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-            <circle cx="18" cy="18" r="14" fill="none" stroke="#E2E8F0" strokeWidth="4" />
+            <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" className="text-slate-200 dark:text-slate-800" strokeWidth="4" />
             <circle cx="18" cy="18" r="14" fill="none" stroke="#0D9488" strokeWidth="4"
               strokeDasharray={`${(touchpoints.qr.pct / 100) * 88} ${88 - (touchpoints.qr.pct / 100) * 88}`}
               strokeDashoffset="0" strokeLinecap="round" />
@@ -408,13 +408,13 @@ function TouchpointDistribution({ touchpoints }: { touchpoints: AnalyticsAPIData
               strokeDashoffset={`${-((touchpoints.qr.pct + touchpoints.nfc.pct) / 100) * 88}`} strokeLinecap="round" />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-sm font-black text-slate-900">{touchpoints.qr.count + touchpoints.nfc.count + touchpoints.direct.count}</span>
-            <span className="text-[9px] text-slate-400">Total</span>
+            <span className="text-sm font-black text-slate-900 dark:text-white">{touchpoints.qr.count + touchpoints.nfc.count + touchpoints.direct.count}</span>
+            <span className="text-[9px] text-slate-400 dark:text-slate-500">Total</span>
           </div>
         </div>
       </div>
 
-      <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-400 leading-relaxed">
+      <div className="pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
         Data is strictly anonymous. No guest personal identity is logged during table scans.
       </div>
     </div>
@@ -438,48 +438,48 @@ function VisitTrendsChart({ timeSeries }: { timeSeries: AnalyticsAPIData["timeSe
   }
 
   return (
-    <div className="lg:col-span-2 p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
-      <h2 className="text-base font-extrabold text-slate-900">Visit & Interaction Trends</h2>
-      <p className="text-xs text-slate-500 mt-0.5 mb-4">Daily visits vs feature interactions over time.</p>
+    <div className="lg:col-span-2 p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+      <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Visit & Interaction Trends</h2>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-4">Daily visits vs feature interactions over time.</p>
 
       <div className="flex items-center gap-4 text-[11px] mb-3 font-semibold">
-        <span className="flex items-center gap-1 text-indigo-700">
+        <span className="flex items-center gap-1 text-indigo-700 dark:text-indigo-400">
           <span className="w-2 h-2 rounded-full bg-indigo-500" /> Visits
         </span>
-        <span className="flex items-center gap-1 text-emerald-700">
+        <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
           <span className="w-2 h-2 rounded-full bg-emerald-500" /> Interactions
         </span>
       </div>
 
       <div className="relative" onMouseLeave={() => setHoveredIdx(null)}>
         {hoveredIdx !== null && timeSeries[hoveredIdx] && (
-          <div className="absolute top-0 bg-white rounded-lg p-2 shadow-lg border border-slate-100 text-center text-xs z-10 pointer-events-none"
+          <div className="absolute top-0 bg-white dark:bg-slate-800 rounded-lg p-2 shadow-lg border border-slate-100 dark:border-slate-700 text-center text-xs z-10 pointer-events-none"
             style={{ left: `${(hoveredIdx / Math.max(timeSeries.length - 1, 1)) * 85 + 5}%`, transform: "translateX(-50%)" }}>
-            <div className="text-[10px] text-slate-400 font-bold">
+            <div className="text-[10px] text-slate-400 dark:text-slate-400 font-bold">
               {new Date(timeSeries[hoveredIdx].date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
             </div>
-            <div className="font-extrabold text-indigo-700">{timeSeries[hoveredIdx].visits} visits</div>
-            <div className="font-extrabold text-emerald-700">{timeSeries[hoveredIdx].interactions} interactions</div>
+            <div className="font-extrabold text-indigo-700 dark:text-indigo-400">{timeSeries[hoveredIdx].visits} visits</div>
+            <div className="font-extrabold text-emerald-700 dark:text-emerald-400">{timeSeries[hoveredIdx].interactions} interactions</div>
           </div>
         )}
 
         <div className="h-36 flex items-end gap-[2px] pt-8">
           {visits.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center text-sm text-slate-400">No data</div>
+            <div className="flex-1 flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">No data</div>
           ) : (
             visits.map((v, i) => (
               <div key={i} className="flex-1 flex flex-col items-stretch gap-[1px] cursor-pointer"
                 onMouseEnter={() => setHoveredIdx(i)}>
-                <div className={`rounded-t-xs transition ${hoveredIdx === i ? "bg-indigo-600" : "bg-indigo-300 hover:bg-indigo-400"}`}
+                <div className={`rounded-t-xs transition ${hoveredIdx === i ? "bg-indigo-600 dark:bg-indigo-500" : "bg-indigo-300 dark:bg-indigo-500/50 hover:bg-indigo-400 dark:hover:bg-indigo-400"}`}
                   style={{ height: `${Math.max((v / maxVal) * 100, 2)}%` }} />
-                <div className={`rounded-b-xs transition ${hoveredIdx === i ? "bg-emerald-600" : "bg-emerald-300 hover:bg-emerald-400"}`}
+                <div className={`rounded-b-xs transition ${hoveredIdx === i ? "bg-emerald-600 dark:bg-emerald-500" : "bg-emerald-300 dark:bg-emerald-500/50 hover:bg-emerald-400 dark:hover:bg-emerald-400"}`}
                   style={{ height: `${Math.max((interactions[i] / maxVal) * 100, 1)}%` }} />
               </div>
             ))
           )}
         </div>
 
-        <div className="flex justify-between text-[10px] text-slate-400 mt-2 px-1">
+        <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-2 px-1">
           {dateLabels.map((dl) => (<span key={dl.idx}>{dl.label}</span>))}
         </div>
       </div>
@@ -498,13 +498,13 @@ function HourlyHeatmap({ hours, peakHour }: { hours: number[]; peakHour: number 
   ];
 
   return (
-    <div className="p-6 rounded-[24px] bg-white border border-slate-200/80 shadow-xs">
+    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900">Peak Hours</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Guest engagement distribution by hour.</p>
+          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Peak Hours</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Guest engagement distribution by hour.</p>
         </div>
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
           <Clock className="w-3.5 h-3.5" />
           <span>Peak: {peakHour}:00</span>
         </div>
@@ -516,17 +516,17 @@ function HourlyHeatmap({ hours, peakHour }: { hours: number[]; peakHour: number 
           <div key={h} className="flex-1 relative group">
             <div
               className={`w-full rounded-t-xs transition-all duration-300 ${
-                h === peakHour ? "bg-emerald-500" : "bg-slate-200 group-hover:bg-slate-400"
+                h === peakHour ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700 group-hover:bg-slate-400 dark:group-hover:bg-slate-500"
               }`}
               style={{ height: `${Math.max((count / maxH) * 100, 3)}%` }}
             />
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-1.5 py-0.5 rounded text-[9px] font-bold opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-10">
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-800 dark:bg-slate-700 text-white px-1.5 py-0.5 rounded text-[9px] font-bold opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-10">
               {h}:00 — {count}
             </div>
           </div>
         ))}
       </div>
-      <div className="flex justify-between text-[9px] text-slate-400 px-0.5">
+      <div className="flex justify-between text-[9px] text-slate-400 dark:text-slate-500 px-0.5">
         <span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span>
       </div>
 
@@ -540,12 +540,12 @@ function HourlyHeatmap({ hours, peakHour }: { hours: number[]; peakHour: number 
             : hours.slice(start).reduce((a, b) => a + b, 0) + hours.slice(0, end).reduce((a, b) => a + b, 0);
           const SlotIcon = slot.icon;
           return (
-            <div key={slot.label} className="p-2.5 rounded-lg bg-slate-50 border border-slate-200/60 text-center">
-              <div className="flex items-center justify-center text-slate-500 mb-1">
+            <div key={slot.label} className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 text-center">
+              <div className="flex items-center justify-center text-slate-500 dark:text-slate-400 mb-1">
                 <SlotIcon className="w-4 h-4" />
               </div>
-              <div className="text-[10px] font-bold text-slate-600">{slot.label}</div>
-              <div className="text-xs font-black text-slate-900 mt-0.5">{slotTotal}</div>
+              <div className="text-[10px] font-bold text-slate-600 dark:text-slate-300">{slot.label}</div>
+              <div className="text-xs font-black text-slate-900 dark:text-white mt-0.5">{slotTotal}</div>
             </div>
           );
         })}

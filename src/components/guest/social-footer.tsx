@@ -60,7 +60,7 @@ export function SocialFooter({ socialLinks, restaurantId }: SocialFooterProps) {
 
   return (
     <div className="py-6 px-4 text-center">
-      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-3.5">
+      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3.5">
         Connect With Us
       </p>
       <div className="flex items-center justify-center gap-3 flex-wrap">
@@ -71,7 +71,7 @@ export function SocialFooter({ socialLinks, restaurantId }: SocialFooterProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => handleClick(link.platform)}
-            className="w-11 h-11 rounded-full bg-white hover:bg-slate-50 border border-slate-200/90 shadow-2xs flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
+            className="w-11 h-11 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200/90 dark:border-slate-700 shadow-2xs flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
             aria-label={`Visit our ${link.platform}`}
           >
             {getPlatformIcon(link.platform)}
@@ -79,8 +79,8 @@ export function SocialFooter({ socialLinks, restaurantId }: SocialFooterProps) {
         ))}
       </div>
       <div className="mt-5 text-xs flex items-center justify-center gap-1.5">
-        <span className="text-slate-400 font-medium">Powered by</span>
-        <span className="font-bold text-slate-800 tracking-tight">Noura</span>
+        <span className="text-slate-400 dark:text-slate-500 font-medium">Powered by</span>
+        <span className="font-bold text-slate-800 dark:text-slate-200 tracking-tight">Noura</span>
       </div>
     </div>
   );

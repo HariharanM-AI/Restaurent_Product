@@ -29,7 +29,10 @@ import {
   Activity,
   Layers,
   Sparkles,
+  Moon,
+  Sun,
 } from "lucide-react";
+import { useTheme } from "@/components/providers/theme-provider";
 
 interface ShopData {
   id: string;
@@ -92,6 +95,7 @@ const cardVariants: Variants = {
 
 export default function PlatformAdminDashboardPage() {
   const router = useRouter();
+  const { theme, toggle: toggleTheme } = useTheme();
 
   const [metrics, setMetrics] = useState<PlatformMetrics | null>(null);
   const [clients, setClients] = useState<ClientData[]>([]);
@@ -222,9 +226,9 @@ export default function PlatformAdminDashboardPage() {
   });
 
   return (
-    <div className="min-h-screen w-full bg-[#F8FAFC] text-slate-900 flex flex-col selection:bg-teal-100 selection:text-teal-900">
-      {/* 1. Header (Fluid width, fitted to screen on all zoom levels) */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs w-full">
+    <div className="min-h-screen w-full bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col selection:bg-teal-100 selection:text-teal-900">
+      {/* 1. Header */}
+      <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-700/80 shadow-2xs w-full">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-3 flex items-center justify-between gap-4">
           {/* Left: Brand Logo & Noura Administration */}
           <div className="flex items-center gap-3 min-w-0">
@@ -249,10 +253,24 @@ export default function PlatformAdminDashboardPage() {
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
               onClick={fetchData}
-              className="p-2 sm:p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition cursor-pointer"
+              className="p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition cursor-pointer"
               title="Refresh Data"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-teal-700" : ""}`} />
+            </button>
+
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition cursor-pointer"
+              title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {theme === "dark" ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
             </button>
 
             <button
@@ -266,7 +284,7 @@ export default function PlatformAdminDashboardPage() {
 
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="p-2 sm:p-2.5 rounded-xl border border-slate-200 hover:bg-rose-50 hover:text-rose-600 text-slate-600 transition"
+              className="p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600 dark:hover:text-rose-400 text-slate-600 dark:text-slate-300 transition"
               title="Sign Out"
             >
               <LogOut className="w-4 h-4" />

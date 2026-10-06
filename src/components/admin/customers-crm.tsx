@@ -268,7 +268,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
   };
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       <PageHeader
         title="Customer Directory"
         description="Track loyalty wallet holders, repeat visit retention, and individual stamp progression."
@@ -292,8 +292,8 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
             onClick={() => setDatePeriod(p.key)}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
               datePeriod === p.key
-                ? "bg-[#0B3B36] text-white shadow-sm"
-                : "bg-white border border-slate-200 text-slate-600 hover:border-emerald-400 hover:text-emerald-700"
+                ? "bg-[#0B3B36] dark:bg-emerald-700 text-white shadow-sm"
+                : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-400 dark:hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400"
             }`}
           >
             {p.key === "custom" && <Calendar className="w-3 h-3 inline mr-1.5 -mt-px" />}
@@ -307,14 +307,14 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
               type="date"
               value={customFrom}
               onChange={(e) => setCustomFrom(e.target.value)}
-              className="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+              className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
             />
-            <span className="text-xs text-slate-400">to</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">to</span>
             <input
               type="date"
               value={customTo}
               onChange={(e) => setCustomTo(e.target.value)}
-              className="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+              className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
             />
           </div>
         )}
@@ -324,28 +324,28 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <KPICard
           icon={<Users className="w-5 h-5" />}
-          iconBg="bg-indigo-50 text-indigo-600"
+          iconBg="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400"
           label="Total Guests"
           value={kpis.totalGuests}
           sub={`${kpis.returningGuests} returning`}
         />
         <KPICard
           icon={<Repeat className="w-5 h-5" />}
-          iconBg="bg-teal-50 text-teal-600"
+          iconBg="bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400"
           label="Retention Rate"
           value={`${kpis.returningPct}%`}
           sub={`${kpis.avgVisits} avg visits`}
         />
         <KPICard
           icon={<Award className="w-5 h-5" />}
-          iconBg="bg-amber-50 text-amber-600"
+          iconBg="bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
           label="Total Stamps"
           value={kpis.totalStamps}
           sub={`${kpis.avgStamps} avg per guest`}
         />
         <KPICard
           icon={<Gift className="w-5 h-5" />}
-          iconBg="bg-purple-50 text-purple-600"
+          iconBg="bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400"
           label="With Rewards"
           value={kpis.withRewards}
           sub="active reward holders"
@@ -369,42 +369,42 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
       </div>
 
       {/* Customer CRM Data Table */}
-      <div className="overflow-x-auto rounded-[20px] border border-slate-200/80 bg-white shadow-card">
+      <div className="overflow-x-auto rounded-[20px] border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-card">
         <table className="w-full text-left border-collapse text-xs sm:text-sm">
           <thead>
-            <tr className="border-b border-slate-200/80 bg-slate-50/70 text-slate-500 font-semibold text-[11px] uppercase tracking-wider">
+            <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">
               <th className="py-3 px-5">Guest Profile</th>
               <th
-                className="py-3 px-4 text-center cursor-pointer hover:text-slate-800 transition select-none"
+                className="py-3 px-4 text-center cursor-pointer hover:text-slate-800 dark:hover:text-slate-200 transition select-none"
                 onClick={() => handleSort("totalVisits")}
               >
                 <span className="inline-flex items-center gap-1">
                   Visits
                   {sortField === "totalVisits" && (
-                    <span className="text-emerald-600">{sortDir === "desc" ? "↓" : "↑"}</span>
+                    <span className="text-emerald-600 dark:text-emerald-400">{sortDir === "desc" ? "↓" : "↑"}</span>
                   )}
                 </span>
               </th>
               <th
-                className="py-3 px-4 text-center cursor-pointer hover:text-slate-800 transition select-none"
+                className="py-3 px-4 text-center cursor-pointer hover:text-slate-800 dark:hover:text-slate-200 transition select-none"
                 onClick={() => handleSort("stampsBalance")}
               >
                 <span className="inline-flex items-center gap-1">
                   Stamps
                   {sortField === "stampsBalance" && (
-                    <span className="text-emerald-600">{sortDir === "desc" ? "↓" : "↑"}</span>
+                    <span className="text-emerald-600 dark:text-emerald-400">{sortDir === "desc" ? "↓" : "↑"}</span>
                   )}
                 </span>
               </th>
               <th className="py-3 px-4 text-center">Rewards</th>
               <th
-                className="py-3 px-4 cursor-pointer hover:text-slate-800 transition select-none"
+                className="py-3 px-4 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200 transition select-none"
                 onClick={() => handleSort("lastVisit")}
               >
                 <span className="inline-flex items-center gap-1">
                   Last Visit
                   {sortField === "lastVisit" && (
-                    <span className="text-emerald-600">{sortDir === "desc" ? "↓" : "↑"}</span>
+                    <span className="text-emerald-600 dark:text-emerald-400">{sortDir === "desc" ? "↓" : "↑"}</span>
                   )}
                 </span>
               </th>
@@ -412,12 +412,12 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
               <th className="py-3 px-4 text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {filteredCustomers.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-12 text-center">
                   <EmptyState
-                    icon={<Users className="w-6 h-6 text-slate-400" />}
+                    icon={<Users className="w-6 h-6 text-slate-400 dark:text-slate-500" />}
                     title="No guests found"
                     description={
                       searchQuery || datePeriod !== "all"
@@ -443,12 +443,12 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                   <tr
                     key={cust.id}
                     onClick={() => setSelectedCustomer(cust)}
-                    className="hover:bg-slate-50/70 transition cursor-pointer group"
+                    className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition cursor-pointer group"
                   >
                     <td className="py-3.5 px-5">
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-200/80 text-teal-800 font-bold text-xs flex items-center justify-center shrink-0">
+                          <div className="w-9 h-9 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-800/40 text-teal-800 dark:text-teal-300 font-bold text-xs flex items-center justify-center shrink-0">
                             {initials}
                           </div>
                           {isReturning && (
@@ -458,10 +458,10 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                           )}
                         </div>
                         <div className="min-w-0">
-                          <span className="font-semibold text-slate-900 block truncate group-hover:text-teal-900 transition-colors">
+                          <span className="font-semibold text-slate-900 dark:text-white block truncate group-hover:text-teal-900 dark:group-hover:text-teal-300 transition-colors">
                             {cust.name}
                           </span>
-                          <span className="text-xs text-slate-400 block truncate">
+                          <span className="text-xs text-slate-400 dark:text-slate-500 block truncate">
                             {cust.email || cust.phone || `Wallet #${cust.browserId.slice(0, 8)}`}
                           </span>
                         </div>
@@ -469,30 +469,30 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                     </td>
 
                     <td className="py-3.5 px-4 text-center">
-                      <span className={`font-bold ${isReturning ? "text-emerald-700" : "text-slate-700"}`}>
+                      <span className={`font-bold ${isReturning ? "text-emerald-700 dark:text-emerald-400" : "text-slate-700 dark:text-slate-300"}`}>
                         {cust.totalVisits}
                       </span>
                     </td>
 
                     <td className="py-3.5 px-4 text-center">
-                      <span className="inline-flex items-center gap-1 font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200/60 text-xs">
-                        <Award className="w-3 h-3 text-teal-600" />
+                      <span className="inline-flex items-center gap-1 font-bold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 px-2 py-0.5 rounded-full border border-teal-200/60 dark:border-teal-800/50 text-xs">
+                        <Award className="w-3 h-3 text-teal-600 dark:text-teal-400" />
                         <span>{cust.stampsBalance}</span>
                       </span>
                     </td>
 
                     <td className="py-3.5 px-4 text-center">
                       {cust.activeRewards > 0 ? (
-                        <span className="inline-flex items-center gap-1 font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60 text-xs">
-                          <Gift className="w-3 h-3 text-amber-600" />
+                        <span className="inline-flex items-center gap-1 font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full border border-amber-200/60 dark:border-amber-800/50 text-xs">
+                          <Gift className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                           <span>{cust.activeRewards} available</span>
                         </span>
                       ) : (
-                        <span className="text-slate-400 text-xs">0</span>
+                        <span className="text-slate-400 dark:text-slate-500 text-xs">0</span>
                       )}
                     </td>
 
-                    <td className="py-3.5 px-4 text-slate-500 text-xs whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">
                       <div>
                         <span className="block">
                           {new Date(cust.lastVisit).toLocaleDateString("en-US", {
@@ -500,7 +500,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                             day: "numeric",
                           })}
                         </span>
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">
                           {new Date(cust.lastVisit).toLocaleTimeString("en-US", {
                             hour: "numeric",
                             minute: "2-digit",
@@ -518,7 +518,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                     </td>
 
                     <td className="py-3.5 px-4 text-right">
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700 group-hover:text-teal-900">
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700 dark:text-teal-400 group-hover:text-teal-900 dark:group-hover:text-teal-300">
                         <span>Profile</span>
                         <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                       </span>
@@ -532,7 +532,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
 
         {/* Table Footer */}
         {filteredCustomers.length > 0 && (
-          <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/40 flex items-center justify-between text-xs text-slate-400">
+          <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-850 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
             <span>
               Showing {filteredCustomers.length} of {initialCustomers.length} guests
               {datePeriod !== "all" || searchQuery || activeFilter !== "all" ? " (filtered)" : ""}
@@ -547,15 +547,15 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
       {/* Slide-Over Customer Profile Drawer */}
       {selectedCustomer && (
         <div
-          className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex justify-end transition-all"
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex justify-end transition-all"
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedCustomer(null); }}
         >
-          <div className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col justify-between overflow-hidden animate-in slide-in-from-right duration-200">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col justify-between overflow-hidden animate-in slide-in-from-right duration-200">
             {/* Drawer Header */}
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-3.5">
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-200 text-teal-800 font-bold text-base flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/40 text-teal-800 dark:text-teal-300 font-bold text-base flex items-center justify-center shrink-0 shadow-sm">
                     {selectedCustomer.name
                       .split(" ")
                       .map((n) => n[0])
@@ -564,13 +564,13 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                       .slice(0, 2)}
                   </div>
                   {selectedCustomer.totalVisits > 1 && (
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center border-2 border-white">
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center border-2 border-white dark:border-slate-900">
                       <Repeat className="w-2.5 h-2.5" />
                     </div>
                   )}
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900 leading-tight">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
                     {selectedCustomer.name}
                   </h3>
                   <div className="flex items-center gap-2 mt-0.5">
@@ -579,7 +579,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                       label={getStatusInfo(selectedCustomer.status).label + " Wallet"}
                       size="sm"
                     />
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-slate-400 dark:text-slate-500">
                       Joined {new Date(selectedCustomer.joinedAt).toLocaleDateString()}
                     </span>
                   </div>
@@ -588,7 +588,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
 
               <button
                 onClick={() => setSelectedCustomer(null)}
-                className="p-2 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-800 hover:bg-slate-200 transition"
+                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
                 aria-label="Close profile drawer"
               >
                 <X className="w-4 h-4" />
@@ -599,53 +599,53 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Quick Metrics */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70 text-center">
-                  <span className="text-[11px] font-semibold text-slate-500 block uppercase">
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700 text-center">
+                  <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block uppercase">
                     Visits
                   </span>
-                  <span className="text-xl font-extrabold text-slate-900 block mt-0.5">
+                  <span className="text-xl font-extrabold text-slate-900 dark:text-white block mt-0.5">
                     {selectedCustomer.totalVisits}
                   </span>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-teal-50/60 border border-teal-200/70 text-center">
-                  <span className="text-[11px] font-semibold text-teal-700 block uppercase">
+                <div className="p-3.5 rounded-xl bg-teal-50/60 dark:bg-teal-950/40 border border-teal-200/70 dark:border-teal-800/40 text-center">
+                  <span className="text-[11px] font-semibold text-teal-700 dark:text-teal-400 block uppercase">
                     Stamps
                   </span>
-                  <span className="text-xl font-extrabold text-teal-900 block mt-0.5">
+                  <span className="text-xl font-extrabold text-teal-900 dark:text-teal-200 block mt-0.5">
                     {selectedCustomer.stampsBalance}
                   </span>
-                  <span className="text-[10px] text-teal-600">
+                  <span className="text-[10px] text-teal-600 dark:text-teal-400">
                     {selectedCustomer.lifetimeStamps} lifetime
                   </span>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/70 text-center">
-                  <span className="text-[11px] font-semibold text-amber-700 block uppercase">
+                <div className="p-3.5 rounded-xl bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/40 text-center">
+                  <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 block uppercase">
                     Perks
                   </span>
-                  <span className="text-xl font-extrabold text-amber-900 block mt-0.5">
+                  <span className="text-xl font-extrabold text-amber-900 dark:text-amber-200 block mt-0.5">
                     {selectedCustomer.activeRewards}
                   </span>
                 </div>
               </div>
 
               {/* Contact Information */}
-              <div className="p-4 rounded-xl border border-slate-200/80 bg-white space-y-2.5">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+              <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-850 space-y-2.5">
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
                   Contact & Hardware Identifier
                 </span>
-                <div className="space-y-1.5 text-xs text-slate-600">
+                <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
                   <div className="flex items-center gap-2">
-                    <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <Mail className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                     <span>{selectedCustomer.email || "No email on record"}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <Phone className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                     <span>{selectedCustomer.phone || "No phone on record"}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Smartphone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <Smartphone className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                     <span className="font-mono text-[11px] truncate">
                       UUID: {selectedCustomer.browserId}
                     </span>
@@ -654,23 +654,23 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
               </div>
 
               {/* Visit timeline summary */}
-              <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/60">
+              <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-200/60 dark:border-emerald-800/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-4 h-4 text-emerald-600" />
-                  <span className="text-xs font-bold text-emerald-800">Visit Timeline</span>
+                  <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">Visit Timeline</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div>
-                    <span className="text-emerald-600 font-semibold block">First Visit</span>
-                    <span className="text-slate-700 font-medium">
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold block">First Visit</span>
+                    <span className="text-slate-700 dark:text-slate-300 font-medium">
                       {new Date(selectedCustomer.joinedAt).toLocaleDateString("en-US", {
                         month: "short", day: "numeric", year: "numeric",
                       })}
                     </span>
                   </div>
                   <div>
-                    <span className="text-emerald-600 font-semibold block">Last Visit</span>
-                    <span className="text-slate-700 font-medium">
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold block">Last Visit</span>
+                    <span className="text-slate-700 dark:text-slate-300 font-medium">
                       {new Date(selectedCustomer.lastVisit).toLocaleDateString("en-US", {
                         month: "short", day: "numeric", year: "numeric",
                       })}
@@ -682,23 +682,23 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
               {/* Feedback Section */}
               {selectedCustomer.feedbacks.length > 0 && (
                 <div className="space-y-2.5">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
                     Feedback ({selectedCustomer.feedbacks.length})
                   </span>
                   {selectedCustomer.feedbacks.map((f) => (
-                    <div key={f.id} className="p-3.5 rounded-xl border border-slate-200/80 bg-white">
+                    <div key={f.id} className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-850">
                       <div className="flex items-center gap-1 mb-1">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-3.5 h-3.5 ${i < f.rating ? "text-amber-400 fill-amber-400" : "text-slate-200"}`}
+                            className={`w-3.5 h-3.5 ${i < f.rating ? "text-amber-400 fill-amber-400" : "text-slate-200 dark:text-slate-700"}`}
                           />
                         ))}
-                        <span className="text-[10px] text-slate-400 ml-2">
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-2">
                           {new Date(f.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-600 line-clamp-3">{f.message}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3">{f.message}</p>
                     </div>
                   ))}
                 </div>
@@ -706,25 +706,25 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
 
               {/* Rewards Unlocked */}
               <div className="space-y-2.5">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
                   Reward Milestones ({selectedCustomer.rewards.length})
                 </span>
 
                 {selectedCustomer.rewards.length === 0 ? (
-                  <p className="text-xs text-slate-400 p-4 bg-slate-50 rounded-xl text-center">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-center">
                     No milestone rewards unlocked yet.
                   </p>
                 ) : (
                   selectedCustomer.rewards.map((r) => (
                     <div
                       key={r.id}
-                      className="p-3.5 rounded-xl border border-slate-200/80 bg-white flex items-center justify-between shadow-sm"
+                      className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-850 flex items-center justify-between shadow-sm"
                     >
                       <div className="flex items-center gap-3">
-                        <Gift className="w-4 h-4 text-teal-600" />
+                        <Gift className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                         <div>
-                          <p className="text-xs font-semibold text-slate-900">{r.title}</p>
-                          <p className="text-[10px] text-slate-400">
+                          <p className="text-xs font-semibold text-slate-900 dark:text-white">{r.title}</p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500">
                             Unlocked {new Date(r.unlockedAt).toLocaleDateString()}
                           </p>
                         </div>
@@ -741,12 +741,12 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
 
               {/* Stamp Transaction History Timeline */}
               <div className="space-y-2.5">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
                   Ledger History ({selectedCustomer.transactions.length})
                 </span>
 
                 {selectedCustomer.transactions.length === 0 ? (
-                  <p className="text-xs text-slate-400 p-4 bg-slate-50 rounded-xl text-center">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-center">
                     No transactions recorded yet.
                   </p>
                 ) : (
@@ -754,20 +754,20 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                     {selectedCustomer.transactions.map((txn) => (
                       <div
                         key={txn.id}
-                        className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between text-xs"
+                        className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 flex items-center justify-between text-xs"
                       >
                         <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                          <span className="font-medium text-slate-800">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                          <span className="font-medium text-slate-800 dark:text-slate-200">
                             {txn.type.replace(/_/g, " ")}
                           </span>
                           {txn.quantity > 1 && (
-                            <span className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded-full text-slate-600 font-bold">
+                            <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-full text-slate-600 dark:text-slate-300 font-bold">
                               ×{txn.quantity}
                             </span>
                           )}
                         </div>
-                        <span className="text-slate-400 text-[11px]">
+                        <span className="text-slate-400 dark:text-slate-500 text-[11px]">
                           {new Date(txn.createdAt).toLocaleDateString()}
                         </span>
                       </div>
@@ -778,7 +778,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
             </div>
 
             {/* Drawer Footer */}
-            <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850 flex justify-end">
               <Button variant="outline" size="sm" onClick={() => setSelectedCustomer(null)}>
                 Close Drawer
               </Button>
@@ -795,13 +795,13 @@ function KPICard({ icon, iconBg, label, value, sub }: {
   icon: React.ReactNode; iconBg: string; label: string; value: string | number; sub: string;
 }) {
   return (
-    <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
       <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center mb-2.5`}>
         {icon}
       </div>
-      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{label}</div>
-      <div className="text-xl font-black text-slate-900 tracking-tight mt-0.5">{value}</div>
-      <div className="text-[11px] text-slate-400 mt-1">{sub}</div>
+      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</div>
+      <div className="text-xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">{value}</div>
+      <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">{sub}</div>
     </div>
   );
 }

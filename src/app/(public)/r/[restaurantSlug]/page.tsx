@@ -43,7 +43,7 @@ export default async function RestaurantGuestPage({
   }
 
   return (
-    <div className="flex-1 flex flex-col justify-between bg-surface">
+    <div className="flex-1 flex flex-col justify-between bg-surface dark:bg-slate-900 transition-colors">
       {/* Client telemetry tracker for page view */}
       <GuestHubTracker restaurantId={restaurant.id} />
 
@@ -72,7 +72,7 @@ export default async function RestaurantGuestPage({
 
         {/* Action Prompt Header */}
         <div className="px-5 pt-5 pb-2">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-600">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
             Quick Actions
           </h2>
         </div>

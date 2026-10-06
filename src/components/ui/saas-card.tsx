@@ -22,9 +22,9 @@ export function SaaSCard({
   ...props
 }: SaaSCardProps) {
   const variants = {
-    default: "bg-white border border-slate-200/80 shadow-card",
-    muted: "bg-slate-50/70 border border-slate-200/60 shadow-none",
-    elevated: "bg-white border border-slate-200/80 shadow-card-hover",
+    default: "bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-card text-slate-900 dark:text-slate-100",
+    muted: "bg-slate-50/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 shadow-none text-slate-800 dark:text-slate-200",
+    elevated: "bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-card-hover text-slate-900 dark:text-slate-100",
   };
 
   const paddings = {
@@ -74,7 +74,7 @@ export function SaaSCardHeader({
   return (
     <div
       className={cn(
-        "flex items-start justify-between gap-4 pb-4 border-b border-slate-100 mb-5",
+        "flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800 mb-5",
         className
       )}
       {...props}
@@ -83,12 +83,12 @@ export function SaaSCardHeader({
         <>
           <div className="space-y-1">
             {title && (
-              <h3 className="text-base font-semibold text-slate-900 tracking-tight">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 tracking-tight">
                 {title}
               </h3>
             )}
             {subtitle && (
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                 {subtitle}
               </p>
             )}

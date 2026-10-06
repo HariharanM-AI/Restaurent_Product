@@ -454,39 +454,39 @@ export function ActionsManagerList({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       {/* Header */}
       <div>
-        <nav className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-2.5">
-          <Link href="/admin" className="hover:text-slate-800 transition">
+        <nav className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium mb-2.5">
+          <Link href="/admin" className="hover:text-slate-800 dark:hover:text-slate-200 transition">
             Restaurants
           </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+          <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
           <Link
             href={`/admin/restaurants/${restaurantId}/dashboard`}
-            className="hover:text-slate-800 transition"
+            className="hover:text-slate-800 dark:hover:text-slate-200 transition"
           >
             {restaurantName}
           </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-          <span className="text-slate-700 font-semibold">Actions</span>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+          <span className="text-slate-700 dark:text-slate-300 font-semibold">Actions</span>
         </nav>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
                 Guest Action Cards
               </h1>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#E6F7F2] text-[#0A7E6C] border border-[#BCE8DB]">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#E6F7F2] dark:bg-emerald-950/40 text-[#0A7E6C] dark:text-emerald-400 border border-[#BCE8DB] dark:border-emerald-800">
                 <span className="w-2 h-2 rounded-full bg-[#10B981]" />
                 {activeCount} Active
               </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                 {actions.length} Total
               </span>
             </div>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
               Add, configure, reorder, or toggle quick actions visible to dining guests on their mobile landing hub.
             </p>
           </div>
@@ -495,7 +495,7 @@ export function ActionsManagerList({
             {/* View Templates Button — prominent */}
             <button
               onClick={() => setIsTemplateModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50 text-[#0A7E6C] hover:bg-emerald-100 text-xs font-semibold transition shadow-xs"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-[#0A7E6C] dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-xs font-semibold transition shadow-xs"
             >
               <LayoutTemplate className="w-4 h-4" />
               <span>View Templates</span>
@@ -505,7 +505,7 @@ export function ActionsManagerList({
               href={`/r/${restaurantSlug}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition shadow-xs"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold transition shadow-xs"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               <span>Preview Hub</span>
@@ -513,7 +513,7 @@ export function ActionsManagerList({
 
             <button
               onClick={openCreateModal}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#072C27] hover:bg-[#0E473F] text-white text-xs font-semibold transition shadow-sm"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#072C27] dark:bg-emerald-700 hover:bg-[#0E473F] dark:hover:bg-emerald-600 text-white text-xs font-semibold transition shadow-sm"
             >
               <Plus className="w-4 h-4" />
               <span>Add Action Card</span>
@@ -524,27 +524,27 @@ export function ActionsManagerList({
 
       {/* Success / Error Messages */}
       {successMessage && (
-        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-2 animate-in fade-in duration-200">
+        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2 animate-in fade-in duration-200">
           <Check className="w-4 h-4" />
           {successMessage}
         </div>
       )}
       {errorMessage && !isModalOpen && !isTemplateModalOpen && (
-        <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-2">
+        <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs font-semibold flex items-center gap-2">
           <AlertTriangle className="w-4 h-4" />
           {errorMessage}
-          <button onClick={() => setErrorMessage(null)} className="ml-auto text-red-500 hover:text-red-700">
+          <button onClick={() => setErrorMessage(null)} className="ml-auto text-red-500 hover:text-red-700 dark:hover:text-red-300">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
       {/* Main Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-7">
+      <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 sm:p-7">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div>
-            <h2 className="text-base font-bold text-slate-900">Guest Touchpoint Actions</h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">Guest Touchpoint Actions</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Manage the interactive cards displayed on the mobile dining hub.
             </p>
           </div>
@@ -558,7 +558,7 @@ export function ActionsManagerList({
                   placeholder="Search actions..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 w-40"
+                  className="pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 w-40"
                 />
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               </div>
@@ -566,7 +566,7 @@ export function ActionsManagerList({
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="px-2.5 py-1.5 text-xs rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold"
+                className="px-2.5 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold"
               >
                 <option value="ALL">All Types</option>
                 {uniqueTypes.map((t) => (
@@ -600,7 +600,7 @@ export function ActionsManagerList({
               }
             />
           ) : filteredActions.length === 0 ? (
-            <div className="py-8 text-center text-sm text-slate-400">
+            <div className="py-8 text-center text-sm text-slate-400 dark:text-slate-500">
               No actions match your search.
             </div>
           ) : (
@@ -609,10 +609,10 @@ export function ActionsManagerList({
                 key={action.id}
                 className={`p-4 rounded-xl border transition-all duration-150 ${
                   deleteConfirmId === action.id
-                    ? "bg-red-50/50 border-red-200 ring-1 ring-red-200"
+                    ? "bg-red-50/50 dark:bg-red-950/40 border-red-200 dark:border-red-800 ring-1 ring-red-200"
                     : action.enabled
-                    ? "bg-white border-slate-200/90 shadow-xs hover:border-slate-300 hover:shadow-sm"
-                    : "bg-slate-50/70 border-slate-200/60 opacity-60"
+                    ? "bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm"
+                    : "bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/60 dark:border-slate-800/60 opacity-60"
                 }`}
               >
                 {/* Delete confirmation bar */}
@@ -621,14 +621,14 @@ export function ActionsManagerList({
                     <div className="flex items-center gap-3 text-sm">
                       <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
                       <div>
-                        <span className="font-bold text-red-800">Delete "{action.title}"?</span>
-                        <span className="text-red-600 text-xs ml-2">This action cannot be undone.</span>
+                        <span className="font-bold text-red-800 dark:text-red-300">Delete "{action.title}"?</span>
+                        <span className="text-red-600 dark:text-red-400 text-xs ml-2">This action cannot be undone.</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => setDeleteConfirmId(null)}
-                        className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition"
                       >
                         Cancel
                       </button>
@@ -660,44 +660,44 @@ export function ActionsManagerList({
 
                       <div className="min-w-0 space-y-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-bold text-sm text-slate-900 truncate">
+                          <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate">
                             {action.title}
                           </h3>
 
                           {action.badge ? (
-                            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
+                            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shadow-2xs">
                               Badge: {action.badge}
                             </span>
                           ) : (
-                            <span className="text-[10px] text-slate-400 italic">
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 italic">
                               No badge
                             </span>
                           )}
 
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 uppercase tracking-wider border border-slate-200/80">
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 uppercase tracking-wider border border-slate-200/80 dark:border-slate-700">
                             Type: {action.type}
                           </span>
                         </div>
 
                         {action.description && (
-                          <p className="text-xs text-slate-500 line-clamp-1">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
                             {action.description}
                           </p>
                         )}
 
                         {action.url && (
-                          <div className="flex items-center gap-1.5 text-xs text-[#0A7E6C] font-mono">
+                          <div className="flex items-center gap-1.5 text-xs text-[#0A7E6C] dark:text-emerald-400 font-mono">
                             <span className="truncate max-w-[280px] sm:max-w-md">
                               {action.url}
                             </span>
                             <button
                               type="button"
                               onClick={() => handleCopyLink(action)}
-                              className="text-slate-400 hover:text-[#0A7E6C] transition p-0.5"
+                              className="text-slate-400 hover:text-[#0A7E6C] dark:hover:text-emerald-400 transition p-0.5"
                               title="Copy destination URL"
                             >
                               {copiedId === action.id ? (
-                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                               ) : (
                                 <Copy className="w-3.5 h-3.5" />
                               )}
@@ -717,7 +717,7 @@ export function ActionsManagerList({
                           aria-checked={action.enabled}
                           onClick={() => handleToggleEnabled(action)}
                           className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#0E473F] focus:ring-offset-2 ${
-                            action.enabled ? "bg-[#0E473F]" : "bg-slate-300"
+                            action.enabled ? "bg-[#0E473F] dark:bg-emerald-600" : "bg-slate-300 dark:bg-slate-700"
                           }`}
                         >
                           <span
@@ -728,7 +728,7 @@ export function ActionsManagerList({
                         </button>
                         <span
                           className={`text-xs font-semibold min-w-[52px] ${
-                            action.enabled ? "text-slate-900" : "text-slate-400"
+                            action.enabled ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500"
                           }`}
                         >
                           {action.enabled ? "Active" : "Disabled"}
@@ -739,7 +739,7 @@ export function ActionsManagerList({
                       <button
                         onClick={() => handleMove(idx, "up")}
                         disabled={idx === 0}
-                        className="w-8 h-8 rounded-lg border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center disabled:opacity-30 transition"
+                        className="w-8 h-8 rounded-lg border border-slate-200/90 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center disabled:opacity-30 transition"
                         title="Move Up"
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
@@ -749,7 +749,7 @@ export function ActionsManagerList({
                       <button
                         onClick={() => handleMove(idx, "down")}
                         disabled={idx === filteredActions.length - 1}
-                        className="w-8 h-8 rounded-lg border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center disabled:opacity-30 transition"
+                        className="w-8 h-8 rounded-lg border border-slate-200/90 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center disabled:opacity-30 transition"
                         title="Move Down"
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
@@ -758,7 +758,7 @@ export function ActionsManagerList({
                       {/* Edit */}
                       <button
                         onClick={() => openEditModal(action)}
-                        className="w-8 h-8 rounded-lg border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center transition"
+                        className="w-8 h-8 rounded-lg border border-slate-200/90 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition"
                         title="Edit Action"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
@@ -768,7 +768,7 @@ export function ActionsManagerList({
                       <button
                         onClick={() => handleDuplicate(action)}
                         disabled={isLoading}
-                        className="w-8 h-8 rounded-lg border border-slate-200/90 text-slate-500 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center transition disabled:opacity-40"
+                        className="w-8 h-8 rounded-lg border border-slate-200/90 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition disabled:opacity-40"
                         title="Duplicate Action"
                       >
                         <Copy className="w-3.5 h-3.5" />
@@ -777,7 +777,7 @@ export function ActionsManagerList({
                       {/* Delete */}
                       <button
                         onClick={() => setDeleteConfirmId(action.id)}
-                        className="w-8 h-8 rounded-lg border border-slate-200/90 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-200 flex items-center justify-center transition"
+                        className="w-8 h-8 rounded-lg border border-slate-200/90 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 hover:border-red-200 dark:hover:border-red-800 flex items-center justify-center transition"
                         title="Delete Action"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -792,7 +792,7 @@ export function ActionsManagerList({
 
         {/* Action count footer */}
         {actions.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-between">
+          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 dark:text-slate-500 flex items-center justify-between">
             <span>
               Showing {filteredActions.length} of {actions.length} actions
               {searchQuery || typeFilter !== "ALL" ? " (filtered)" : ""}
@@ -803,16 +803,16 @@ export function ActionsManagerList({
       </div>
 
       {/* Bottom CTA Card */}
-      <div className="bg-[#EAF6F3] border border-[#BCE8DC] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-[#EAF6F3] dark:bg-slate-900/90 border border-[#BCE8DC] dark:border-emerald-800/60 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-full bg-[#0A7E6C]/15 text-[#0A7E6C] flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-full bg-[#0A7E6C]/15 dark:bg-emerald-950/40 text-[#0A7E6C] dark:text-emerald-400 flex items-center justify-center shrink-0">
             <Lightbulb className="w-5 h-5" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-slate-900">
+            <h4 className="text-sm font-bold text-slate-900 dark:text-white">
               Create memorable guest experiences
             </h4>
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-slate-600 dark:text-slate-400">
               Show the right actions at the right time to engage your guests and drive loyalty.
             </p>
           </div>
@@ -821,7 +821,7 @@ export function ActionsManagerList({
         <button
           type="button"
           onClick={() => setIsTemplateModalOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0A7E6C] text-white text-xs font-bold hover:bg-[#0E473F] transition shadow-sm"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0A7E6C] dark:bg-emerald-600 text-white text-xs font-bold hover:bg-[#0E473F] dark:hover:bg-emerald-700 transition shadow-sm"
         >
           <LayoutTemplate className="w-4 h-4" />
           <span>Explore Templates</span>
@@ -831,24 +831,24 @@ export function ActionsManagerList({
       {/* ─── Template Modal ─── */}
       {isTemplateModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-xl bg-white rounded-2xl p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+          <div className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
               <div>
-                <h3 className="font-bold text-base text-slate-900">Action Card Templates</h3>
-                <p className="text-xs text-slate-500">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">Action Card Templates</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Quickly add standard hospitality action cards to your dining hub.
                 </p>
               </div>
               <button
                 onClick={() => { setIsTemplateModalOpen(false); setErrorMessage(null); }}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {errorMessage && (
-              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-700 text-xs rounded-xl flex items-center gap-2">
+              <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-xs rounded-xl flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
@@ -862,28 +862,28 @@ export function ActionsManagerList({
                     key={i}
                     className={`p-3.5 rounded-xl border transition flex flex-col justify-between gap-3 ${
                       alreadyAdded
-                        ? "bg-slate-50 border-slate-200/60 opacity-60"
-                        : "bg-white border-slate-200/90 hover:border-[#0E473F] hover:bg-emerald-50/20"
+                        ? "bg-slate-50 dark:bg-slate-800/40 border-slate-200/60 dark:border-slate-700/60 opacity-60"
+                        : "bg-white dark:bg-slate-800/80 border-slate-200/90 dark:border-slate-700 hover:border-[#0E473F] dark:hover:border-emerald-500 hover:bg-emerald-50/20"
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-emerald-50 text-[#0A7E6C] border border-emerald-200 flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[#0A7E6C] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0">
                         <IconRenderer name={tmpl.icon} className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-slate-900">{tmpl.title}</h4>
-                        <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">{tmpl.title}</h4>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">
                           {tmpl.description}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700">
                       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${getBadgeColor(tmpl.type)}`}>
                         {tmpl.type}
                       </span>
                       {alreadyAdded ? (
-                        <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
+                        <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 flex items-center gap-1">
                           <Check className="w-3.5 h-3.5" />
                           Already added
                         </span>
@@ -892,7 +892,7 @@ export function ActionsManagerList({
                           type="button"
                           disabled={isLoading}
                           onClick={() => handleAddFromTemplate(tmpl)}
-                          className="px-2.5 py-1 rounded-lg bg-[#072C27] hover:bg-[#0E473F] text-white text-[11px] font-semibold transition disabled:opacity-50"
+                          className="px-2.5 py-1 rounded-lg bg-[#072C27] dark:bg-emerald-700 hover:bg-[#0E473F] dark:hover:bg-emerald-600 text-white text-[11px] font-semibold transition disabled:opacity-50"
                         >
                           + Add Card
                         </button>
@@ -909,16 +909,16 @@ export function ActionsManagerList({
       {/* ─── Create/Edit Modal ─── */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full max-w-lg bg-white rounded-t-[28px] sm:rounded-2xl shadow-2xl border border-slate-200 flex flex-col max-h-[92dvh] sm:max-h-[85vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-t-[28px] sm:rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[92dvh] sm:max-h-[85vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Pinned Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0 bg-white">
-              <h3 className="font-bold text-base text-slate-900">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900">
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">
                 {editingAction ? "Edit Action Card" : "Add New Action Card"}
               </h3>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -926,7 +926,7 @@ export function ActionsManagerList({
 
             {/* Error banner */}
             {errorMessage && (
-              <div className="mx-5 mt-3 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2 shrink-0">
+              <div className="mx-5 mt-3 p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs rounded-xl flex items-center gap-2 shrink-0">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
@@ -945,7 +945,7 @@ export function ActionsManagerList({
             >
               <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3.5 text-xs">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1" htmlFor="action-title">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1" htmlFor="action-title">
                     Action Title
                   </label>
                   <input
@@ -955,7 +955,7 @@ export function ActionsManagerList({
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="e.g. View Menu"
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs text-xs sm:text-sm font-medium"
+                    className="w-full h-10 px-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs text-xs sm:text-sm font-medium"
                   />
                   {title && isDuplicate(title, editingAction?.id) && (
                     <p className="mt-1 text-red-500 text-[11px] font-medium flex items-center gap-1">
@@ -966,7 +966,7 @@ export function ActionsManagerList({
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1" htmlFor="action-desc">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1" htmlFor="action-desc">
                     Short Description
                   </label>
                   <input
@@ -975,14 +975,14 @@ export function ActionsManagerList({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="e.g. Explore our seasonal farm-to-table dishes"
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs text-xs sm:text-sm"
+                    className="w-full h-10 px-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs text-xs sm:text-sm"
                   />
                 </div>
 
                 {/* Icon Picker */}
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Select Icon</label>
-                  <div className="grid grid-cols-6 gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl max-h-28 overflow-y-auto">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Select Icon</label>
+                  <div className="grid grid-cols-6 gap-2 p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl max-h-28 overflow-y-auto">
                     {AVAILABLE_ICONS.map((ic) => (
                       <button
                         key={ic}
@@ -990,8 +990,8 @@ export function ActionsManagerList({
                         onClick={() => setIcon(ic)}
                         className={`p-2 rounded-xl flex items-center justify-center transition ${
                           icon === ic
-                            ? "bg-[#072C27] text-white shadow-sm"
-                            : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/60"
+                            ? "bg-[#072C27] dark:bg-emerald-700 text-white shadow-sm"
+                            : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200/60 dark:border-slate-600"
                         }`}
                         title={ic}
                       >
@@ -1003,14 +1003,14 @@ export function ActionsManagerList({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1" htmlFor="action-type">
+                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1" htmlFor="action-type">
                       Action Type
                     </label>
                     <select
                       id="action-type"
                       value={type}
                       onChange={(e) => setType(e.target.value)}
-                      className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs text-xs sm:text-sm"
+                      className="w-full h-10 px-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs text-xs sm:text-sm"
                     >
                       <option value="MENU">MENU</option>
                       <option value="REWARDS">REWARDS</option>
@@ -1024,7 +1024,7 @@ export function ActionsManagerList({
                   </div>
 
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1" htmlFor="action-badge">
+                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1" htmlFor="action-badge">
                       Badge (Optional)
                     </label>
                     <input
@@ -1033,13 +1033,13 @@ export function ActionsManagerList({
                       value={badge}
                       onChange={(e) => setBadge(e.target.value)}
                       placeholder="Optional"
-                      className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs text-xs sm:text-sm"
+                      className="w-full h-10 px-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs text-xs sm:text-sm"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1" htmlFor="action-url">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1" htmlFor="action-url">
                     Destination URL
                   </label>
                   <input
@@ -1048,20 +1048,20 @@ export function ActionsManagerList({
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder={`/r/${restaurantSlug}/menu or https://...`}
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs font-mono text-xs sm:text-sm"
+                    className="w-full h-10 px-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0E473F] shadow-xs font-mono text-xs sm:text-sm"
                   />
                 </div>
               </div>
 
               {/* Pinned Footer */}
-              <div className="px-5 py-3.5 border-t border-slate-100 bg-white sm:bg-slate-50/60 flex items-center justify-end gap-2.5 shrink-0">
+              <div className="px-5 py-3.5 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 sm:bg-slate-50/60 dark:sm:bg-slate-800/60 flex items-center justify-end gap-2.5 shrink-0">
                 <Button type="button" variant="ghost" size="sm" onClick={() => setIsModalOpen(false)}>
                   Cancel
                 </Button>
                 <button
                   type="submit"
                   disabled={isLoading || (!!title && isDuplicate(title, editingAction?.id))}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#072C27] hover:bg-[#0E473F] text-white text-xs font-semibold transition shadow-sm disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#072C27] dark:bg-emerald-700 hover:bg-[#0E473F] dark:hover:bg-emerald-600 text-white text-xs font-semibold transition shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <Check className="w-3.5 h-3.5" />
