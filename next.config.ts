@@ -4,6 +4,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   reactStrictMode: true,
+  transpilePackages: ["framer-motion", "motion"],
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },

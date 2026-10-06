@@ -806,7 +806,11 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                   }}
                   className="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-800 dark:text-white font-bold text-xs border border-slate-200 dark:border-white/10 flex items-center justify-center gap-2 transition"
                 >
-                  <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  {profileImage ? (
+                    <img src={profileImage} alt={profileName} className="w-4 h-4 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  )}
                   <span>{profileName} (Profile)</span>
                 </button>
                 <button
