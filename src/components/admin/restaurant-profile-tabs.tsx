@@ -140,13 +140,17 @@ function FieldLabel({
   iconClassName?: string;
 }) {
   return (
-    <div className="flex items-center justify-between mb-1.5">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-2 mb-1.5">
       <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200">
-        {Icon && <Icon className={`w-3.5 h-3.5 ${iconClassName}`} />}
+        {Icon && <Icon className={`w-3.5 h-3.5 shrink-0 ${iconClassName}`} />}
         <span>{label}</span>
         {required && <span className="text-red-500 font-bold">*</span>}
       </label>
-      {hint && <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">{hint}</span>}
+      {hint && (
+        <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal leading-normal">
+          {hint}
+        </span>
+      )}
     </div>
   );
 }
@@ -651,14 +655,14 @@ export function RestaurantProfileTabs({
                 {/* Admin Profile Photo Upload (Appears as admin profile image) */}
                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
                   <FieldLabel icon={User} label="Admin Profile Photo" hint="Appears as admin avatar across dashboard" />
-                  <div className="p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-1">
-                    <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mt-1">
+                    <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 w-full sm:w-auto">
                       <div className="relative shrink-0">
-                        <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-emerald-500/40 shadow-xs flex items-center justify-center overflow-hidden">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-emerald-500/40 shadow-xs flex items-center justify-center overflow-hidden">
                           {adminPhotoUrl ? (
                             <img src={adminPhotoUrl} alt="Admin Profile" className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-bold text-base flex items-center justify-center">
+                            <div className="w-full h-full bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-bold text-sm sm:text-base flex items-center justify-center">
                               {adminInitials}
                             </div>
                           )}
@@ -670,22 +674,22 @@ export function RestaurantProfileTabs({
                         )}
                       </div>
 
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block truncate">
                           {adminUser?.name || "Admin Account Photo"}
                         </span>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate">
-                          JPG, PNG, WebP up to 10MB • Appears in navigation & profile
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block leading-snug mt-0.5">
+                          PNG, JPG, or WebP up to 10MB
                         </span>
                         {adminPhotoError && (
-                          <span className="text-xs text-red-600 dark:text-red-400 block mt-0.5 font-medium">
+                          <span className="text-xs text-red-600 dark:text-red-400 block mt-1 font-medium leading-tight">
                             {adminPhotoError}
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center flex-wrap sm:flex-nowrap gap-2 w-full sm:w-auto shrink-0 pt-2 sm:pt-0">
+                    <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 pt-1 sm:pt-0">
                       <input
                         ref={adminPhotoInputRef}
                         type="file"
@@ -702,7 +706,7 @@ export function RestaurantProfileTabs({
                         size="sm"
                         disabled={isUploadingAdminPhoto}
                         onClick={() => adminPhotoInputRef.current?.click()}
-                        className="flex-1 sm:flex-none justify-center dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 cursor-pointer"
+                        className="flex-1 sm:flex-initial justify-center dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 cursor-pointer text-xs"
                         icon={
                           isUploadingAdminPhoto ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -724,7 +728,7 @@ export function RestaurantProfileTabs({
                           size="sm"
                           disabled={isUploadingAdminPhoto}
                           onClick={handleRemoveAdminPhoto}
-                          className="flex-1 sm:flex-none justify-center text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30 cursor-pointer"
+                          className="flex-1 sm:flex-initial justify-center text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30 cursor-pointer text-xs"
                           icon={<Trash2 className="w-3.5 h-3.5" />}
                         >
                           Remove
@@ -744,15 +748,11 @@ export function RestaurantProfileTabs({
               <div className="space-y-6 pt-2">
                 {/* Logo Upload Zone */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <ImageIcon className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                      <span>Restaurant Logo</span>
-                    </span>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
-                      Square 1:1 recommended, PNG, JPG, SVG, WebP up to 10MB
-                    </span>
-                  </label>
+                  <FieldLabel
+                    icon={ImageIcon}
+                    label="Restaurant Logo"
+                    hint="Square 1:1 recommended, PNG, JPG, SVG, WebP up to 10MB"
+                  />
 
                   <input
                     ref={logoInputRef}
@@ -766,29 +766,29 @@ export function RestaurantProfileTabs({
                   />
 
                   {logoUrl ? (
-                    <div className="p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-4 min-w-0">
-                        <div className="w-16 h-16 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-center overflow-hidden shrink-0">
+                    <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0 w-full sm:w-auto">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-center overflow-hidden shrink-0">
                           <img src={logoUrl} alt="Restaurant Logo" className="w-full h-full object-cover" />
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block truncate">
                             Current Logo Asset
                           </span>
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 block leading-snug mt-0.5">
                             Applied across guest experience & digital receipts
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end pt-1 sm:pt-0">
                         <Button
                           type="button"
                           variant="secondary"
                           size="sm"
                           disabled={isUploadingLogo}
                           onClick={() => logoInputRef.current?.click()}
-                          className="dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                          className="flex-1 sm:flex-initial justify-center dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 cursor-pointer text-xs"
                           icon={
                             isUploadingLogo ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -802,7 +802,7 @@ export function RestaurantProfileTabs({
                         <button
                           type="button"
                           onClick={() => setLogoUrl("")}
-                          className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+                          className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 transition shrink-0 cursor-pointer"
                           title="Remove Logo"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -856,15 +856,11 @@ export function RestaurantProfileTabs({
 
                 {/* Cover Banner Upload Zone */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <ImageIcon className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                      <span>Cover Banner Photography</span>
-                    </span>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
-                      Landscape 16:9 recommended, PNG, JPG, WebP up to 25MB
-                    </span>
-                  </label>
+                  <FieldLabel
+                    icon={ImageIcon}
+                    label="Cover Banner Photography"
+                    hint="Landscape 16:9 recommended, PNG, JPG, WebP up to 25MB"
+                  />
 
                   <input
                     ref={coverInputRef}
@@ -878,26 +874,26 @@ export function RestaurantProfileTabs({
                   />
 
                   {coverImageUrl ? (
-                    <div className="p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl space-y-3">
-                      <div className="w-full h-36 rounded-xl bg-slate-200 dark:bg-slate-900 overflow-hidden relative border border-slate-200 dark:border-slate-700 shadow-xs">
+                    <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl space-y-3">
+                      <div className="w-full h-32 sm:h-36 rounded-xl bg-slate-200 dark:bg-slate-900 overflow-hidden relative border border-slate-200 dark:border-slate-700 shadow-xs">
                         <img
                           src={coverImageUrl}
                           alt="Restaurant Cover Banner"
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
                         <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                           Header photography active on guest hub
                         </span>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
                           <Button
                             type="button"
                             variant="secondary"
                             size="sm"
                             disabled={isUploadingCover}
                             onClick={() => coverInputRef.current?.click()}
-                            className="dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                            className="flex-1 sm:flex-initial justify-center dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 cursor-pointer text-xs"
                             icon={
                               isUploadingCover ? (
                                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -911,7 +907,7 @@ export function RestaurantProfileTabs({
                           <button
                             type="button"
                             onClick={() => setCoverImageUrl("")}
-                            className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+                            className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 transition shrink-0 cursor-pointer"
                             title="Remove Cover Banner"
                           >
                             <Trash2 className="w-4 h-4" />
