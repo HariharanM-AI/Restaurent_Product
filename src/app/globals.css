@@ -4,34 +4,34 @@
 
 @layer base {
   :root {
-    --background: #FFFFFF;
+    --background: #FAF9F6;
     --foreground: #0F172A;
     --muted: #64748B;
     --muted-foreground: #94A3B8;
-    --surface: #F8FAFC;
+    --surface: #FFFFFF;
     --surface-foreground: #0F172A;
-    --border: #E2E8F0;
+    --border: #E8ECEF;
     --primary: #0F766E;
     --brand-primary: #0F766E;
-    --brand-secondary: #F8FAFC;
+    --brand-secondary: #FAF9F6;
     --brand-text: #0F172A;
-    --success: #16A34A;
-    --warning: #D97706;
-    --destructive: #DC2626;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --destructive: #EF4444;
   }
 
   .dark {
-    --background: #0F172A;
-    --foreground: #F1F5F9;
+    --background: #0B0F17;
+    --foreground: #F8FAFC;
     --muted: #94A3B8;
     --muted-foreground: #64748B;
-    --surface: #1E293B;
-    --surface-foreground: #F1F5F9;
-    --border: #334155;
+    --surface: #131B2B;
+    --surface-foreground: #F8FAFC;
+    --border: rgba(255, 255, 255, 0.08);
     --primary: #14B8A6;
     --brand-primary: #14B8A6;
-    --brand-secondary: #1E293B;
-    --brand-text: #F1F5F9;
+    --brand-secondary: #131B2B;
+    --brand-text: #F8FAFC;
   }
 
   * {
@@ -41,9 +41,12 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: "rlig" 1, "calt" 1, "cv02" 1, "cv03" 1, "cv04" 1;
     overflow-x: hidden;
-    min-height: 100vh;
+    min-height: 100dvh;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
@@ -65,5 +68,41 @@ button, a, input, select, textarea {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Agency-grade glassmorphism & surfaces */
+.glass-surface {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+.dark .glass-surface {
+  background: rgba(19, 27, 43, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
+}
+.dark .glass-pill {
+  background: rgba(19, 27, 43, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+}
+
+/* Subtle luxury foil & embossed effects */
+.foil-sheen {
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.15) 100%);
+}
+
+.tab-active-glow {
+  box-shadow: 0 0 20px -3px var(--brand-primary, rgba(15, 118, 110, 0.25));
 }
 

@@ -282,15 +282,17 @@ function KPICard({ icon, iconBg, label, value, change, suffix = "%" }: {
   icon: React.ReactNode; iconBg: string; label: string; value: string; change: number; suffix?: string;
 }) {
   return (
-    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-      <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center mb-3`}>
+    <div className="p-5 sm:p-5.5 rounded-[22px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden flex flex-col justify-between backdrop-blur-xs">
+      <div className={`w-10 h-10 rounded-2xl ${iconBg} flex items-center justify-center mb-3 shadow-xs`}>
         {icon}
       </div>
-      <div className="text-xs font-bold text-slate-500 dark:text-slate-400">{label}</div>
-      <div className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1">{value}</div>
-      <div className="mt-2 flex items-center gap-1.5">
-        <ChangeBadge change={change} suffix={suffix} />
-        <span className="text-[11px] text-slate-400 dark:text-slate-500">vs previous period</span>
+      <div>
+        <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</div>
+        <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1 tabular-nums">{value}</div>
+        <div className="mt-2 flex items-center gap-1.5">
+          <ChangeBadge change={change} suffix={suffix} />
+          <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">vs previous period</span>
+        </div>
       </div>
     </div>
   );
@@ -299,7 +301,7 @@ function KPICard({ icon, iconBg, label, value, change, suffix = "%" }: {
 /* ─── Engagement Funnel ─── */
 function EngagementFunnel({ funnel, totalVisits }: { funnel: AnalyticsAPIData["funnel"]; totalVisits: number }) {
   return (
-    <div className="lg:col-span-8 p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+    <div className="lg:col-span-8 p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Action Engagement Funnel</h2>
@@ -360,7 +362,7 @@ function TouchpointDistribution({ touchpoints }: { touchpoints: AnalyticsAPIData
   ];
 
   return (
-    <div className="lg:col-span-4 p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+    <div className="lg:col-span-4 p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
       <div>
         <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Touchpoint Distribution</h2>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Physical QR vs NFC vs Web Direct</p>
@@ -438,7 +440,7 @@ function VisitTrendsChart({ timeSeries }: { timeSeries: AnalyticsAPIData["timeSe
   }
 
   return (
-    <div className="lg:col-span-2 p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+    <div className="lg:col-span-2 p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
       <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Visit & Interaction Trends</h2>
       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-4">Daily visits vs feature interactions over time.</p>
 
@@ -498,7 +500,7 @@ function HourlyHeatmap({ hours, peakHour }: { hours: number[]; peakHour: number 
   ];
 
   return (
-    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Peak Hours</h2>
@@ -557,7 +559,7 @@ function HourlyHeatmap({ hours, peakHour }: { hours: number[]; peakHour: number 
 /* ─── Insights Card ─── */
 function InsightsCard({ insights }: { insights: AnalyticsAPIData["insights"] }) {
   return (
-    <div className="p-6 rounded-[24px] bg-gradient-to-br from-[#0B3B36] to-[#0E473F] text-white shadow-lg lg:col-span-1 flex flex-col justify-between">
+    <div className="p-6 rounded-[24px] bg-gradient-to-br from-[#0B3B36] to-[#0E473F] text-white shadow-card hover:shadow-card-hover transition-all duration-200 lg:col-span-1 flex flex-col justify-between border border-emerald-500/20 backdrop-blur-xs">
       <div>
         <h2 className="text-base font-extrabold flex items-center gap-2">
           <Zap className="w-4 h-4 text-amber-400" />

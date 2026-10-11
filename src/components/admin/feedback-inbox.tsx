@@ -310,7 +310,7 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
           </div>
 
           {/* 5. Feedback Table (matching uploaded image design) */}
-          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs">
             {/* Filter bar */}
             <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-700">
@@ -481,12 +481,13 @@ function KPICard({
 }) {
   const isPositive = change >= 0;
   return (
-    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-      <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center mb-3`}>
+    <div className="p-5 sm:p-5.5 rounded-[22px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden flex flex-col justify-between backdrop-blur-xs">
+      <div className={`w-10 h-10 rounded-2xl ${iconBg} flex items-center justify-center mb-3 shadow-xs`}>
         {icon}
       </div>
-      <div className="text-xs font-bold text-slate-500 dark:text-slate-400">{label}</div>
-      <div className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1">{value}</div>
+      <div>
+        <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</div>
+        <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1 tabular-nums">{value}</div>
       {change !== 0 ? (
         <div className={`text-xs font-bold mt-2 ${isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
           {isRatingChange ? (
@@ -500,6 +501,7 @@ function KPICard({
       ) : (
         <div className="text-xs font-bold text-slate-400 dark:text-slate-500 mt-2">No previous data</div>
       )}
+      </div>
     </div>
   );
 }
@@ -513,11 +515,12 @@ function TopMentionsCard({ topics }: { topics: FeedbackStatsData["topics"] }) {
     "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400",
   ];
   return (
-    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-      <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-3">
+    <div className="p-5 sm:p-5.5 rounded-[22px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden flex flex-col justify-between backdrop-blur-xs">
+      <div className="w-10 h-10 rounded-2xl bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-3 shadow-xs">
         <MessageSquare className="w-5 h-5" />
       </div>
-      <div className="text-xs font-bold text-slate-500 dark:text-slate-400">Response Insights</div>
+      <div>
+        <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Response Insights</div>
       <div className="text-lg font-black text-slate-900 dark:text-white tracking-tight mt-1">
         {top3.length > 0 ? "Top Mentions" : "No topics yet"}
       </div>
@@ -530,6 +533,7 @@ function TopMentionsCard({ topics }: { topics: FeedbackStatsData["topics"] }) {
             {t.name}
           </span>
         ))}
+      </div>
       </div>
     </div>
   );
@@ -554,7 +558,7 @@ function RatingDistribution({ distribution }: { distribution: FeedbackStatsData[
   };
 
   return (
-    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Rating Distribution</h2>
@@ -610,7 +614,7 @@ function FeedbackTrends({ timeSeries }: { timeSeries: FeedbackStatsData["timeSer
   }
 
   return (
-    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Feedback Trends</h2>
@@ -688,7 +692,7 @@ function TopicsCard({ topics }: { topics: FeedbackStatsData["topics"] }) {
   const maxCount = Math.max(...topics.map(t => t.count), 1);
 
   return (
-    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Common Feedback Topics</h2>

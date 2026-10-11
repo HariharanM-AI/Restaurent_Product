@@ -195,7 +195,7 @@ export function MenuManager({
       {/* Main Form Layout - Full Width across container */}
       <div className="w-full space-y-6">
         {/* Card 1: Guest Action Card Display */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 sm:p-7 space-y-5 w-full overflow-hidden">
+        <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs p-4 sm:p-7 space-y-5 w-full overflow-hidden">
           <div className="flex items-start gap-3.5 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div className="w-10 h-10 rounded-xl bg-[#E6F7F2] dark:bg-emerald-950/60 text-[#0A7E6C] dark:text-emerald-400 border border-[#BCE8DB] dark:border-emerald-800/40 flex items-center justify-center shrink-0">
               <FileText className="w-5 h-5" />
@@ -252,7 +252,7 @@ export function MenuManager({
         </div>
 
         {/* Card 2: Menu Delivery Format */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 sm:p-7 space-y-6 w-full overflow-hidden">
+        <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs p-4 sm:p-7 space-y-6 w-full overflow-hidden">
           <div className="flex items-start gap-3.5 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div className="w-10 h-10 rounded-xl bg-[#E6F7F2] dark:bg-emerald-950/60 text-[#0A7E6C] dark:text-emerald-400 border border-[#BCE8DB] dark:border-emerald-800/40 flex items-center justify-center shrink-0">
               <UtensilsCrossed className="w-5 h-5" />

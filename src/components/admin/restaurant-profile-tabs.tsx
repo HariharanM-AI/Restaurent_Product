@@ -539,9 +539,9 @@ export function RestaurantProfileTabs({
       <button
         type="submit"
         disabled={isSaving}
-        className="inline-flex items-center gap-2.5 px-8 py-3 rounded-2xl bg-[#0A7E6C] hover:bg-[#076254] dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-bold text-sm shadow-lg shadow-teal-900/20 hover:shadow-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+        className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-gradient-to-r from-teal-700 via-teal-600 to-emerald-700 hover:from-teal-600 hover:via-teal-500 hover:to-emerald-600 text-white font-extrabold text-sm shadow-lg shadow-teal-900/25 hover:shadow-xl hover:shadow-teal-900/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 border border-teal-400/30 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
       >
-        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 stroke-[2.5]" />}
         {isSaving ? "Saving Changes..." : "Save Changes"}
       </button>
     </div>
@@ -550,7 +550,7 @@ export function RestaurantProfileTabs({
   return (
     <div className="w-full space-y-6 pb-12">
       {/* Tab Navigation Bar */}
-      <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/70 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-xs">
+      <div className="flex items-center gap-1.5 p-1.5 bg-slate-100/80 dark:bg-slate-850/80 rounded-[18px] border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-xs shadow-xs">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -559,10 +559,10 @@ export function RestaurantProfileTabs({
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`relative flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              className={`relative flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 select-none ${
                 isActive
-                  ? "bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-400 shadow-sm"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  ? "bg-white dark:bg-slate-900 text-teal-800 dark:text-teal-300 shadow-card border border-black/[0.04] dark:border-white/[0.08]"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-slate-800/40"
               }`}
             >
               <Icon className="w-3.5 h-3.5 shrink-0" />
@@ -570,7 +570,7 @@ export function RestaurantProfileTabs({
               {isActive && (
                 <motion.span
                   layoutId="tabUnderline"
-                  className="absolute inset-0 rounded-xl ring-1 ring-teal-400/30 dark:ring-teal-500/40"
+                  className="absolute inset-0 rounded-xl ring-1 ring-teal-400/30 dark:ring-teal-500/40 pointer-events-none"
                 />
               )}
             </button>

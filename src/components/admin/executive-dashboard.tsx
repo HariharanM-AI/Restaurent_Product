@@ -414,24 +414,24 @@ function KPICard({
 }) {
   const isPositive = change >= 0;
   return (
-    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs relative overflow-hidden flex flex-col justify-between">
+    <div className="p-5 sm:p-5.5 rounded-[22px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden flex flex-col justify-between backdrop-blur-xs">
       <div className="flex items-start justify-between">
-        <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center`}>
+        <div className={`w-10 h-10 rounded-2xl ${iconBg} flex items-center justify-center shadow-xs`}>
           {icon}
         </div>
       </div>
       <div className="mt-4">
-        <div className="text-xs font-bold text-slate-500 dark:text-slate-400">{label}</div>
-        <div className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1">{value}</div>
+        <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</div>
+        <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1 tabular-nums">{value}</div>
         {change !== 0 && (
-          <div className={`flex items-center gap-1.5 mt-2 text-xs font-bold ${isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-            <span>{isPositive ? "↑" : "↓"} {Math.abs(change)}%</span>
-            <span className="text-slate-400 dark:text-slate-500 font-normal text-[11px]">vs previous period</span>
+          <div className={`flex items-center gap-1.5 mt-2 text-xs font-bold ${isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"}`}>
+            <span className="px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/50">{isPositive ? "↑" : "↓"} {Math.abs(change)}%</span>
+            <span className="text-slate-400 dark:text-slate-500 font-medium text-[11px]">vs previous</span>
           </div>
         )}
         {change === 0 && (
           <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-slate-400 dark:text-slate-500">
-            <span>No previous data</span>
+            <span className="font-medium text-[11px]">Steady baseline</span>
           </div>
         )}
       </div>
@@ -527,7 +527,7 @@ function EngagementChart({
   const gridStroke = isDark ? "#1E293B" : "#F1F5F9";
 
   return (
-    <div className="lg:col-span-2 p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+    <div className="lg:col-span-2 p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Guest Engagement</h2>
@@ -718,7 +718,7 @@ function EngagementChart({
 /* ─── Guest Actions Breakdown ─── */
 function GuestActionsBreakdown({ actions }: { actions: DashboardData["actionBreakdown"] }) {
   return (
-    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Guest Actions</h2>
@@ -769,7 +769,7 @@ function LoyaltyPerformance({
   const maxBar = Math.max(...barData, 1);
 
   return (
-    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Loyalty Performance</h2>
@@ -835,7 +835,7 @@ function CustomerInsights({
   const retDash = (retPct / 100) * 88;
 
   return (
-    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Customer Insights</h2>
@@ -930,7 +930,7 @@ function FeedbackOverview({
   restaurantId: string;
 }) {
   return (
-    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Feedback Overview</h2>
@@ -993,7 +993,7 @@ function PeakActivityHeatmap({ heatmap }: { heatmap: number[][] }) {
       ];
 
   return (
-    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Peak Guest Activity</h2>
@@ -1039,7 +1039,7 @@ function PeakActivityHeatmap({ heatmap }: { heatmap: number[][] }) {
 /* ─── Review Journey Funnel ─── */
 function ReviewFunnel({ funnel }: { funnel: DashboardData["funnel"] }) {
   return (
-    <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
       <div className="mb-4">
         <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Review Journey</h2>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">From guest interaction to feedback.</p>

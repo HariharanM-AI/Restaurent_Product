@@ -388,7 +388,7 @@ export function LoyaltyAdminDashboard({
           {/* 4. Stamps Chart + Reward Status */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Stamps Time-Series Chart */}
-            <div className="lg:col-span-2 p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+            <div className="lg:col-span-2 p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Stamps Activity</h2>
@@ -406,7 +406,7 @@ export function LoyaltyAdminDashboard({
             </div>
 
             {/* Reward Status Card */}
-            <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
               <div>
                 <h2 className="text-base font-extrabold text-slate-900 dark:text-white mb-1">Reward Status</h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Breakdown of all rewards</p>
@@ -455,7 +455,7 @@ export function LoyaltyAdminDashboard({
       {/* 5. QR Generator */}
       <div className="w-full">
         {/* QR Generator */}
-        <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
               <QrCode className="w-5 h-5" />
@@ -561,7 +561,7 @@ export function LoyaltyAdminDashboard({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Activity */}
         {stats && (
-          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Recent Activity</h2>
@@ -596,7 +596,7 @@ export function LoyaltyAdminDashboard({
         )}
 
         {/* Milestones Table */}
-        <div className="lg:col-span-2 p-6 rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        <div className="lg:col-span-2 p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
@@ -776,12 +776,13 @@ function KPICard({
 }) {
   const isPositive = change >= 0;
   return (
-    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-      <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center mb-3`}>
+    <div className="p-5 sm:p-5.5 rounded-[22px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden flex flex-col justify-between backdrop-blur-xs">
+      <div className={`w-10 h-10 rounded-2xl ${iconBg} flex items-center justify-center mb-3 shadow-xs`}>
         {icon}
       </div>
-      <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</div>
-      <div className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1">{value}</div>
+      <div>
+        <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</div>
+        <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1 tabular-nums">{value}</div>
       {change !== 0 ? (
         <div className={`text-xs font-bold mt-2 ${isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
           {isPositive ? "↑" : "↓"} {Math.abs(change)}%{" "}
@@ -793,6 +794,7 @@ function KPICard({
       ) : (
         <div className="text-xs font-bold text-slate-400 dark:text-slate-500 mt-2">No previous data</div>
       )}
+      </div>
     </div>
   );
 }

@@ -379,7 +379,7 @@ export function BrandingEditorForm({
           >
             <div className="space-y-4 pt-2">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="rest-name">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5" htmlFor="rest-name">
                   Restaurant Legal or Display Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -395,12 +395,12 @@ export function BrandingEditorForm({
                       })
                     );
                   }}
-                  className="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white transition"
+                  className="w-full h-11 px-3.5 bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/[0.08] rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 focus:bg-white dark:focus:bg-slate-900 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="rest-tagline">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5" htmlFor="rest-tagline">
                   Concept Tagline / Subtitle
                 </label>
                 <input
@@ -409,7 +409,7 @@ export function BrandingEditorForm({
                   value={tagline}
                   onChange={(e) => setTagline(e.target.value)}
                   placeholder="e.g. Locally sourced rustic kitchen & craft cocktail lounge"
-                  className="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white transition"
+                  className="w-full h-11 px-3.5 bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/[0.08] rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 focus:bg-white dark:focus:bg-slate-900 transition-all"
                 />
               </div>
             </div>
@@ -423,12 +423,12 @@ export function BrandingEditorForm({
             <div className="space-y-6 pt-2">
               {/* Logo Upload Zone */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-2 flex items-center justify-between">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                   <span className="flex items-center gap-1.5">
-                    <ImageIcon className="w-3.5 h-3.5 text-slate-500" />
+                    <ImageIcon className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                     <span>Restaurant Logo</span>
                   </span>
-                  <span className="text-[11px] text-slate-400 font-normal">
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
                     Square 1:1 recommended, PNG, JPG, SVG, WebP up to 10MB
                   </span>
                 </label>
@@ -445,16 +445,16 @@ export function BrandingEditorForm({
                 />
 
                 {logoUrl ? (
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between gap-4">
+                  <div className="p-4 bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/[0.08] rounded-2xl flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="w-16 h-16 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center justify-center overflow-hidden shrink-0">
+                      <div className="w-16 h-16 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-white/[0.08] shadow-xs flex items-center justify-center overflow-hidden shrink-0">
                         <img src={logoUrl} alt="Restaurant Logo" className="w-full h-full object-cover" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-xs font-bold text-slate-900 block truncate">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white block truncate">
                           Current Logo Asset
                         </span>
-                        <span className="text-[11px] text-slate-500 block truncate">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate">
                           Applied across guest experience & digital receipts
                         </span>
                       </div>
@@ -474,7 +474,7 @@ export function BrandingEditorForm({
                       <button
                         type="button"
                         onClick={() => setLogoUrl("")}
-                        className="p-2 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition"
+                        className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 transition"
                         title="Remove Logo"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -492,25 +492,25 @@ export function BrandingEditorForm({
                     }}
                     className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2 ${
                       isUploadingLogo
-                        ? "border-teal-400 bg-teal-50/40"
-                        : "border-slate-300 hover:border-teal-500 bg-slate-50 hover:bg-white"
+                        ? "border-teal-400 bg-teal-50/40 dark:bg-teal-950/30"
+                        : "border-slate-300 dark:border-slate-700 hover:border-teal-500 dark:hover:border-teal-400 bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-850"
                     }`}
                   >
                     {isUploadingLogo ? (
                       <>
-                        <Loader2 className="w-8 h-8 text-teal-600 animate-spin" />
-                        <span className="text-xs font-semibold text-teal-800">Uploading logo image...</span>
+                        <Loader2 className="w-8 h-8 text-teal-600 dark:text-teal-400 animate-spin" />
+                        <span className="text-xs font-semibold text-teal-800 dark:text-teal-300">Uploading logo image...</span>
                       </>
                     ) : (
                       <>
-                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
                           <UploadCloud className="w-5 h-5" />
                         </div>
                         <div>
-                          <span className="text-xs font-bold text-slate-800 block">
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
                             Click to upload logo or drag and drop
                           </span>
-                          <span className="text-[11px] text-slate-500 block mt-0.5">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
                             PNG, JPG, SVG or WebP (max 10MB)
                           </span>
                         </div>
@@ -526,12 +526,12 @@ export function BrandingEditorForm({
 
               {/* Cover Banner Upload Zone */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-2 flex items-center justify-between">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                   <span className="flex items-center gap-1.5">
-                    <ImageIcon className="w-3.5 h-3.5 text-slate-500" />
+                    <ImageIcon className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                     <span>Cover Banner Photography</span>
                   </span>
-                  <span className="text-[11px] text-slate-400 font-normal">
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
                     Landscape 16:9 recommended, PNG, JPG, WebP up to 25MB
                   </span>
                 </label>
@@ -548,8 +548,8 @@ export function BrandingEditorForm({
                 />
 
                 {coverImageUrl ? (
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-                    <div className="w-full h-32 rounded-xl bg-slate-200 overflow-hidden relative border border-slate-200 shadow-xs">
+                  <div className="p-4 bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/[0.08] rounded-2xl space-y-3">
+                    <div className="w-full h-32 rounded-xl bg-slate-200 dark:bg-slate-800 overflow-hidden relative border border-slate-200/80 dark:border-white/[0.08] shadow-xs">
                       <img
                         src={coverImageUrl}
                         alt="Restaurant Cover Banner"
@@ -557,7 +557,7 @@ export function BrandingEditorForm({
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-slate-500 font-medium">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                         Header photography active on guest hub
                       </span>
                       <div className="flex items-center gap-2">
@@ -574,7 +574,7 @@ export function BrandingEditorForm({
                         <button
                           type="button"
                           onClick={() => setCoverImageUrl("")}
-                          className="p-2 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition"
+                          className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 transition"
                           title="Remove Cover Banner"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -593,25 +593,25 @@ export function BrandingEditorForm({
                     }}
                     className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2 ${
                       isUploadingCover
-                        ? "border-teal-400 bg-teal-50/40"
-                        : "border-slate-300 hover:border-teal-500 bg-slate-50 hover:bg-white"
+                        ? "border-teal-400 bg-teal-50/40 dark:bg-teal-950/30"
+                        : "border-slate-300 dark:border-slate-700 hover:border-teal-500 dark:hover:border-teal-400 bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-850"
                     }`}
                   >
                     {isUploadingCover ? (
                       <>
-                        <Loader2 className="w-8 h-8 text-teal-600 animate-spin" />
-                        <span className="text-xs font-semibold text-teal-800">Uploading banner image...</span>
+                        <Loader2 className="w-8 h-8 text-teal-600 dark:text-teal-400 animate-spin" />
+                        <span className="text-xs font-semibold text-teal-800 dark:text-teal-300">Uploading banner image...</span>
                       </>
                     ) : (
                       <>
-                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
                           <UploadCloud className="w-5 h-5" />
                         </div>
                         <div>
-                          <span className="text-xs font-bold text-slate-800 block">
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
                             Click to upload cover banner or drag and drop
                           </span>
-                          <span className="text-[11px] text-slate-500 block mt-0.5">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
                             High-resolution 16:9 photo (max 25MB)
                           </span>
                         </div>
@@ -706,8 +706,8 @@ export function BrandingEditorForm({
           >
             <div className="space-y-4 pt-2">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5" htmlFor="rest-address">
-                  <MapPin className="w-3.5 h-3.5 text-slate-500" />
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5" htmlFor="rest-address">
+                  <MapPin className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                   <span>Physical Venue Address</span>
                 </label>
                 <input
@@ -716,13 +716,13 @@ export function BrandingEditorForm({
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="e.g. 428 Market Street, Suite 100, San Francisco, CA"
-                  className="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white transition"
+                  className="w-full h-11 px-3.5 bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/[0.08] rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 focus:bg-white dark:focus:bg-slate-900 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5" htmlFor="rest-map">
-                  <MapPin className="w-3.5 h-3.5 text-teal-600" />
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5" htmlFor="rest-map">
+                  <MapPin className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                   <span>Google Maps Location URL</span>
                 </label>
                 <input
@@ -731,17 +731,14 @@ export function BrandingEditorForm({
                   value={googleMapsUrl}
                   onChange={(e) => setGoogleMapsUrl(e.target.value)}
                   placeholder="https://maps.google.com/?q=428+Market+Street+San+Francisco"
-                  className="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white transition"
+                  className="w-full h-11 px-3.5 bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/[0.08] rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 focus:bg-white dark:focus:bg-slate-900 transition-all"
                 />
-                <span className="text-[11px] text-slate-400 mt-1 block">
-                  
-                </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5" htmlFor="rest-phone">
-                    <Phone className="w-3.5 h-3.5 text-slate-500" />
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5" htmlFor="rest-phone">
+                    <Phone className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                     <span>Contact Phone</span>
                   </label>
                   <input
@@ -750,13 +747,13 @@ export function BrandingEditorForm({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="e.g. (555) 234-8901"
-                    className="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white transition"
+                    className="w-full h-11 px-3.5 bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/[0.08] rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 focus:bg-white dark:focus:bg-slate-900 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5" htmlFor="rest-website">
-                    <Globe className="w-3.5 h-3.5 text-slate-500" />
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5" htmlFor="rest-website">
+                    <Globe className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                     <span>Official Website</span>
                   </label>
                   <input
@@ -765,14 +762,14 @@ export function BrandingEditorForm({
                     value={website}
                     onChange={(e) => setWebsite(e.target.value)}
                     placeholder="https://www.yourrestaurant.com"
-                    className="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white transition"
+                    className="w-full h-11 px-3.5 bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/[0.08] rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 focus:bg-white dark:focus:bg-slate-900 transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5" htmlFor="rest-hours">
-                  <Clock className="w-3.5 h-3.5 text-amber-600" />
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5" htmlFor="rest-hours">
+                  <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                   <span>Opening Hours / Operating Schedule</span>
                 </label>
                 <input
@@ -781,11 +778,8 @@ export function BrandingEditorForm({
                   value={openingHours}
                   onChange={(e) => setOpeningHours(e.target.value)}
                   placeholder="e.g. Open Today: 11:30 AM – 10:00 PM or Mon–Sun 11:30 AM – 10:00 PM"
-                  className="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white transition"
+                  className="w-full h-11 px-3.5 bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/[0.08] rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 focus:bg-white dark:focus:bg-slate-900 transition-all"
                 />
-                <span className="text-[11px] text-slate-400 mt-1 block">
-                  
-                </span>
               </div>
             </div>
           </SaaSCard>
@@ -797,7 +791,7 @@ export function BrandingEditorForm({
           >
             <div className="space-y-4 pt-2">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5" htmlFor="rest-instagram">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5" htmlFor="rest-instagram">
                   <InstagramIcon className="w-3.5 h-3.5 text-rose-600" />
                   <span>Instagram Profile URL</span>
                 </label>
@@ -807,15 +801,12 @@ export function BrandingEditorForm({
                   value={instagramUrl}
                   onChange={(e) => setInstagramUrl(e.target.value)}
                   placeholder="https://instagram.com/yourrestaurant"
-                  className="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white transition"
+                  className="w-full h-11 px-3.5 bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/[0.08] rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 focus:bg-white dark:focus:bg-slate-900 transition-all"
                 />
-                <span className="text-[11px] text-slate-400 mt-1 block">
-                  
-                </span>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5" htmlFor="rest-facebook">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5" htmlFor="rest-facebook">
                   <FacebookIcon className="w-3.5 h-3.5 text-blue-600" />
                   <span>Facebook Page URL</span>
                 </label>
@@ -825,11 +816,8 @@ export function BrandingEditorForm({
                   value={facebookUrl}
                   onChange={(e) => setFacebookUrl(e.target.value)}
                   placeholder="https://facebook.com/yourrestaurant"
-                  className="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white transition"
+                  className="w-full h-11 px-3.5 bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/[0.08] rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 focus:bg-white dark:focus:bg-slate-900 transition-all"
                 />
-                <span className="text-[11px] text-slate-400 mt-1 block">
-                  
-                </span>
               </div>
             </div>
           </SaaSCard>

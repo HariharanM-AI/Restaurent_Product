@@ -2,7 +2,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 
 export interface SaaSCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
-  variant?: "default" | "muted" | "elevated";
+  variant?: "default" | "muted" | "elevated" | "glass";
   padding?: "none" | "sm" | "md" | "lg";
   radius?: "md" | "lg" | "saas";
   title?: React.ReactNode;
@@ -22,9 +22,10 @@ export function SaaSCard({
   ...props
 }: SaaSCardProps) {
   const variants = {
-    default: "bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-card text-slate-900 dark:text-slate-100",
-    muted: "bg-slate-50/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 shadow-none text-slate-800 dark:text-slate-200",
-    elevated: "bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-card-hover text-slate-900 dark:text-slate-100",
+    default: "bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover text-slate-900 dark:text-slate-100 backdrop-blur-xs",
+    muted: "bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-white/[0.06] shadow-none text-slate-800 dark:text-slate-200",
+    elevated: "bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-white/[0.1] shadow-card-hover hover:shadow-luxury text-slate-900 dark:text-slate-100",
+    glass: "glass-surface shadow-card text-slate-900 dark:text-slate-100",
   };
 
   const paddings = {
@@ -37,13 +38,13 @@ export function SaaSCard({
   const radiuses = {
     md: "rounded-xl",
     lg: "rounded-2xl",
-    saas: "rounded-[20px]",
+    saas: "rounded-[22px]",
   };
 
   return (
     <div
       className={cn(
-        "transition-all duration-200",
+        "relative transition-all duration-200 ease-out",
         variants[variant],
         radiuses[radius],
         paddings[padding],
@@ -74,16 +75,16 @@ export function SaaSCardHeader({
   return (
     <div
       className={cn(
-        "flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800 mb-5",
+        "flex items-start justify-between gap-4 pb-4 border-b border-slate-100/90 dark:border-white/[0.06] mb-5",
         className
       )}
       {...props}
     >
       {children || (
         <>
-          <div className="space-y-1">
+          <div className="space-y-1 min-w-0">
             {title && (
-              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 tracking-tight">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                 {title}
               </h3>
             )}

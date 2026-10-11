@@ -59,11 +59,11 @@ export function SocialFooter({ socialLinks, restaurantId }: SocialFooterProps) {
   };
 
   return (
-    <div className="py-6 px-4 text-center">
-      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3.5">
+    <div className="py-8 px-4 text-center">
+      <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4">
         Connect With Us
       </p>
-      <div className="flex items-center justify-center gap-3 flex-wrap">
+      <div className="flex items-center justify-center gap-3.5 flex-wrap">
         {socialLinks.map((link) => (
           <a
             key={link.id}
@@ -71,16 +71,16 @@ export function SocialFooter({ socialLinks, restaurantId }: SocialFooterProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => handleClick(link.platform)}
-            className="w-11 h-11 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200/90 dark:border-slate-700 shadow-2xs flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
+            className="w-11 h-11 rounded-2xl bg-white/90 dark:bg-[#131B2B]/90 hover:bg-white dark:hover:bg-[#1b253b] border border-slate-200/80 dark:border-white/[0.1] shadow-xs hover:shadow-card-hover flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-xs"
             aria-label={`Visit our ${link.platform}`}
           >
             {getPlatformIcon(link.platform)}
           </a>
         ))}
       </div>
-      <div className="mt-5 text-xs flex items-center justify-center gap-1.5">
-        <span className="text-slate-400 dark:text-slate-500 font-medium">Powered by</span>
-        <span className="font-bold text-slate-800 dark:text-slate-200 tracking-tight">Noura</span>
+      <div className="mt-6 text-xs flex items-center justify-center gap-1.5 font-medium">
+        <span className="text-slate-400 dark:text-slate-500">Powered by</span>
+        <span className="font-extrabold text-slate-900 dark:text-white tracking-tight">Noura</span>
       </div>
     </div>
   );

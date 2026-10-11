@@ -369,10 +369,10 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
           duration: 0.3,
           ease: [0.25, 0.1, 0.25, 1],
         }}
-        className="hidden lg:flex flex-col h-screen sticky top-0 bg-white dark:bg-[#111111] border-r border-slate-200/80 dark:border-white/10 shrink-0 select-none text-slate-800 dark:text-white z-30 overflow-hidden transition-colors"
+        className="hidden lg:flex flex-col h-screen sticky top-0 bg-white/95 dark:bg-[#0B0F17]/95 border-r border-slate-200/70 dark:border-white/[0.08] shrink-0 select-none text-slate-800 dark:text-white z-30 overflow-hidden transition-colors backdrop-blur-md"
         style={{
           borderRadius: "0 24px 24px 0",
-          boxShadow: theme === "dark" ? "4px 0 24px rgba(0,0,0,0.3)" : "4px 0 20px rgba(0,0,0,0.05)",
+          boxShadow: theme === "dark" ? "4px 0 28px rgba(0,0,0,0.4)" : "4px 0 24px rgba(15,23,42,0.04)",
         }}
       >
         {/* Toggle Button & Collapsed Brand Icon */}
@@ -570,21 +570,21 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                     : "gap-3 px-3.5 py-2"
                 } ${
                   isActive
-                    ? "bg-emerald-50 text-emerald-950 font-bold border border-emerald-200/80 shadow-2xs dark:bg-white/[0.12] dark:text-white dark:border-white/[0.08] dark:shadow-lg dark:shadow-black/10"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 dark:text-white/50 dark:hover:text-white dark:hover:bg-white/[0.06]"
+                    ? "bg-teal-500/10 text-teal-950 font-bold border border-teal-500/20 shadow-xs dark:bg-white/[0.1] dark:text-white dark:border-white/[0.1] dark:shadow-sm"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 dark:text-white/60 dark:hover:text-white dark:hover:bg-white/[0.06]"
                 }`}
               >
                 {isActive && (
                   <motion.div
                     layoutId="activeNavIndicator"
-                    className="absolute inset-0 rounded-xl bg-emerald-50/90 border border-emerald-200/80 dark:bg-white/[0.12] dark:border-white/[0.08]"
+                    className="absolute inset-0 rounded-xl bg-teal-500/10 border border-teal-500/20 dark:bg-white/[0.1] dark:border-white/[0.1]"
                     transition={{ type: "spring", stiffness: 350, damping: 30 }}
                   />
                 )}
                 <Icon
                   className={`w-[18px] h-[18px] shrink-0 relative z-10 transition-colors ${
                     isActive
-                      ? "text-emerald-700 dark:text-emerald-300 stroke-[2.2px]"
+                      ? "text-teal-700 dark:text-teal-300 stroke-[2.2px]"
                       : "text-slate-400 group-hover:text-slate-700 dark:text-white/40 dark:group-hover:text-white/70 stroke-[1.8px]"
                   }`}
                 />

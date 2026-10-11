@@ -369,11 +369,11 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
       </div>
 
       {/* Customer CRM Data Table */}
-      <div className="overflow-x-auto rounded-[20px] border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-card">
+      <div className="overflow-x-auto rounded-[20px] border border-slate-200/80 dark:border-white/[0.08] bg-white/95 dark:bg-[#121927]/90 shadow-card backdrop-blur-xs">
         <table className="w-full text-left border-collapse text-xs sm:text-sm">
           <thead>
-            <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">
-              <th className="py-3 px-5">Guest Profile</th>
+            <tr className="border-b border-slate-200/80 dark:border-white/[0.08] bg-slate-50/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-bold text-[11px] uppercase tracking-wider">
+              <th className="py-3.5 px-5">Guest Profile</th>
               <th
                 className="py-3 px-4 text-center cursor-pointer hover:text-slate-800 dark:hover:text-slate-200 transition select-none"
                 onClick={() => handleSort("totalVisits")}
@@ -550,7 +550,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
           className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex justify-end transition-all"
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedCustomer(null); }}
         >
-          <div className="w-full max-w-lg bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col justify-between overflow-hidden animate-in slide-in-from-right duration-200">
+          <div className="w-full max-w-lg bg-white/98 dark:bg-[#0D131F]/98 border-l border-slate-200/80 dark:border-white/[0.08] backdrop-blur-xl h-full shadow-2xl flex flex-col justify-between overflow-hidden animate-in slide-in-from-right duration-200">
             {/* Drawer Header */}
             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-3.5">
@@ -795,13 +795,15 @@ function KPICard({ icon, iconBg, label, value, sub }: {
   icon: React.ReactNode; iconBg: string; label: string; value: string | number; sub: string;
 }) {
   return (
-    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-      <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center mb-2.5`}>
+    <div className="p-4 sm:p-5 rounded-[22px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
+      <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center mb-2.5 shadow-xs`}>
         {icon}
       </div>
-      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</div>
-      <div className="text-xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">{value}</div>
-      <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">{sub}</div>
+      <div>
+        <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</div>
+        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5 tabular-nums">{value}</div>
+        <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 font-medium">{sub}</div>
+      </div>
     </div>
   );
 }

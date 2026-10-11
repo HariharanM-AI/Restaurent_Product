@@ -43,7 +43,7 @@ export default async function RestaurantGuestPage({
   }
 
   return (
-    <div className="flex-1 flex flex-col justify-between bg-surface dark:bg-slate-900 transition-colors">
+    <div className="flex-1 flex flex-col justify-between bg-background dark:bg-[#0B0F17] transition-colors">
       {/* Client telemetry tracker for page view */}
       <GuestHubTracker restaurantId={restaurant.id} />
 
@@ -71,10 +71,13 @@ export default async function RestaurantGuestPage({
         />
 
         {/* Action Prompt Header */}
-        <div className="px-5 pt-5 pb-2">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-            Quick Actions
+        <div className="px-5 pt-5 pb-2 flex items-center justify-between">
+          <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+            Guest Experience
           </h2>
+          <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+            Tap to explore
+          </span>
         </div>
 
         {/* Staggered Action Cards Stack */}

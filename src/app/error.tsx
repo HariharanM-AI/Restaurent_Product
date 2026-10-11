@@ -30,9 +30,17 @@ export default function GlobalError({
         Something unexpected occurred
       </h1>
 
-      <p className="text-sm text-slate-500 max-w-md mb-8 leading-relaxed">
+      <p className="text-sm text-slate-500 max-w-md mb-4 leading-relaxed">
         We encountered a temporary issue while loading this page. Please try refreshing or return to the main portal.
       </p>
+
+      {error?.message && (
+        <div className="max-w-md w-full p-3 mb-6 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 text-xs font-mono text-left overflow-auto break-words">
+          <p className="font-bold mb-1">Error:</p>
+          <p>{error.message}</p>
+          {error.digest && <p className="text-[10px] opacity-75 mt-1">Digest: {error.digest}</p>}
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
         <button

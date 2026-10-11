@@ -30,7 +30,7 @@ export function SearchInput({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full pl-9 pr-9 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition shadow-sm"
+        className="w-full pl-9 pr-9 py-2 bg-white/90 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/[0.08] rounded-[14px] text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/40 dark:focus:border-emerald-500/40 transition-all shadow-card"
         {...props}
       />
 
@@ -38,7 +38,7 @@ export function SearchInput({
         <button
           type="button"
           onClick={onClear}
-          className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+          className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
           aria-label="Clear search"
         >
           <X className="w-4 h-4" />

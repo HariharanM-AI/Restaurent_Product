@@ -60,13 +60,16 @@ export function GuestActionCard({
       whileHover={shouldReduceMotion ? undefined : { y: -2 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
       onClick={handleClick}
-      className="group relative flex items-center justify-between p-4 bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 rounded-[20px] shadow-[0_2px_8px_rgba(15,23,42,0.04)] transition-colors cursor-pointer select-none"
+      className="group relative flex items-center justify-between p-4 sm:p-4.5 bg-white/95 dark:bg-[#121927]/90 hover:bg-white dark:hover:bg-[#162032] border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.18] rounded-[22px] shadow-card hover:shadow-card-hover transition-all duration-200 cursor-pointer select-none backdrop-blur-xs overflow-hidden"
     >
+      {/* Subtle ambient hover highlight */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-teal-500/[0.02] dark:to-teal-400/[0.04] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
       {/* Icon & Details */}
-      <div className="flex items-center gap-3.5 min-w-0 pr-2">
+      <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 pr-2">
         {/* Dynamic Icon Container */}
         <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+          className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-200 group-hover:scale-105 shadow-xs ring-1 ring-black/[0.04] dark:ring-white/[0.08]"
           style={{
             backgroundColor: bgTint,
             color: brandPrimaryColor,
@@ -78,12 +81,12 @@ export function GuestActionCard({
         {/* Text */}
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-sm text-slate-900 dark:text-white leading-snug truncate">
+            <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-snug truncate tracking-tight">
               {action.title}
             </h3>
             {action.badge && (
               <span
-                className="px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase rounded-full shrink-0"
+                className="px-2.5 py-0.5 text-[10px] font-extrabold tracking-wider uppercase rounded-full shrink-0 border border-current/20 shadow-xs"
                 style={{
                   backgroundColor: badgeTint,
                   color: brandPrimaryColor,
@@ -94,7 +97,7 @@ export function GuestActionCard({
             )}
           </div>
           {action.description && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-tight line-clamp-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed line-clamp-1 font-medium">
               {action.description}
             </p>
           )}
@@ -102,7 +105,7 @@ export function GuestActionCard({
       </div>
 
       {/* Right Indicator Chevron */}
-      <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-700/60 group-hover:bg-slate-100 dark:group-hover:bg-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 shrink-0 transition">
+      <div className="w-8 h-8 rounded-full bg-slate-100/80 dark:bg-slate-800/80 group-hover:bg-slate-200/80 dark:group-hover:bg-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white shrink-0 transition-all duration-200 border border-slate-200/50 dark:border-white/[0.06]">
         <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
       </div>
     </motion.div>

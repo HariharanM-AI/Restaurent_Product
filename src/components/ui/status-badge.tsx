@@ -73,12 +73,16 @@ export function StatusBadge({
       )}
     >
       {showDot && (
-        <span
-          className={cn("w-1.5 h-1.5 rounded-full shrink-0", dotColors[normalizedStatus] || dotColors.neutral)}
-          aria-hidden="true"
-        />
+        <span className="relative flex h-1.5 w-1.5 shrink-0" aria-hidden="true">
+          {normalizedStatus === "success" && (
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          )}
+          <span
+            className={cn("relative inline-flex rounded-full h-1.5 w-1.5", dotColors[normalizedStatus] || dotColors.neutral)}
+          />
+        </span>
       )}
-      <span>{label}</span>
+      <span className="font-semibold">{label}</span>
     </span>
   );
 }

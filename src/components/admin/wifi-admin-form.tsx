@@ -131,7 +131,7 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
       <div className="w-full space-y-6">
         <div className="space-y-6">
           {/* Card: Guest Network Credentials */}
-          <div className="p-6 sm:p-7 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <div className="p-6 sm:p-7 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40 flex items-center justify-center shrink-0">
@@ -271,7 +271,7 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
           </div>
 
           {/* Bottom Card: Enhance Guest Engagement */}
-          <div className="p-5 rounded-[20px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between gap-4">
+          <div className="p-5 rounded-[22px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs flex items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
               <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <Users className="w-5 h-5" />

@@ -138,7 +138,7 @@ export function QrExporter({
         {/* Left Column: Touchpoint Configuration & Best Practices */}
         <div className="flex-1 min-w-0 space-y-6">
           {/* Card 1: Touchpoint Configuration */}
-          <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 sm:p-7 space-y-6">
+          <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs p-6 sm:p-7 space-y-6">
             <div className="flex items-start gap-3.5 pb-4 border-b border-slate-100 dark:border-slate-800">
               <div className="w-10 h-10 rounded-xl bg-[#E6F7F2] dark:bg-emerald-950/40 text-[#0A7E6C] dark:text-emerald-400 border border-[#BCE8DB] dark:border-emerald-800/40 flex items-center justify-center shrink-0">
                 <QrCode className="w-5 h-5" />
@@ -300,7 +300,7 @@ export function QrExporter({
           </div>
 
           {/* Card 2: Deployment Best Practices matching Image 3 */}
-          <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 sm:p-7 space-y-4">
+          <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs p-6 sm:p-7 space-y-4">
             <div className="flex items-start gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="w-8 h-8 rounded-lg bg-[#E6F7F2] dark:bg-emerald-950/40 text-[#0A7E6C] dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <Sparkles className="w-4 h-4" />

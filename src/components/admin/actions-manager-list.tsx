@@ -540,7 +540,7 @@ export function ActionsManagerList({
       )}
 
       {/* Main Card */}
-      <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 sm:p-7">
+      <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs p-6 sm:p-7">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div>
             <h2 className="text-base font-bold text-slate-900 dark:text-white">Guest Touchpoint Actions</h2>
@@ -611,7 +611,7 @@ export function ActionsManagerList({
                   deleteConfirmId === action.id
                     ? "bg-red-50/50 dark:bg-red-950/40 border-red-200 dark:border-red-800 ring-1 ring-red-200"
                     : action.enabled
-                    ? "bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm"
+                    ? "bg-white/95 dark:bg-[#121927]/90 border-slate-200/80 dark:border-white/[0.08] shadow-card hover:shadow-card-hover hover:border-slate-300 dark:hover:border-white/[0.15]"
                     : "bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/60 dark:border-slate-800/60 opacity-60"
                 }`}
               >
