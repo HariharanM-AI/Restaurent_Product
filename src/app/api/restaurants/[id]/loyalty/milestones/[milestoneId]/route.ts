@@ -25,10 +25,17 @@ export async function PATCH(
       );
     }
 
-    const updated = await prisma.loyaltyMilestone.update({
-      where: { id: milestoneId },
+    // Tenant-scoped write: the milestone must belong to the authorized restaurant
+    const result = await prisma.loyaltyMilestone.updateMany({
+      where: { id: milestoneId, loyaltyProgram: { restaurantId } },
       data: parsed.data,
     });
+
+    if (result.count === 0) {
+      return NextResponse.json({ success: false, error: "Milestone not found" }, { status: 404 });
+    }
+
+    const updated = await prisma.loyaltyMilestone.findUnique({ where: { id: milestoneId } });
 
     return NextResponse.json({ success: true, data: updated });
   } catch {
@@ -48,9 +55,14 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: access.error }, { status: 403 });
     }
 
-    await prisma.loyaltyMilestone.delete({
-      where: { id: milestoneId },
+    // Tenant-scoped delete: the milestone must belong to the authorized restaurant
+    const result = await prisma.loyaltyMilestone.deleteMany({
+      where: { id: milestoneId, loyaltyProgram: { restaurantId } },
     });
+
+    if (result.count === 0) {
+      return NextResponse.json({ success: false, error: "Milestone not found" }, { status: 404 });
+    }
 
     return NextResponse.json({ success: true });
   } catch {

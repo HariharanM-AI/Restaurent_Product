@@ -40,7 +40,7 @@ export default function RewardsPage() {
   const { wallet, isLoading, refetch } = useLoyaltyWallet(restaurantId);
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
+    <div className="min-h-screen bg-transparent flex flex-col">
       {/* Top App Bar */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 flex items-center justify-between">
         <Link

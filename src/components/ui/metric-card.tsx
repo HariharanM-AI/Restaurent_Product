@@ -26,7 +26,7 @@ export function MetricCard({
 }: MetricCardProps) {
   const accentStyles = {
     neutral: {
-      card: "bg-white/95 dark:bg-[#121927]/90 border-slate-200/70 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15]",
+      card: "glass spotlight",
       iconBg: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200/60 dark:border-white/[0.08]",
       titleColor: "text-slate-500 dark:text-slate-400",
       valueColor: "text-slate-900 dark:text-slate-100",
@@ -68,19 +68,19 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        "p-5 rounded-[22px] border shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover flex flex-col justify-between backdrop-blur-xs",
+        "group p-5 rounded-[22px] border glass-hover transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:shadow-panel-hover flex flex-col justify-between animate-in fade-in slide-in-from-bottom-2 duration-500",
         currentAccent.card,
         className
       )}
     >
       <div className="flex items-center justify-between gap-3 mb-3">
-        <span className={cn("text-[11px] font-bold uppercase tracking-wider", currentAccent.titleColor)}>
+        <span className={cn("text-[12.5px] font-medium", currentAccent.titleColor)}>
           {title}
         </span>
         {icon && (
           <div
             className={cn(
-              "w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 shadow-xs",
+              "w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 shadow-xs transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6",
               currentAccent.iconBg
             )}
           >
@@ -90,7 +90,7 @@ export function MetricCard({
       </div>
 
       <div className="space-y-1">
-        <div className={cn("text-2xl sm:text-3xl font-extrabold tracking-tight tabular-nums", currentAccent.valueColor)}>
+        <div className={cn("text-2xl sm:text-[28px] font-semibold tracking-tight tabular", currentAccent.valueColor)}>
           {value}
         </div>
 

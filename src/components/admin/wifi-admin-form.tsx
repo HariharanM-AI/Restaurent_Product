@@ -118,7 +118,7 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
           <span className="text-slate-600 dark:text-slate-300">Wi-Fi</span>
         </div>
         <div className="mt-1">
-          <h1 className="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
             Guest Wi-Fi Configuration
           </h1>
         </div>
@@ -131,14 +131,14 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
       <div className="w-full space-y-6">
         <div className="space-y-6">
           {/* Card: Guest Network Credentials */}
-          <div className="p-6 sm:p-7 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs">
+          <div className="p-6 sm:p-7 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40 flex items-center justify-center shrink-0">
                   <Wifi className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
+                  <h2 className="text-base font-semibold text-slate-900 dark:text-white">
                     Guest Network Credentials
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -271,13 +271,13 @@ export function WifiAdminForm({ restaurant, initialConfig }: WifiAdminFormProps)
           </div>
 
           {/* Bottom Card: Enhance Guest Engagement */}
-          <div className="p-5 rounded-[22px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs flex items-center justify-between gap-4">
+          <div className="p-5 rounded-[22px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card flex items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
               <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-xs font-extrabold text-slate-900 dark:text-white">
+                <h3 className="text-xs font-semibold text-slate-900 dark:text-white">
                   Enhance Guest Engagement
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">

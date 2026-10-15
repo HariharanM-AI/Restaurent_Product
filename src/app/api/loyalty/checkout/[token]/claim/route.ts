@@ -4,6 +4,8 @@ import { hashToken } from "@/lib/loyalty/token";
 import { calculateWalletStamps, getNextUnlockedMilestone } from "@/lib/loyalty/ledger";
 import { claimLoyaltyTokenSchema } from "@/lib/validation/schemas";
 
+class TokenAlreadyClaimedError extends Error {}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ token: string }> }
@@ -67,14 +69,17 @@ export async function POST(
 
     // 2. Atomic Database Transaction to Consume Token & Award Stamp
     const result = await prisma.$transaction(async (tx) => {
-      // Mark session consumed
-      await tx.loyaltyCheckoutSession.update({
-        where: { id: session.id },
+      // Atomically consume the token: only one concurrent claim can flip ACTIVE -> CONSUMED
+      const consumed = await tx.loyaltyCheckoutSession.updateMany({
+        where: { id: session.id, status: "ACTIVE", expiresAt: { gt: new Date() } },
         data: {
           status: "CONSUMED",
           consumedAt: new Date(),
         },
       });
+      if (consumed.count !== 1) {
+        throw new TokenAlreadyClaimedError();
+      }
 
       // Find or create wallet
       let wallet = await tx.loyaltyWallet.findUnique({
@@ -199,6 +204,13 @@ export async function POST(
       },
     });
   } catch (error: any) {
+    if (error instanceof TokenAlreadyClaimedError) {
+      return NextResponse.json(
+        { success: false, error: { code: "ALREADY_CONSUMED", message: "This checkout QR code has already been claimed." } },
+        { status: 409 }
+      );
+    }
+
     if (error.code === "P2002") {
       // Unique constraint violation on idempotencyKey or tokenHash
       return NextResponse.json(

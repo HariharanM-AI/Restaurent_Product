@@ -64,7 +64,7 @@ export function Tabs({
   return (
     <div
       className={cn(
-        "inline-flex items-center p-1 bg-slate-100/80 dark:bg-slate-850/80 rounded-[14px] border border-slate-200/70 dark:border-white/[0.08] backdrop-blur-xs shadow-xs overflow-x-auto no-scrollbar",
+        "inline-flex items-center p-1 bg-slate-100/80 dark:bg-white/[0.04] rounded-[14px] border border-slate-200/70 dark:border-white/[0.08] backdrop-blur-xs shadow-xs overflow-x-auto no-scrollbar",
         className
       )}
     >

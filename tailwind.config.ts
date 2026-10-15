@@ -58,6 +58,9 @@ const config: Config = {
         luxury: "0 24px 48px -12px rgba(15, 23, 42, 0.14), 0 8px 20px -4px rgba(15, 23, 42, 0.06)",
         emboss: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.2), 0 4px 12px rgba(0, 0, 0, 0.1)",
         "glow-brand": "0 0 24px -4px rgba(15, 118, 110, 0.3)",
+        panel: "0 1px 0 0 rgba(255,255,255,0.7) inset, 0 1px 2px rgba(16, 42, 38, 0.04), 0 8px 24px -12px rgba(16, 42, 38, 0.12)",
+        "panel-hover": "0 1px 0 0 rgba(255,255,255,0.7) inset, 0 2px 4px rgba(16, 42, 38, 0.05), 0 18px 40px -16px rgba(16, 42, 38, 0.22)",
+        "panel-dark": "0 1px 0 0 rgba(255,255,255,0.04) inset, 0 8px 24px -12px rgba(0, 0, 0, 0.6)",
       },
       borderRadius: {
         sm: "8px",
@@ -68,7 +71,8 @@ const config: Config = {
         pill: "999px",
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       keyframes: {
         "pulse-subtle": {
@@ -80,8 +84,39 @@ const config: Config = {
           "70%": { transform: "scale(1.15) rotate(3deg)", opacity: "1" },
           "100%": { transform: "scale(1) rotate(0deg)", opacity: "1" },
         },
+        shimmer: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
+        "text-shimmer": {
+          "0%": { backgroundPosition: "200% 0" },
+          "100%": { backgroundPosition: "-200% 0" },
+        },
+        "live-ping": {
+          "0%": { transform: "scale(1)", opacity: "0.6" },
+          "80%, 100%": { transform: "scale(2.4)", opacity: "0" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-8px)" },
+        },
+        aurora: {
+          "0%": { transform: "translate3d(0,0,0) rotate(0deg) scale(1)" },
+          "50%": { transform: "translate3d(4%, -3%, 0) rotate(8deg) scale(1.08)" },
+          "100%": { transform: "translate3d(0,0,0) rotate(0deg) scale(1)" },
+        },
+        "border-spin": {
+          "0%": { "--border-angle": "0deg" },
+          "100%": { "--border-angle": "360deg" },
+        },
       },
       animation: {
+        shimmer: "shimmer 1.6s linear infinite",
+        "text-shimmer": "text-shimmer 2.4s linear infinite",
+        "live-ping": "live-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite",
+        float: "float 6s ease-in-out infinite",
+        aurora: "aurora 18s ease-in-out infinite",
+        "border-spin": "border-spin 6s linear infinite",
         "pulse-subtle": "pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "stamp-pop": "stamp-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards",
       },

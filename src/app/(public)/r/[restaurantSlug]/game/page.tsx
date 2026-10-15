@@ -132,11 +132,11 @@ export default function SudokuGamePage() {
 
   return (
     <div
-      className="w-full flex flex-col bg-slate-50 dark:bg-slate-900 select-none touch-manipulation overflow-hidden"
+      className="w-full flex flex-col bg-transparent select-none touch-manipulation overflow-hidden"
       style={{ height: "100dvh" }}
     >
       {/* Top Bar */}
-      <div className="shrink-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-700 shadow-sm px-3 py-2 flex items-center justify-between w-full z-30">
+      <div className="shrink-0 bg-white/60 dark:bg-white/[0.04] backdrop-blur-xl border-b border-white/60 dark:border-white/[0.08] px-3 py-2 flex items-center justify-between w-full z-30">
         <Link
           href={`/r/${slug}`}
           className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 cursor-pointer"
@@ -187,7 +187,7 @@ export default function SudokuGamePage() {
       {/* Grid */}
       <div className="flex-1 min-h-0 flex items-center justify-center px-2">
         <div
-          className="aspect-square bg-slate-900 rounded-2xl shadow-md grid grid-cols-9 gap-[1px] p-1"
+          className="aspect-square bg-slate-900 dark:bg-slate-500 rounded-2xl shadow-md grid grid-cols-9 gap-[1px] p-1"
           style={{
             width: "min(360px, calc(100vw - 1rem), calc(100dvh - 210px))",
             height: "min(360px, calc(100vw - 1rem), calc(100dvh - 210px))",
@@ -204,8 +204,8 @@ export default function SudokuGamePage() {
                 selectedCell &&
                 Math.floor(selectedCell[0] / 3) === Math.floor(r / 3) &&
                 Math.floor(selectedCell[1] / 3) === Math.floor(c / 3);
-              const bR = (c + 1) % 3 === 0 && c !== 8 ? "border-r-2 border-slate-700" : "";
-              const bB = (r + 1) % 3 === 0 && r !== 8 ? "border-b-2 border-slate-700" : "";
+              const bR = (c + 1) % 3 === 0 && c !== 8 ? "border-r-2 border-slate-700 dark:border-slate-400" : "";
+              const bB = (r + 1) % 3 === 0 && r !== 8 ? "border-b-2 border-slate-700 dark:border-slate-400" : "";
               return (
                 <button
                   key={`${r}-${c}`}
@@ -216,11 +216,11 @@ export default function SudokuGamePage() {
                     isSel
                       ? "text-white font-black ring-2 ring-white/70 ring-inset shadow-inner"
                       : isSame
-                      ? "bg-amber-100 text-amber-950 font-black ring-1 ring-amber-300"
+                      ? "bg-amber-100 dark:bg-amber-400/25 text-amber-950 dark:text-amber-200 font-black ring-1 ring-amber-300 dark:ring-amber-400/50"
                       : inLine || inBox
-                      ? "bg-slate-100 text-slate-800"
-                      : "bg-white text-slate-900"
-                  } ${isInitial ? "text-slate-950 font-black" : "text-teal-700 font-bold"}`}
+                      ? "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100"
+                      : "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                  } ${isInitial ? "text-slate-950 dark:text-white font-black" : "text-teal-700 dark:text-teal-300 font-bold"}`}
                 >
                   {val !== 0 ? val : ""}
                 </button>
@@ -243,7 +243,7 @@ export default function SudokuGamePage() {
                 disabled={!selectedCell || isClue || isWon}
                 className={`h-10 rounded-xl text-base font-bold border transition-all active:scale-95 flex items-center justify-center shadow-sm ${
                   active
-                    ? "bg-teal-50 border-teal-500 text-teal-800 ring-1 ring-teal-400"
+                    ? "bg-teal-50 dark:bg-teal-400/15 border-teal-500 text-teal-800 dark:text-teal-200 ring-1 ring-teal-400"
                     : "bg-white dark:bg-slate-700 hover:bg-slate-50 border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100"
                 } disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100`}
               >
@@ -263,7 +263,7 @@ export default function SudokuGamePage() {
                 disabled={!selectedCell || isClue || isWon}
                 className={`h-10 rounded-xl text-base font-bold border transition-all active:scale-95 flex items-center justify-center shadow-sm ${
                   active
-                    ? "bg-teal-50 border-teal-500 text-teal-800 ring-1 ring-teal-400"
+                    ? "bg-teal-50 dark:bg-teal-400/15 border-teal-500 text-teal-800 dark:text-teal-200 ring-1 ring-teal-400"
                     : "bg-white dark:bg-slate-700 hover:bg-slate-50 border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100"
                 } disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100`}
               >

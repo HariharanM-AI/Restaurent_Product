@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { ArrowLeft, Home, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Ambient } from "@/components/ui/ambient";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6 text-center">
+    <div className="glass-ui light-scope relative min-h-screen flex flex-col items-center justify-center p-6 text-center">
+      <Ambient />
       <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-500 border border-slate-200 flex items-center justify-center mb-5 shadow-xs">
         <SearchX className="w-8 h-8" />
       </div>

@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import Link from "next/link";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import { Ambient } from "@/components/ui/ambient";
 
 export default function GlobalError({
   error,
@@ -17,7 +18,8 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6 text-center text-slate-900 selection:bg-teal-600 selection:text-white">
+    <div className="glass-ui light-scope relative min-h-screen flex flex-col items-center justify-center p-6 text-center text-slate-900 selection:bg-teal-600 selection:text-white">
+      <Ambient />
       <div className="w-16 h-16 rounded-2xl bg-teal-50 border border-teal-200 text-teal-700 flex items-center justify-center mb-5 shadow-xs">
         <AlertTriangle className="w-8 h-8 text-teal-700" />
       </div>

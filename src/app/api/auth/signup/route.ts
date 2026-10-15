@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
 import { slugify, sanitizeString } from "@/lib/utils";
 import { getDefaultGuestActions } from "@/lib/constants/default-actions";
+import { rateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/client-ip";
 
 const SignupSchema = z.object({
   name: z.string().min(2, "Owner name must be at least 2 characters"),
@@ -33,6 +35,23 @@ export async function POST(req: Request) {
     }
 
     const { name, email, password, restaurantName, phone, address } = result.data;
+
+    // Throttle account creation per client IP and per email address
+    const SIGNUP_WINDOW = 60 * 60 * 1000;
+    const ip = getClientIp(req.headers);
+    const [byIp, byEmail] = await Promise.all([
+      rateLimit(`signup_ip_${ip}`, { limit: 5, windowMs: SIGNUP_WINDOW }),
+      rateLimit(`signup_email_${email.toLowerCase().trim()}`, { limit: 3, windowMs: SIGNUP_WINDOW }),
+    ]);
+    if (!byIp.success || !byEmail.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: { code: "RATE_LIMITED", message: "Too many sign-up attempts. Please try again later." },
+        },
+        { status: 429 }
+      );
+    }
     const resolvedVenueName = restaurantName?.trim() || `${name.trim()}'s Venue`;
     const normalizedEmail = email.toLowerCase().trim();
 

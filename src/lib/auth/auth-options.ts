@@ -2,13 +2,23 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
+import { rateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/client-ip";
+
+const authSecret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
+
+// Never sign sessions with a guessable secret. `next build` evaluates this module
+// without runtime env, so only enforce once the server is actually running.
+if (!authSecret && process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build") {
+  throw new Error("NEXTAUTH_SECRET (or AUTH_SECRET) must be set in production.");
+}
 
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || "guestlink-default-dev-secret-32-chars-long",
+  secret: authSecret,
   pages: {
     signIn: "/login",
   },
@@ -19,13 +29,25 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
+        // Throttle password guessing per client IP and per targeted account
+        const SIGN_IN_WINDOW = 15 * 60 * 1000;
+        const email = credentials.email.toLowerCase().trim();
+        const ip = getClientIp(req?.headers as Record<string, string> | undefined);
+        const [byIp, byEmail] = await Promise.all([
+          rateLimit(`signin_ip_${ip}`, { limit: 30, windowMs: SIGN_IN_WINDOW }),
+          rateLimit(`signin_email_${email}`, { limit: 10, windowMs: SIGN_IN_WINDOW }),
+        ]);
+        if (!byIp.success || !byEmail.success) {
+          throw new Error("TOO_MANY_ATTEMPTS");
+        }
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase().trim() },
+          where: { email },
           include: {
             memberships: {
               include: {

@@ -1,5 +1,7 @@
 "use client";
 
+import { Ambient } from "@/components/ui/ambient";
+
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -226,7 +228,8 @@ export default function PlatformAdminDashboardPage() {
   });
 
   return (
-    <div className="min-h-screen w-full bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col selection:bg-teal-100 selection:text-teal-900">
+    <div className="admin-canvas glass-ui relative min-h-screen w-full text-slate-900 dark:text-slate-100 flex flex-col selection:bg-teal-100 selection:text-teal-900">
+      <Ambient />
       {/* 1. Header */}
       <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-700/80 shadow-2xs w-full">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-3 flex items-center justify-between gap-4">
@@ -240,7 +243,7 @@ export default function PlatformAdminDashboardPage() {
               />
             </div>
             <div className="min-w-0">
-              <h1 className="font-extrabold tracking-tight text-base sm:text-xl text-slate-900 leading-none">
+              <h1 className="font-semibold tracking-tight text-base sm:text-xl text-slate-900 leading-none">
                 Noura Administration
               </h1>
               <p className="text-[10.5px] sm:text-xs text-slate-500 font-medium mt-1 truncate">
@@ -347,7 +350,7 @@ export default function PlatformAdminDashboardPage() {
             animate="visible"
             whileHover={{ y: -2, transition: { duration: 0.2 } }}
             variants={cardVariants}
-            className="bg-white/95 dark:bg-[#121927]/90 rounded-[22px] border border-slate-200/70 dark:border-white/[0.08] p-5 shadow-card hover:shadow-card-hover backdrop-blur-xs flex items-center gap-4 transition-all"
+            className="bg-white/95 dark:bg-[#121927]/90 rounded-[22px] border border-slate-200/70 dark:border-white/[0.08] p-5 shadow-card hover:shadow-card-hover flex items-center gap-4 transition-all"
           >
             <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-400 border border-teal-200/80 dark:border-teal-800/40 flex items-center justify-center shrink-0 shadow-xs">
               <Users className="w-6 h-6" />
@@ -356,7 +359,7 @@ export default function PlatformAdminDashboardPage() {
               <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
                 Total Clients
               </span>
-              <span className="text-2xl font-extrabold text-slate-900 dark:text-white font-mono tabular-nums">
+              <span className="text-2xl font-semibold text-slate-900 dark:text-white font-mono tabular-nums">
                 {metrics ? metrics.totalClients : "—"}
               </span>
               <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold block mt-0.5">
@@ -372,7 +375,7 @@ export default function PlatformAdminDashboardPage() {
             animate="visible"
             whileHover={{ y: -2, transition: { duration: 0.2 } }}
             variants={cardVariants}
-            className="bg-white/95 dark:bg-[#121927]/90 rounded-[22px] border border-slate-200/70 dark:border-white/[0.08] p-5 shadow-card hover:shadow-card-hover backdrop-blur-xs flex items-center gap-4 transition-all"
+            className="bg-white/95 dark:bg-[#121927]/90 rounded-[22px] border border-slate-200/70 dark:border-white/[0.08] p-5 shadow-card hover:shadow-card-hover flex items-center gap-4 transition-all"
           >
             <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/40 flex items-center justify-center shrink-0 shadow-xs">
               <Store className="w-6 h-6" />
@@ -381,7 +384,7 @@ export default function PlatformAdminDashboardPage() {
               <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
                 Provisioned Venues
               </span>
-              <span className="text-2xl font-extrabold text-slate-900 dark:text-white font-mono tabular-nums">
+              <span className="text-2xl font-semibold text-slate-900 dark:text-white font-mono tabular-nums">
                 {metrics ? metrics.totalShops : "—"}
               </span>
               <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold block mt-0.5">
@@ -397,7 +400,7 @@ export default function PlatformAdminDashboardPage() {
             animate="visible"
             whileHover={{ y: -2, transition: { duration: 0.2 } }}
             variants={cardVariants}
-            className="bg-white/95 dark:bg-[#121927]/90 rounded-[22px] border border-slate-200/70 dark:border-white/[0.08] p-5 shadow-card hover:shadow-card-hover backdrop-blur-xs flex items-center gap-4 transition-all"
+            className="bg-white/95 dark:bg-[#121927]/90 rounded-[22px] border border-slate-200/70 dark:border-white/[0.08] p-5 shadow-card hover:shadow-card-hover flex items-center gap-4 transition-all"
           >
             <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800/40 flex items-center justify-center shrink-0 shadow-xs">
               <Activity className="w-6 h-6" />
@@ -406,7 +409,7 @@ export default function PlatformAdminDashboardPage() {
               <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
                 Guest Engagements
               </span>
-              <span className="text-2xl font-extrabold text-slate-900 dark:text-white font-mono tabular-nums">
+              <span className="text-2xl font-semibold text-slate-900 dark:text-white font-mono tabular-nums">
                 {metrics ? metrics.totalEngagements.toLocaleString() : "—"}
               </span>
               <span className="text-[10px] text-blue-700 dark:text-blue-400 font-semibold block mt-0.5">
@@ -422,7 +425,7 @@ export default function PlatformAdminDashboardPage() {
             animate="visible"
             whileHover={{ y: -2, transition: { duration: 0.2 } }}
             variants={cardVariants}
-            className="bg-white/95 dark:bg-[#121927]/90 rounded-[22px] border border-slate-200/70 dark:border-white/[0.08] p-5 shadow-card hover:shadow-card-hover backdrop-blur-xs flex items-center gap-4 transition-all"
+            className="bg-white/95 dark:bg-[#121927]/90 rounded-[22px] border border-slate-200/70 dark:border-white/[0.08] p-5 shadow-card hover:shadow-card-hover flex items-center gap-4 transition-all"
           >
             <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/40 flex items-center justify-center shrink-0 shadow-xs">
               <TrendingUp className="w-6 h-6" />
@@ -431,7 +434,7 @@ export default function PlatformAdminDashboardPage() {
               <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
                 Estimated MRR
               </span>
-              <span className="text-2xl font-extrabold text-slate-900 dark:text-white font-mono tabular-nums">
+              <span className="text-2xl font-semibold text-slate-900 dark:text-white font-mono tabular-nums">
                 ${metrics?.estimatedMrr ? metrics.estimatedMrr.toLocaleString() : "1,341"}
               </span>
               <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold block mt-0.5">
@@ -442,14 +445,14 @@ export default function PlatformAdminDashboardPage() {
         </div>
 
         {/* 4. Section Bar & Filter Controls */}
-        <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] p-4 shadow-card backdrop-blur-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 w-full">
+        <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] p-4 shadow-card flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 w-full">
           {/* Section Title: Clients & Their Venues */}
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200/80 dark:border-teal-800/40 text-teal-800 dark:text-teal-300 flex items-center justify-center shrink-0 shadow-xs">
               <Building2 className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-tight">
+              <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white leading-tight">
                 Clients & Their Venues
               </h2>
               <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
@@ -563,7 +566,7 @@ export default function PlatformAdminDashboardPage() {
                     {/* Right controls */}
                     <div className="flex items-center gap-2.5 shrink-0 self-end md:self-auto">
                       <div className="text-right mr-2">
-                        <span className="text-sm font-extrabold text-slate-900 block font-mono">
+                        <span className="text-sm font-semibold text-slate-900 block font-mono">
                           {client.shops.length} / {client.maxShops}
                         </span>
                         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
@@ -627,7 +630,7 @@ export default function PlatformAdminDashboardPage() {
                                         />
                                       ) : (
                                         <div
-                                          className="w-full h-full rounded-lg text-white font-extrabold text-xs flex items-center justify-center tracking-tight shadow-2xs"
+                                          className="w-full h-full rounded-lg text-white font-semibold text-xs flex items-center justify-center tracking-tight shadow-2xs"
                                           style={{
                                             backgroundColor: shop.primaryColor || "#0F766E",
                                           }}
@@ -667,19 +670,19 @@ export default function PlatformAdminDashboardPage() {
 
                                 <div className="grid grid-cols-3 gap-2 py-2.5 px-3 rounded-xl bg-slate-50/90 border border-slate-100 text-center">
                                   <div>
-                                    <span className="font-extrabold text-slate-900 block font-mono text-xs sm:text-sm">
+                                    <span className="font-semibold text-slate-900 block font-mono text-xs sm:text-sm">
                                       {shop.actionsCount}
                                     </span>
                                     <span className="text-[10px] text-slate-500 font-medium">Touchpoints</span>
                                   </div>
                                   <div className="border-x border-slate-200/70">
-                                    <span className="font-extrabold text-slate-900 block font-mono text-xs sm:text-sm">
+                                    <span className="font-semibold text-slate-900 block font-mono text-xs sm:text-sm">
                                       {shop.customersCount}
                                     </span>
                                     <span className="text-[10px] text-slate-500 font-medium">Customers</span>
                                   </div>
                                   <div>
-                                    <span className="font-extrabold text-slate-900 block font-mono text-xs sm:text-sm">
+                                    <span className="font-semibold text-slate-900 block font-mono text-xs sm:text-sm">
                                       {shop.feedbacksCount}
                                     </span>
                                     <span className="text-[10px] text-slate-500 font-medium">Feedback</span>
@@ -727,7 +730,7 @@ export default function PlatformAdminDashboardPage() {
       {/* 6. Onboard New Client Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}

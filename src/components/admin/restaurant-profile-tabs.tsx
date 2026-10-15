@@ -539,7 +539,7 @@ export function RestaurantProfileTabs({
       <button
         type="submit"
         disabled={isSaving}
-        className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-gradient-to-r from-teal-700 via-teal-600 to-emerald-700 hover:from-teal-600 hover:via-teal-500 hover:to-emerald-600 text-white font-extrabold text-sm shadow-lg shadow-teal-900/25 hover:shadow-xl hover:shadow-teal-900/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 border border-teal-400/30 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+        className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-gradient-to-r from-teal-700 via-teal-600 to-emerald-700 hover:from-teal-600 hover:via-teal-500 hover:to-emerald-600 text-white font-semibold text-sm shadow-lg shadow-teal-900/25 hover:shadow-xl hover:shadow-teal-900/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 border border-teal-400/30 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
       >
         {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 stroke-[2.5]" />}
         {isSaving ? "Saving Changes..." : "Save Changes"}
@@ -550,7 +550,7 @@ export function RestaurantProfileTabs({
   return (
     <div className="w-full space-y-6 pb-12">
       {/* Tab Navigation Bar */}
-      <div className="flex items-center gap-1.5 p-1.5 bg-slate-100/80 dark:bg-slate-850/80 rounded-[18px] border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-xs shadow-xs">
+      <div className="flex items-center gap-1.5 p-1.5 bg-slate-100/80 dark:bg-white/[0.04] rounded-[18px] border border-slate-200/80 dark:border-white/[0.08] shadow-xs">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -668,7 +668,7 @@ export function RestaurantProfileTabs({
                           )}
                         </div>
                         {isUploadingAdminPhoto && (
-                          <div className="absolute inset-0 rounded-full bg-black/50 backdrop-blur-xs flex items-center justify-center">
+                          <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
                             <Loader2 className="w-4 h-4 text-white animate-spin" />
                           </div>
                         )}
@@ -751,13 +751,13 @@ export function RestaurantProfileTabs({
                   <FieldLabel
                     icon={ImageIcon}
                     label="Restaurant Logo"
-                    hint="Square 1:1 recommended, PNG, JPG, SVG, WebP up to 10MB"
+                    hint="Square 1:1 recommended, PNG, JPG, WebP up to 10MB"
                   />
 
                   <input
                     ref={logoInputRef}
                     type="file"
-                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                    accept="image/png,image/jpeg,image/webp"
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
@@ -841,7 +841,7 @@ export function RestaurantProfileTabs({
                               Click to upload logo or drag and drop
                             </span>
                             <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                              PNG, JPG, SVG or WebP (max 10MB)
+                              PNG, JPG or WebP (max 10MB)
                             </span>
                           </div>
                         </>

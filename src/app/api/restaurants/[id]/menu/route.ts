@@ -70,6 +70,22 @@ export async function GET(
   }
 }
 
+function isHttpsUrl(value: unknown): boolean {
+  if (typeof value !== "string") return false;
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isOwnStoragePdfUrl(value: unknown): boolean {
+  if (!isHttpsUrl(value)) return false;
+  const url = new URL(value as string);
+  const storageHost = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || "https://invalid.local").host;
+  return url.host === storageHost && url.pathname.startsWith("/storage/v1/object/public/");
+}
+
 export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -87,6 +103,20 @@ export async function PUT(
 
     const body = await req.json();
     const { menuType, pdfUrl, images, externalUrl, title, description } = body;
+
+    // Links are shown to guests, so only accept https; PDFs must come from our own storage
+    if (pdfUrl && !isOwnStoragePdfUrl(pdfUrl)) {
+      return NextResponse.json(
+        { success: false, error: { message: "Menu PDF must be uploaded through Noura." } },
+        { status: 400 }
+      );
+    }
+    if (externalUrl && !isHttpsUrl(externalUrl)) {
+      return NextResponse.json(
+        { success: false, error: { message: "External menu link must start with https://" } },
+        { status: 400 }
+      );
+    }
 
     const restaurant = await prisma.restaurant.findUnique({
       where: { id: restaurantId },

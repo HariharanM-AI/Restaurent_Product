@@ -1,6 +1,14 @@
 import path from "path";
 import type { NextConfig } from "next";
 
+const supabaseHost = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || "https://wiugpsnngyponfwtlvnj.supabase.co").hostname;
+  } catch {
+    return "wiugpsnngyponfwtlvnj.supabase.co";
+  }
+})();
+
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   reactStrictMode: true,
@@ -9,14 +17,12 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react"],
   },
   images: {
+    // Only optimise images from our own Supabase Storage bucket (no open fetch proxy)
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
-      },
-      {
-        protocol: "http",
-        hostname: "**",
+        hostname: supabaseHost,
+        pathname: "/storage/v1/object/public/**",
       },
     ],
   },

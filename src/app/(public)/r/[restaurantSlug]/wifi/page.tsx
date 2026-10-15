@@ -26,6 +26,7 @@ export default function WifiPage() {
 
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [hasCopied, setHasCopied] = useState<boolean>(false);
+  const [showConnectSteps, setShowConnectSteps] = useState<boolean>(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -71,7 +72,9 @@ export default function WifiPage() {
 
   const handleCopyPassword = () => {
     if (!wifiData?.password) return;
-    navigator.clipboard.writeText(wifiData.password);
+    // Clipboard can be blocked (insecure origin / denied permission): reveal the password instead
+    if (navigator.clipboard) navigator.clipboard.writeText(wifiData.password).catch(() => setShowPassword(true));
+    else setShowPassword(true);
     setHasCopied(true);
     setTimeout(() => setHasCopied(false), 2500);
 
@@ -84,7 +87,7 @@ export default function WifiPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
+    <div className="min-h-screen bg-transparent flex flex-col">
       {/* Top App Bar */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 flex items-center justify-between">
         <Link
@@ -183,6 +186,51 @@ export default function WifiPage() {
                 </div>
               )}
 
+              {/* One-tap connect: copies the password and walks the guest through the last steps.
+                  shortcut: web pages cannot join Wi-Fi themselves (no browser API); a native app could. */}
+              <button
+                type="button"
+                onClick={() => {
+                  handleCopyPassword();
+                  setShowConnectSteps(true);
+                }}
+                className="w-full py-3.5 px-4 rounded-2xl font-semibold text-sm text-white shadow-sm transition active:scale-[0.98] flex items-center justify-center gap-2"
+                style={{ backgroundColor: brandColor }}
+              >
+                <Wifi className="w-4 h-4" />
+                {wifiData.password ? "Connect to Wi-Fi" : "Connect to open network"}
+              </button>
+
+              {showConnectSteps && (
+                <ol
+                  className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5 text-xs text-slate-700 animate-in fade-in slide-in-from-top-1 duration-300"
+                  aria-live="polite"
+                >
+                  {wifiData.password && (
+                    <li className="flex items-center gap-2 font-semibold text-emerald-700">
+                      <Check className="w-4 h-4 shrink-0" />
+                      Password copied
+                    </li>
+                  )}
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-slate-900">1.</span>
+                    <span>Open your phone&apos;s <strong className="text-slate-900">Settings → Wi-Fi</strong>.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-slate-900">2.</span>
+                    <span>
+                      Tap <strong className="font-mono text-slate-900">{wifiData.ssid}</strong>.
+                    </span>
+                  </li>
+                  {wifiData.password && (
+                    <li className="flex gap-2">
+                      <span className="font-semibold text-slate-900">3.</span>
+                      <span>Long-press the password box and choose <strong className="text-slate-900">Paste</strong>.</span>
+                    </li>
+                  )}
+                </ol>
+              )}
+
               {/* Instructions */}
               {wifiData.instructions && (
                 <div className="p-3 rounded-xl bg-teal-50/50 border border-teal-200/50 text-xs text-teal-900 flex items-start gap-2.5">
@@ -200,7 +248,7 @@ export default function WifiPage() {
                     <QrIcon className="w-4 h-4 text-slate-500" />
                     <span>Scan with Camera to Connect</span>
                   </div>
-                  <div className="w-44 h-44 mx-auto p-2 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center">
+                  <div className="qr-surface w-44 h-44 mx-auto p-2 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center">
                     <img src={qrDataUrl} alt="Wi-Fi Connection QR" className="w-full h-full object-contain" />
                   </div>
                   <span className="text-[10px] text-slate-400 block mt-2">

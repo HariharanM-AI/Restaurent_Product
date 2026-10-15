@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { subscribeToActivity } from "@/lib/realtime/broadcast";
+import { AnimatePresence, motion } from "motion/react";
+import { useLiveRefresh } from "@/hooks/use-live-refresh";
 import {
   Users,
   Eye,
@@ -17,20 +18,34 @@ import {
   ExternalLink,
   TrendingUp,
   Gift,
-  Calendar,
-  Loader2,
   AlertCircle,
   Zap,
   Clock,
-  ArrowUpRight,
-  ArrowDownRight,
   BarChart3,
   Sunrise,
   Sun,
   Sunset,
   Moon,
   AlertTriangle,
+  Lightbulb,
+  ShieldCheck,
+  RotateCw,
+  MousePointerClick,
 } from "lucide-react";
+import { Stagger } from "@/components/ui/motion";
+import { AreaChart, ColumnChart, Donut, Legend, compact } from "@/components/charts";
+import {
+  DashboardSkeleton,
+  Delta,
+  KpiTile,
+  PERIOD_LONG,
+  Panel,
+  PanelEmpty,
+  PeriodToolbar,
+  longDate,
+  shortDate,
+  type PeriodKey,
+} from "@/components/admin/dashboard-kit";
 
 /* ─── Types ─── */
 interface AnalyticsAPIData {
@@ -70,16 +85,6 @@ interface AnalyticsDashboardProps {
   restaurantId: string;
 }
 
-/* ─── Constants ─── */
-const PERIODS = [
-  { key: "today", label: "Today" },
-  { key: "7d", label: "7 Days" },
-  { key: "30d", label: "30 Days" },
-  { key: "90d", label: "90 Days" },
-  { key: "1y", label: "1 Year" },
-  { key: "custom", label: "Custom" },
-] as const;
-
 const iconMap: Record<string, React.ElementType> = {
   UtensilsCrossed,
   Star,
@@ -91,54 +96,24 @@ const iconMap: Record<string, React.ElementType> = {
   Share2,
 };
 
-const colorMap: Record<string, { bg: string; bar: string; text: string }> = {
-  teal: { bg: "bg-teal-50", bar: "bg-teal-600", text: "text-teal-700" },
-  amber: { bg: "bg-amber-50", bar: "bg-amber-500", text: "text-amber-700" },
-  sky: { bg: "bg-sky-50", bar: "bg-sky-600", text: "text-sky-700" },
-  blue: { bg: "bg-blue-50", bar: "bg-blue-600", text: "text-blue-700" },
-  purple: { bg: "bg-purple-50", bar: "bg-purple-600", text: "text-purple-700" },
-  emerald: { bg: "bg-emerald-50", bar: "bg-emerald-600", text: "text-emerald-700" },
-  green: { bg: "bg-green-50", bar: "bg-green-600", text: "text-green-700" },
-  indigo: { bg: "bg-indigo-50", bar: "bg-indigo-600", text: "text-indigo-700" },
-  rose: { bg: "bg-rose-50", bar: "bg-rose-600", text: "text-rose-700" },
+/* Feature tint → chart token, keeping the palette restrained */
+const tintMap: Record<string, string> = {
+  teal: "var(--chart-1)",
+  emerald: "var(--chart-1)",
+  green: "var(--chart-2)",
+  amber: "var(--chart-3)",
+  sky: "var(--chart-4)",
+  blue: "var(--chart-4)",
+  indigo: "var(--chart-4)",
+  purple: "var(--chart-4)",
+  rose: "var(--chart-5)",
 };
-
-function fmt(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(n >= 10_000 ? 0 : 1) + "K";
-  return n.toLocaleString();
-}
-
-/* ─── Skeleton ─── */
-function SkeletonCard() {
-  return (
-    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs animate-pulse">
-      <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 mb-3" />
-      <div className="h-3 w-24 bg-slate-100 dark:bg-slate-800 rounded mb-2" />
-      <div className="h-7 w-16 bg-slate-100 dark:bg-slate-800 rounded mb-2" />
-      <div className="h-3 w-32 bg-slate-100 dark:bg-slate-800 rounded" />
-    </div>
-  );
-}
-
-/* ─── Change Badge ─── */
-function ChangeBadge({ change, suffix = "%" }: { change: number; suffix?: string }) {
-  if (change === 0) return <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">No change</span>;
-  const isPositive = change > 0;
-  return (
-    <span className={`inline-flex items-center gap-0.5 text-[11px] font-bold ${isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-      {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-      {Math.abs(change)}{suffix}
-    </span>
-  );
-}
 
 /* ─── Main Component ─── */
 export function AnalyticsDashboard({ restaurantId }: AnalyticsDashboardProps) {
-  const [period, setPeriod] = useState("30d");
+  const [period, setPeriod] = useState<PeriodKey>("30d");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
-  const [showCustom, setShowCustom] = useState(false);
   const [data, setData] = useState<AnalyticsAPIData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -172,438 +147,483 @@ export function AnalyticsDashboard({ restaurantId }: AnalyticsDashboardProps) {
     fetchData();
   }, [fetchData, period, customFrom, customTo]);
 
-  // Real-time synchronization whenever guest opens or interacts with guest experience
-  useEffect(() => {
-    const unsubscribe = subscribeToActivity(restaurantId, () => {
-      fetchData(true);
-    });
-
-    const pollInterval = setInterval(() => {
-      fetchData(true);
-    }, 4000);
-
-    return () => {
-      unsubscribe();
-      clearInterval(pollInterval);
-    };
-  }, [restaurantId, fetchData]);
-
-  const periodLabel = PERIODS.find((p) => p.key === period)?.label || "30 Days";
+  // Live refresh: 30s polling + realtime events, paused while hidden, never overlapping
+  useLiveRefresh(restaurantId, () => fetchData(true));
 
   return (
-    <div className="w-full space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col gap-1">
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          {loading ? "Loading analytics..." : `Engagement data for ${periodLabel} — vs previous period`}
+    <div className="w-full space-y-5 pb-12">
+      {/* Toolbar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-[13px] text-slate-500 dark:text-slate-400">
+          {loading && !data ? "Loading analytics…" : (
+            <>
+              <span className="font-medium text-slate-700 dark:text-slate-200">{PERIOD_LONG[period]}</span> · compared with the previous period
+            </>
+          )}
         </p>
+        <PeriodToolbar
+          layoutId="analytics-period"
+          period={period}
+          onPeriod={setPeriod}
+          customFrom={customFrom}
+          customTo={customTo}
+          onCustomFrom={setCustomFrom}
+          onCustomTo={setCustomTo}
+          loading={loading}
+        />
       </div>
 
-      {/* Date Filter */}
-      <div className="flex flex-wrap items-center gap-2">
-        {PERIODS.map((p) => (
-          <button
-            key={p.key}
-            onClick={() => { setPeriod(p.key); setShowCustom(p.key === "custom"); }}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              period === p.key
-                ? "bg-[#0B3B36] dark:bg-emerald-700 text-white shadow-sm"
-                : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-400 dark:hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400"
-            }`}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            role="alert"
+            className="flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
           >
-            {p.key === "custom" && <Calendar className="w-3 h-3 inline mr-1.5 -mt-px" />}
-            {p.label}
-          </button>
-        ))}
-        {showCustom && period === "custom" && (
-          <div className="flex items-center gap-2 ml-2">
-            <input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)}
-              className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none" />
-            <span className="text-xs text-slate-400 dark:text-slate-500">to</span>
-            <input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)}
-              className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none" />
-          </div>
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{error}</span>
+            <button
+              onClick={() => fetchData()}
+              className="pressable ml-auto inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100 dark:bg-rose-900/40 dark:text-rose-200 dark:ring-rose-800"
+            >
+              <RotateCw className="h-3 w-3" />
+              Retry
+            </button>
+          </motion.div>
         )}
-        {loading && <Loader2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 animate-spin ml-2" />}
-      </div>
+      </AnimatePresence>
 
-      {error && (
-        <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-400 text-sm font-medium flex items-center gap-2">
-          <AlertCircle className="w-4 h-4" />
-          <span>{error}</span>
-          <button onClick={() => fetchData()} className="ml-auto text-xs font-bold underline">Retry</button>
-        </div>
-      )}
-
-      {loading && !data && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
-        </div>
-      )}
+      {loading && !data && <DashboardSkeleton />}
 
       {data && (
-        <>
-          {/* KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <KPICard icon={<Eye className="w-5 h-5" />} iconBg="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400"
-              label="Total Visits" value={fmt(data.kpis.totalVisits.current)} change={data.kpis.totalVisits.change} />
-            <KPICard icon={<Users className="w-5 h-5" />} iconBg="bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400"
-              label="Unique Guests" value={fmt(data.kpis.uniqueGuests.current)} change={data.kpis.uniqueGuests.change} />
-            <KPICard icon={<Zap className="w-5 h-5" />} iconBg="bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400"
-              label="Feature Interactions" value={fmt(data.kpis.totalInteractions.current)} change={data.kpis.totalInteractions.change} />
-            <KPICard icon={<TrendingUp className="w-5 h-5" />} iconBg="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
-              label="Conversion Rate" value={`${data.kpis.conversionRate.current}%`} change={data.kpis.conversionRate.change} suffix="pts" />
+        <Stagger className="space-y-4 sm:space-y-5" stagger={0.05}>
+          {/* KPI tiles */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <KpiTile
+              featured
+              label="Total visits"
+              value={data.kpis.totalVisits.current}
+              format={compact}
+              delta={data.kpis.totalVisits.change}
+              icon={<Eye className="h-4 w-4" />}
+              spark={data.timeSeries.map((d) => d.visits)}
+            />
+            <KpiTile
+              label="Unique guests"
+              value={data.kpis.uniqueGuests.current}
+              format={compact}
+              delta={data.kpis.uniqueGuests.change}
+              icon={<Users className="h-4 w-4" />}
+            />
+            <KpiTile
+              label="Feature interactions"
+              value={data.kpis.totalInteractions.current}
+              format={compact}
+              delta={data.kpis.totalInteractions.change}
+              icon={<Zap className="h-4 w-4" />}
+              spark={data.timeSeries.map((d) => d.interactions)}
+              color="var(--chart-3)"
+            />
+            <KpiTile
+              label="Conversion rate"
+              value={data.kpis.conversionRate.current}
+              format={(n) => `${Math.round(n)}%`}
+              delta={data.kpis.conversionRate.change}
+              deltaSuffix="pts"
+              icon={<TrendingUp className="h-4 w-4" />}
+              hint="Interactions per visit"
+            />
           </div>
 
-          {/* Engagement Funnel + Touchpoint Distribution */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <EngagementFunnel funnel={data.funnel} totalVisits={data.kpis.totalVisits.current} />
-            <TouchpointDistribution touchpoints={data.touchpoints} />
+          {/* Trend + insights */}
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-3">
+            <TrendsPanel timeSeries={data.timeSeries} />
+            <InsightsPanel insights={data.insights} />
           </div>
 
-          {/* Time Series + Hourly Heatmap + Insights */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <VisitTrendsChart timeSeries={data.timeSeries} />
-            <HourlyHeatmap hours={data.hourlyDistribution} peakHour={data.insights.peakHour} />
-            <InsightsCard insights={data.insights} />
+          {/* Feature funnel + touchpoints */}
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-12">
+            <FeatureEngagementPanel funnel={data.funnel} />
+            <TouchpointPanel touchpoints={data.touchpoints} />
           </div>
-        </>
+
+          {/* Hourly */}
+          <HourlyPanel hours={data.hourlyDistribution} peakHour={data.insights.peakHour} />
+        </Stagger>
       )}
     </div>
   );
 }
 
 /* ═══════════════════════════════════════════════════
-   SUB-COMPONENTS
+   PANELS
    ═══════════════════════════════════════════════════ */
 
-/* ─── KPI Card ─── */
-function KPICard({ icon, iconBg, label, value, change, suffix = "%" }: {
-  icon: React.ReactNode; iconBg: string; label: string; value: string; change: number; suffix?: string;
-}) {
+/* ─── Visits vs interactions ─── */
+function TrendsPanel({ timeSeries }: { timeSeries: AnalyticsAPIData["timeSeries"] }) {
+  const [mode, setMode] = useState<"area" | "bars">("area");
+  const visits = timeSeries.map((d) => d.visits);
+  const interactions = timeSeries.map((d) => d.interactions);
+  const empty = visits.every((v) => v === 0) && interactions.every((v) => v === 0);
+
   return (
-    <div className="p-5 sm:p-5.5 rounded-[22px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden flex flex-col justify-between backdrop-blur-xs">
-      <div className={`w-10 h-10 rounded-2xl ${iconBg} flex items-center justify-center mb-3 shadow-xs`}>
-        {icon}
-      </div>
-      <div>
-        <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</div>
-        <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1 tabular-nums">{value}</div>
-        <div className="mt-2 flex items-center gap-1.5">
-          <ChangeBadge change={change} suffix={suffix} />
-          <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">vs previous period</span>
+    <Panel
+      className="xl:col-span-2"
+      title="Visit & interaction trends"
+      description="Daily hub visits against the feature interactions they produced."
+      action={
+        <div className="flex items-center gap-1 rounded-lg bg-slate-100/80 p-0.5 dark:bg-white/[0.05]" role="group" aria-label="Chart style">
+          {(["area", "bars"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              aria-pressed={mode === m}
+              onClick={() => setMode(m)}
+              className={`rounded-md px-2 py-1 text-[11px] font-semibold capitalize transition-colors ${
+                mode === m
+                  ? "bg-white text-slate-900 shadow-sm dark:bg-white/[0.1] dark:text-white"
+                  : "text-slate-500 hover:text-slate-800 dark:text-slate-400"
+              }`}
+            >
+              {m === "area" ? "Lines" : "Bars"}
+            </button>
+          ))}
         </div>
+      }
+    >
+      <div className="mb-3">
+        <Legend
+          items={[
+            { label: "Visits", color: "var(--chart-1)" },
+            { label: "Interactions", color: "var(--chart-3)" },
+          ]}
+        />
       </div>
-    </div>
+      {empty ? (
+        <PanelEmpty icon={<BarChart3 className="h-4 w-4" />} title="No traffic in this period" hint="Try a wider date range, or share your QR codes to start collecting data." />
+      ) : (
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={mode}
+            initial={{ opacity: 0, filter: "blur(3px)" }}
+            animate={{ opacity: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, filter: "blur(3px)" }}
+            transition={{ duration: 0.2 }}
+          >
+            {mode === "area" ? (
+              <AreaChart
+                ariaLabel="Daily visits and interactions"
+                labels={timeSeries.map((d) => d.date)}
+                formatLabel={shortDate}
+                formatTooltipLabel={longDate}
+                height={260}
+                series={[
+                  { key: "visits", label: "Visits", color: "var(--chart-1)", data: visits },
+                  { key: "interactions", label: "Interactions", color: "var(--chart-3)", data: interactions },
+                ]}
+              />
+            ) : (
+              <ColumnChart
+                ariaLabel="Daily visits and interactions, stacked"
+                data={visits}
+                stackData={interactions}
+                seriesLabels={["Visits", "Interactions"]}
+                stackColor="var(--chart-3)"
+                labels={timeSeries.map((d) => d.date)}
+                formatLabel={shortDate}
+                height={260}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      )}
+    </Panel>
   );
 }
 
-/* ─── Engagement Funnel ─── */
-function EngagementFunnel({ funnel, totalVisits }: { funnel: AnalyticsAPIData["funnel"]; totalVisits: number }) {
+/* ─── Operational insights ─── */
+function InsightsPanel({ insights }: { insights: AnalyticsAPIData["insights"] }) {
+  const rows = [
+    insights.topFeature && {
+      key: "top",
+      tone: "text-teal-300",
+      icon: Award,
+      label: "Top feature",
+      title: insights.topFeature.label,
+      sub: `${insights.topFeature.count.toLocaleString()} interactions`,
+    },
+    insights.leastUsed &&
+      insights.leastUsed.count > 0 && {
+        key: "least",
+        tone: "text-amber-300",
+        icon: AlertTriangle,
+        label: "Needs attention",
+        title: insights.leastUsed.label,
+        sub: `Only ${insights.leastUsed.count.toLocaleString()} interactions`,
+      },
+    {
+      key: "peak",
+      tone: "text-sky-300",
+      icon: Clock,
+      label: "Peak volume hour",
+      title: insights.peakHourLabel,
+      sub: "Highest guest traffic window",
+    },
+  ].filter(Boolean) as { key: string; tone: string; icon: React.ElementType; label: string; title: string; sub: string }[];
+
   return (
-    <div className="lg:col-span-8 p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Action Engagement Funnel</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            How guests interact with each feature — conversion from page view to action.
-          </p>
-        </div>
+    <motion.section
+      variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } } }}
+      className="grain relative flex flex-col overflow-hidden rounded-2xl border border-teal-900/30 bg-[#0B2E2A] p-5 text-white shadow-panel sm:p-6"
+    >
+      <div aria-hidden="true" className="pointer-events-none absolute -left-20 -top-24 h-64 w-64 rounded-full bg-teal-400/20 blur-3xl animate-aurora" />
+      <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 -right-16 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl animate-aurora [animation-delay:-6s]" />
+      <div className="relative">
+        <h2 className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/10 ring-1 ring-white/15">
+            <Lightbulb className="h-3.5 w-3.5 text-amber-300" />
+          </span>
+          Operational insights
+        </h2>
+        <p className="mt-1 text-[12.5px] text-teal-100/60">Calculated from this period&apos;s telemetry.</p>
       </div>
-
-      <div className="space-y-4">
-        {funnel.length === 0 && (
-          <div className="py-8 text-center text-sm text-slate-400 dark:text-slate-500">
-            No feature interactions recorded in this period.
-          </div>
-        )}
-        {funnel.map((item) => {
-          const Icon = iconMap[item.icon] || BarChart3;
-          const colors = colorMap[item.color] || colorMap.teal;
-          const barWidth = totalVisits > 0 ? Math.max(2, Math.min(100, (item.count / totalVisits) * 100)) : 2;
-
+      <ul className="relative mt-5 space-y-2.5">
+        {rows.map((r, i) => {
+          const Icon = r.icon;
           return (
-            <div key={item.eventType} className="group">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-200">
-                  <span className={`w-7 h-7 rounded-lg ${colors.bg} ${colors.text} flex items-center justify-center`}>
-                    <Icon className="w-3.5 h-3.5" />
-                  </span>
-                  <span>{item.label}</span>
-                </span>
-                <div className="flex items-center gap-3">
-                  <ChangeBadge change={item.change} />
-                  <span className="font-mono font-bold text-slate-900 dark:text-white text-xs min-w-[28px] text-right">{item.count}</span>
-                </div>
+            <motion.li
+              key={r.key}
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.25 + i * 0.1 }}
+              className="rounded-xl bg-white/[0.06] p-3.5 ring-1 ring-inset ring-white/10 backdrop-blur-sm transition-colors hover:bg-white/[0.09]"
+            >
+              <div className={`flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wider ${r.tone}`}>
+                <Icon className="h-3.5 w-3.5" />
+                {r.label}
               </div>
-              <div className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                <div
-                  className={`h-full rounded-full ${colors.bar} transition-all duration-700 ease-out`}
-                  style={{ width: `${barWidth}%` }}
-                />
-              </div>
-              <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
-                {item.pct}% of visitors used this feature
-              </div>
-            </div>
+              <div className="mt-1 text-sm font-semibold">{r.title}</div>
+              <div className="text-[12px] text-teal-100/60">{r.sub}</div>
+            </motion.li>
           );
         })}
+      </ul>
+      <div className="relative mt-auto flex items-center gap-1.5 pt-5 text-[11px] text-teal-100/40">
+        <ShieldCheck className="h-3.5 w-3.5" />
+        Updates live as guests interact.
       </div>
-    </div>
+    </motion.section>
   );
 }
 
-/* ─── Touchpoint Distribution ─── */
-function TouchpointDistribution({ touchpoints }: { touchpoints: AnalyticsAPIData["touchpoints"] }) {
+/* ─── Per-feature engagement ─── */
+function FeatureEngagementPanel({ funnel }: { funnel: AnalyticsAPIData["funnel"] }) {
+  const max = Math.max(1, ...funnel.map((f) => f.count));
+  const anyData = funnel.some((f) => f.count > 0);
+  return (
+    <Panel
+      className="xl:col-span-7"
+      icon={<MousePointerClick className="h-4 w-4" />}
+      title="Feature engagement"
+      description="How many visitors went on to use each feature."
+    >
+      {!anyData ? (
+        <PanelEmpty icon={<BarChart3 className="h-4 w-4" />} title="No feature interactions recorded in this period." />
+      ) : (
+        <div className="overflow-x-auto scroll-thin -mx-1">
+          <table className="w-full min-w-[460px] border-separate border-spacing-y-1 px-1 text-[13px]">
+            <thead>
+              <tr className="text-left text-[11px] font-medium text-slate-400">
+                <th className="pb-1 font-medium">Feature</th>
+                <th className="pb-1 font-medium">Reach</th>
+                <th className="pb-1 text-right font-medium">Count</th>
+                <th className="pb-1 text-right font-medium">Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              {funnel.map((item, idx) => {
+                const Icon = iconMap[item.icon] || BarChart3;
+                const color = tintMap[item.color] || "var(--chart-1)";
+                return (
+                  <motion.tr
+                    key={item.eventType}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.1 + idx * 0.04, ease: [0.22, 1, 0.36, 1] }}
+                    className="group"
+                  >
+                    <td className="rounded-l-lg py-2 pl-2 pr-3 transition-colors group-hover:bg-slate-50 dark:group-hover:bg-white/[0.03]">
+                      <span className="flex items-center gap-2.5 font-medium text-slate-700 dark:text-slate-200">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset ring-slate-200/80 dark:ring-white/[0.08]" style={{ color }}>
+                          <Icon className="h-3.5 w-3.5" />
+                        </span>
+                        <span className="truncate">{item.label}</span>
+                      </span>
+                    </td>
+                    <td className="w-[34%] py-2 pr-3 transition-colors group-hover:bg-slate-50 dark:group-hover:bg-white/[0.03]">
+                      <div className="flex items-center gap-2">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-white/[0.05]">
+                          <motion.div
+                            className="h-full rounded-full"
+                            style={{ background: color }}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.max((item.count / max) * 100, item.count > 0 ? 3 : 0)}%` }}
+                            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.2 + idx * 0.04 }}
+                          />
+                        </div>
+                        <span className="w-9 text-right text-[11px] tabular text-slate-400">{item.pct}%</span>
+                      </div>
+                    </td>
+                    <td className="py-2 pr-3 text-right font-semibold tabular text-slate-900 transition-colors group-hover:bg-slate-50 dark:text-white dark:group-hover:bg-white/[0.03]">
+                      {item.count.toLocaleString()}
+                    </td>
+                    <td className="rounded-r-lg py-2 pr-2 text-right transition-colors group-hover:bg-slate-50 dark:group-hover:bg-white/[0.03]">
+                      <Delta value={item.change} />
+                    </td>
+                  </motion.tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+/* ─── Touchpoint distribution ─── */
+function TouchpointPanel({ touchpoints }: { touchpoints: AnalyticsAPIData["touchpoints"] }) {
+  const [active, setActive] = useState<string | null>(null);
   const items = [
-    { key: "qr", label: "Table QR Code", desc: "Physical tabletop stands", icon: QrCode, data: touchpoints.qr, colors: "bg-teal-50 dark:bg-teal-950/40 border-teal-200/60 dark:border-teal-800/40 text-teal-700 dark:text-teal-400" },
-    { key: "nfc", label: "NFC Touchpoint", desc: "Tap-to-connect tags", icon: Radio, data: touchpoints.nfc, colors: "bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200/60 dark:border-indigo-800/40 text-indigo-700 dark:text-indigo-400" },
-    { key: "direct", label: "Direct / Online", desc: "Browser & shared links", icon: ExternalLink, data: touchpoints.direct, colors: "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300" },
+    { key: "qr", label: "Table QR code", desc: "Physical tabletop stands", icon: QrCode, data: touchpoints.qr, color: "var(--chart-1)" },
+    { key: "nfc", label: "NFC touchpoint", desc: "Tap-to-connect tags", icon: Radio, data: touchpoints.nfc, color: "var(--chart-4)" },
+    { key: "direct", label: "Direct / online", desc: "Browser & shared links", icon: ExternalLink, data: touchpoints.direct, color: "var(--chart-3)" },
   ];
+  const total = touchpoints.qr.count + touchpoints.nfc.count + touchpoints.direct.count;
 
   return (
-    <div className="lg:col-span-4 p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
-      <div>
-        <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Touchpoint Distribution</h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Physical QR vs NFC vs Web Direct</p>
-
-        <div className="space-y-3 mt-5">
+    <Panel className="xl:col-span-5" title="Touchpoint distribution" description="Where guest sessions start.">
+      <div className="flex flex-col items-center gap-5 sm:flex-row xl:flex-col 2xl:flex-row">
+        <Donut
+          size={156}
+          thickness={15}
+          centerLabel="Events"
+          centerValue={compact(total)}
+          activeKey={active}
+          onActiveChange={setActive}
+          segments={items.map((i) => ({ key: i.key, label: i.label, value: i.data.count, color: i.color }))}
+        />
+        <ul className="w-full flex-1 space-y-1.5">
           {items.map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.key} className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 rounded-xl flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className={`w-9 h-9 rounded-lg border flex items-center justify-center ${item.colors}`}>
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="font-semibold text-xs text-slate-800 dark:text-slate-200 block">{item.label}</span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500">{item.desc}</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="font-mono font-bold text-slate-900 dark:text-white text-sm block">{item.data.count}</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{item.data.pct}%</span>
-                    <ChangeBadge change={item.data.change} />
-                  </div>
-                </div>
+              <li
+                key={item.key}
+                onPointerEnter={() => setActive(item.key)}
+                onPointerLeave={() => setActive(null)}
+                className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 ring-1 ring-inset transition-all duration-200 ${
+                  active === item.key
+                    ? "bg-slate-50 ring-slate-300/80 dark:bg-white/[0.05] dark:ring-white/15"
+                    : "ring-slate-200/60 dark:ring-white/[0.06]"
+                }`}
+              >
+                <span className="flex min-w-0 items-center gap-2.5">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ color: item.color, background: `color-mix(in srgb, ${item.color} 12%, transparent)` }}>
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[13px] font-medium text-slate-800 dark:text-slate-100">{item.label}</span>
+                    <span className="block truncate text-[11px] text-slate-400">{item.desc}</span>
+                  </span>
+                </span>
+                <span className="shrink-0 text-right">
+                  <span className="block text-sm font-semibold tabular text-slate-900 dark:text-white">{item.data.count.toLocaleString()}</span>
+                  <span className="flex items-center justify-end gap-1.5">
+                    <span className="text-[11px] tabular text-slate-400">{item.data.pct}%</span>
+                    <Delta value={item.data.change} />
+                  </span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      <p className="mt-4 flex items-center gap-1.5 border-t border-slate-100 pt-3 text-[11.5px] text-slate-400 dark:border-white/[0.06]">
+        <ShieldCheck className="h-3.5 w-3.5" />
+        Data is strictly anonymous. No guest personal identity is logged during table scans.
+      </p>
+    </Panel>
+  );
+}
+
+/* ─── Hourly distribution ─── */
+function HourlyPanel({ hours, peakHour }: { hours: number[]; peakHour: number }) {
+  const timeSlots = [
+    { label: "Morning", hint: "6–12", range: [6, 12], icon: Sunrise },
+    { label: "Afternoon", hint: "12–17", range: [12, 17], icon: Sun },
+    { label: "Evening", hint: "17–22", range: [17, 22], icon: Sunset },
+    { label: "Night", hint: "22–6", range: [22, 6], icon: Moon },
+  ];
+  const totals = timeSlots.map((slot) => {
+    const [start, end] = slot.range;
+    return start < end
+      ? hours.slice(start, end).reduce((a, b) => a + b, 0)
+      : hours.slice(start).reduce((a, b) => a + b, 0) + hours.slice(0, end).reduce((a, b) => a + b, 0);
+  });
+  const best = Math.max(...totals);
+  const hasData = hours.some((h) => h > 0);
+
+  return (
+    <Panel
+      icon={<Clock className="h-4 w-4" />}
+      title="Peak hours"
+      description="Guest engagement distribution across the day."
+      action={
+        hasData ? (
+          <span className="rounded-lg bg-amber-50 px-2 py-1 text-[11.5px] font-semibold text-amber-800 ring-1 ring-inset ring-amber-600/15 dark:bg-amber-400/10 dark:text-amber-300 dark:ring-amber-400/20">
+            Peak {String(peakHour).padStart(2, "0")}:00
+          </span>
+        ) : null
+      }
+    >
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-4">
+        <div className="lg:col-span-3">
+          <ColumnChart
+            ariaLabel="Interactions by hour of day"
+            data={hours}
+            labels={hours.map((_, h) => `${String(h).padStart(2, "0")}:00`)}
+            highlightIndex={hasData ? peakHour : undefined}
+            height={170}
+            tickEvery={3}
+            valueFormatter={(n) => `${n.toLocaleString()} events`}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-1">
+          {timeSlots.map((slot, i) => {
+            const SlotIcon = slot.icon;
+            const isBest = hasData && totals[i] === best;
+            return (
+              <div
+                key={slot.label}
+                className={`flex items-center justify-between rounded-xl px-3 py-2.5 ring-1 ring-inset transition-colors ${
+                  isBest
+                    ? "bg-amber-50/70 ring-amber-500/25 dark:bg-amber-400/[0.07] dark:ring-amber-400/20"
+                    : "ring-slate-200/60 dark:ring-white/[0.06]"
+                }`}
+              >
+                <span className="flex items-center gap-2 text-[12.5px] font-medium text-slate-700 dark:text-slate-200">
+                  <SlotIcon className={`h-4 w-4 ${isBest ? "text-amber-600 dark:text-amber-300" : "text-slate-400"}`} />
+                  {slot.label}
+                  <span className="text-[10.5px] font-normal text-slate-400">{slot.hint}</span>
+                </span>
+                <span className="text-sm font-semibold tabular text-slate-900 dark:text-white">{totals[i].toLocaleString()}</span>
               </div>
             );
           })}
         </div>
       </div>
-
-      {/* Donut */}
-      <div className="flex items-center justify-center my-4">
-        <div className="relative w-28 h-28">
-          <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-            <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" className="text-slate-200 dark:text-slate-800" strokeWidth="4" />
-            <circle cx="18" cy="18" r="14" fill="none" stroke="#0D9488" strokeWidth="4"
-              strokeDasharray={`${(touchpoints.qr.pct / 100) * 88} ${88 - (touchpoints.qr.pct / 100) * 88}`}
-              strokeDashoffset="0" strokeLinecap="round" />
-            <circle cx="18" cy="18" r="14" fill="none" stroke="#6366F1" strokeWidth="4"
-              strokeDasharray={`${(touchpoints.nfc.pct / 100) * 88} ${88 - (touchpoints.nfc.pct / 100) * 88}`}
-              strokeDashoffset={`${-(touchpoints.qr.pct / 100) * 88}`} strokeLinecap="round" />
-            <circle cx="18" cy="18" r="14" fill="none" stroke="#94A3B8" strokeWidth="4"
-              strokeDasharray={`${(touchpoints.direct.pct / 100) * 88} ${88 - (touchpoints.direct.pct / 100) * 88}`}
-              strokeDashoffset={`${-((touchpoints.qr.pct + touchpoints.nfc.pct) / 100) * 88}`} strokeLinecap="round" />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-sm font-black text-slate-900 dark:text-white">{touchpoints.qr.count + touchpoints.nfc.count + touchpoints.direct.count}</span>
-            <span className="text-[9px] text-slate-400 dark:text-slate-500">Total</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
-        Data is strictly anonymous. No guest personal identity is logged during table scans.
-      </div>
-    </div>
-  );
-}
-
-/* ─── Visit Trends Chart ─── */
-function VisitTrendsChart({ timeSeries }: { timeSeries: AnalyticsAPIData["timeSeries"] }) {
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-  const visits = timeSeries.map((d) => d.visits);
-  const interactions = timeSeries.map((d) => d.interactions);
-  const maxVal = Math.max(...visits, ...interactions, 1);
-
-  const dateLabels: { label: string; idx: number }[] = [];
-  const step = Math.max(1, Math.floor(timeSeries.length / 5));
-  for (let i = 0; i < timeSeries.length; i += step) {
-    dateLabels.push({
-      label: new Date(timeSeries[i].date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      idx: i,
-    });
-  }
-
-  return (
-    <div className="lg:col-span-2 p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
-      <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Visit & Interaction Trends</h2>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-4">Daily visits vs feature interactions over time.</p>
-
-      <div className="flex items-center gap-4 text-[11px] mb-3 font-semibold">
-        <span className="flex items-center gap-1 text-indigo-700 dark:text-indigo-400">
-          <span className="w-2 h-2 rounded-full bg-indigo-500" /> Visits
-        </span>
-        <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" /> Interactions
-        </span>
-      </div>
-
-      <div className="relative" onMouseLeave={() => setHoveredIdx(null)}>
-        {hoveredIdx !== null && timeSeries[hoveredIdx] && (
-          <div className="absolute top-0 bg-white dark:bg-slate-800 rounded-lg p-2 shadow-lg border border-slate-100 dark:border-slate-700 text-center text-xs z-10 pointer-events-none"
-            style={{ left: `${(hoveredIdx / Math.max(timeSeries.length - 1, 1)) * 85 + 5}%`, transform: "translateX(-50%)" }}>
-            <div className="text-[10px] text-slate-400 dark:text-slate-400 font-bold">
-              {new Date(timeSeries[hoveredIdx].date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-            </div>
-            <div className="font-extrabold text-indigo-700 dark:text-indigo-400">{timeSeries[hoveredIdx].visits} visits</div>
-            <div className="font-extrabold text-emerald-700 dark:text-emerald-400">{timeSeries[hoveredIdx].interactions} interactions</div>
-          </div>
-        )}
-
-        <div className="h-36 flex items-end gap-[2px] pt-8">
-          {visits.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">No data</div>
-          ) : (
-            visits.map((v, i) => (
-              <div key={i} className="flex-1 flex flex-col items-stretch gap-[1px] cursor-pointer"
-                onMouseEnter={() => setHoveredIdx(i)}>
-                <div className={`rounded-t-xs transition ${hoveredIdx === i ? "bg-indigo-600 dark:bg-indigo-500" : "bg-indigo-300 dark:bg-indigo-500/50 hover:bg-indigo-400 dark:hover:bg-indigo-400"}`}
-                  style={{ height: `${Math.max((v / maxVal) * 100, 2)}%` }} />
-                <div className={`rounded-b-xs transition ${hoveredIdx === i ? "bg-emerald-600 dark:bg-emerald-500" : "bg-emerald-300 dark:bg-emerald-500/50 hover:bg-emerald-400 dark:hover:bg-emerald-400"}`}
-                  style={{ height: `${Math.max((interactions[i] / maxVal) * 100, 1)}%` }} />
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-2 px-1">
-          {dateLabels.map((dl) => (<span key={dl.idx}>{dl.label}</span>))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Hourly Heatmap ─── */
-function HourlyHeatmap({ hours, peakHour }: { hours: number[]; peakHour: number }) {
-  const maxH = Math.max(...hours, 1);
-  const timeSlots = [
-    { label: "Morning", range: [6, 12], icon: Sunrise },
-    { label: "Afternoon", range: [12, 17], icon: Sun },
-    { label: "Evening", range: [17, 22], icon: Sunset },
-    { label: "Night", range: [22, 6], icon: Moon },
-  ];
-
-  return (
-    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Peak Hours</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Guest engagement distribution by hour.</p>
-        </div>
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-          <Clock className="w-3.5 h-3.5" />
-          <span>Peak: {peakHour}:00</span>
-        </div>
-      </div>
-
-      {/* Hour bars */}
-      <div className="h-24 flex items-end gap-[2px] mb-2">
-        {hours.map((count, h) => (
-          <div key={h} className="flex-1 relative group">
-            <div
-              className={`w-full rounded-t-xs transition-all duration-300 ${
-                h === peakHour ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700 group-hover:bg-slate-400 dark:group-hover:bg-slate-500"
-              }`}
-              style={{ height: `${Math.max((count / maxH) * 100, 3)}%` }}
-            />
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-800 dark:bg-slate-700 text-white px-1.5 py-0.5 rounded text-[9px] font-bold opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-10">
-              {h}:00 — {count}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-between text-[9px] text-slate-400 dark:text-slate-500 px-0.5">
-        <span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span>
-      </div>
-
-      {/* Time slot summaries */}
-      <div className="grid grid-cols-2 gap-2 mt-4">
-        {timeSlots.map((slot) => {
-          const start = slot.range[0];
-          const end = slot.range[1];
-          const slotTotal = start < end
-            ? hours.slice(start, end).reduce((a, b) => a + b, 0)
-            : hours.slice(start).reduce((a, b) => a + b, 0) + hours.slice(0, end).reduce((a, b) => a + b, 0);
-          const SlotIcon = slot.icon;
-          return (
-            <div key={slot.label} className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 text-center">
-              <div className="flex items-center justify-center text-slate-500 dark:text-slate-400 mb-1">
-                <SlotIcon className="w-4 h-4" />
-              </div>
-              <div className="text-[10px] font-bold text-slate-600 dark:text-slate-300">{slot.label}</div>
-              <div className="text-xs font-black text-slate-900 dark:text-white mt-0.5">{slotTotal}</div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Insights Card ─── */
-function InsightsCard({ insights }: { insights: AnalyticsAPIData["insights"] }) {
-  return (
-    <div className="p-6 rounded-[24px] bg-gradient-to-br from-[#0B3B36] to-[#0E473F] text-white shadow-card hover:shadow-card-hover transition-all duration-200 lg:col-span-1 flex flex-col justify-between border border-emerald-500/20 backdrop-blur-xs">
-      <div>
-        <h2 className="text-base font-extrabold flex items-center gap-2">
-          <Zap className="w-4 h-4 text-amber-400" />
-          Operational Insights
-        </h2>
-        <p className="text-xs text-emerald-200/70 mt-0.5 mb-5">Calculated from recent telemetry.</p>
-
-        <div className="space-y-4">
-          {insights.topFeature && (
-            <div className="p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-              <div className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                <Award className="w-3.5 h-3.5" />
-                <span>Top Feature</span>
-              </div>
-              <div className="text-sm font-bold">{insights.topFeature.label}</div>
-              <div className="text-xs text-emerald-200/80 mt-0.5">{insights.topFeature.count} interactions</div>
-            </div>
-          )}
-
-          {insights.leastUsed && insights.leastUsed.count > 0 && (
-            <div className="p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-              <div className="text-[10px] font-bold text-amber-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                <AlertTriangle className="w-3.5 h-3.5" />
-                <span>Needs Attention</span>
-              </div>
-              <div className="text-sm font-bold">{insights.leastUsed.label}</div>
-              <div className="text-xs text-emerald-200/80 mt-0.5">Only {insights.leastUsed.count} interactions</div>
-            </div>
-          )}
-
-          <div className="p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-            <div className="text-[10px] font-bold text-sky-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" />
-              <span>Peak Volume Hour</span>
-            </div>
-            <div className="text-sm font-bold">{insights.peakHourLabel}</div>
-            <div className="text-xs text-emerald-200/80 mt-0.5">Highest guest traffic period</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-5 pt-4 border-t border-white/10 text-[11px] text-emerald-200/50">
-        Metrics refresh with active reporting period.
-      </div>
-    </div>
+    </Panel>
   );
 }

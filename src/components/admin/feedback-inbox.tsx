@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Segmented } from "@/components/ui/motion";
+import { FeedbackPhotoCell } from "@/components/admin/feedback-photos";
 import { subscribeToActivity } from "@/lib/realtime/broadcast";
 import {
   Star,
@@ -22,6 +24,8 @@ interface FeedbackRecord {
   message: string;
   contact?: string | null;
   isAnonymous: boolean;
+  /** Access-controlled photo URLs (served only to this restaurant's admins) */
+  photos?: string[];
   createdAt: Date | string;
 }
 
@@ -185,7 +189,7 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="text-xs font-bold text-slate-400 dark:text-slate-500 mb-1">Feedback</div>
-          <h1 className="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
             Guest Feedback
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -213,23 +217,16 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
 
       {/* 2. Date Filter Pills */}
       <div className="flex flex-wrap items-center gap-2">
-        {PERIODS.map((p) => (
-          <button
-            key={p.key}
-            onClick={() => {
-              setPeriod(p.key);
-              setShowCustomPicker(p.key === "custom");
-            }}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              period === p.key
-                ? "bg-[#0B3B36] text-white shadow-sm"
-                : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-400"
-            }`}
-          >
-            {p.key === "custom" && <Calendar className="w-3 h-3 inline mr-1.5 -mt-px" />}
-            {p.label}
-          </button>
-        ))}
+        <Segmented
+          ariaLabel="Reporting period"
+          layoutId="feedback-period"
+          options={PERIODS}
+          value={period as (typeof PERIODS)[number]["key"]}
+          onChange={(k) => {
+            setPeriod(k);
+            setShowCustomPicker(k === "custom");
+          }}
+        />
 
         {showCustomPicker && period === "custom" && (
           <div className="flex items-center gap-2 ml-2">
@@ -310,7 +307,7 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
           </div>
 
           {/* 5. Feedback Table (matching uploaded image design) */}
-          <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs">
+          <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card">
             {/* Filter bar */}
             <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-700">
@@ -374,6 +371,7 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
                   <tr className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                     <th className="text-left py-3 px-3 w-24">Rating</th>
                     <th className="text-left py-3 px-3">Feedback</th>
+                    <th className="text-left py-3 px-3 w-40">Photos</th>
                     <th className="text-center py-3 px-3 w-28">Category</th>
                     <th className="text-right py-3 px-3 w-36">Date & Time</th>
                   </tr>
@@ -401,6 +399,12 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
                               </span>
                             )}
                           </div>
+                        </td>
+                        <td className="py-4 px-3 align-top">
+                          <FeedbackPhotoCell
+                            urls={item.photos ?? []}
+                            label={`${item.rating}-star ${item.category ?? ""} feedback`.replace(/\s+/g, " ").trim()}
+                          />
                         </td>
                         <td className="py-4 px-3 text-center align-top">
                           {item.category ? (
@@ -436,7 +440,7 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="py-12 text-center text-sm text-slate-400 dark:text-slate-500">
+                      <td colSpan={5} className="py-12 text-center text-sm text-slate-400 dark:text-slate-500">
                         No feedback matching your filters.
                       </td>
                     </tr>
@@ -481,13 +485,13 @@ function KPICard({
 }) {
   const isPositive = change >= 0;
   return (
-    <div className="p-5 sm:p-5.5 rounded-[22px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden flex flex-col justify-between backdrop-blur-xs">
+    <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#0E1520] border border-slate-200/70 dark:border-white/[0.07] shadow-panel hover:shadow-panel-hover dark:shadow-panel-dark hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden flex flex-col justify-between">
       <div className={`w-10 h-10 rounded-2xl ${iconBg} flex items-center justify-center mb-3 shadow-xs`}>
         {icon}
       </div>
       <div>
-        <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</div>
-        <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1 tabular-nums">{value}</div>
+        <div className="text-[12.5px] font-medium text-slate-500 dark:text-slate-400">{label}</div>
+        <div className="text-[28px] font-semibold text-slate-900 dark:text-white tracking-tight mt-1 tabular leading-tight">{value}</div>
       {change !== 0 ? (
         <div className={`text-xs font-bold mt-2 ${isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
           {isRatingChange ? (
@@ -515,13 +519,13 @@ function TopMentionsCard({ topics }: { topics: FeedbackStatsData["topics"] }) {
     "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400",
   ];
   return (
-    <div className="p-5 sm:p-5.5 rounded-[22px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden flex flex-col justify-between backdrop-blur-xs">
+    <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#0E1520] border border-slate-200/70 dark:border-white/[0.07] shadow-panel hover:shadow-panel-hover dark:shadow-panel-dark hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden flex flex-col justify-between">
       <div className="w-10 h-10 rounded-2xl bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-3 shadow-xs">
         <MessageSquare className="w-5 h-5" />
       </div>
       <div>
-        <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Response Insights</div>
-      <div className="text-lg font-black text-slate-900 dark:text-white tracking-tight mt-1">
+        <div className="text-[12.5px] font-medium text-slate-500 dark:text-slate-400">Response Insights</div>
+      <div className="text-lg font-bold text-slate-900 dark:text-white tracking-tight mt-1">
         {top3.length > 0 ? "Top Mentions" : "No topics yet"}
       </div>
       <div className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-medium">
@@ -558,10 +562,10 @@ function RatingDistribution({ distribution }: { distribution: FeedbackStatsData[
   };
 
   return (
-    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
+    <div className="p-6 rounded-2xl bg-white dark:bg-[#0E1520] border border-slate-200/70 dark:border-white/[0.07] shadow-panel hover:shadow-panel-hover dark:shadow-panel-dark transition-all duration-200">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Rating Distribution</h2>
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">Rating Distribution</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Breakdown of all feedback ratings.</p>
         </div>
       </div>
@@ -614,10 +618,10 @@ function FeedbackTrends({ timeSeries }: { timeSeries: FeedbackStatsData["timeSer
   }
 
   return (
-    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
+    <div className="p-6 rounded-2xl bg-white dark:bg-[#0E1520] border border-slate-200/70 dark:border-white/[0.07] shadow-panel hover:shadow-panel-hover dark:shadow-panel-dark transition-all duration-200">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Feedback Trends</h2>
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">Feedback Trends</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Daily feedback count and average rating.</p>
         </div>
       </div>
@@ -645,7 +649,7 @@ function FeedbackTrends({ timeSeries }: { timeSeries: FeedbackStatsData["timeSer
             <div className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">
               {new Date(timeSeries[hoveredIdx].date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
             </div>
-            <div className="font-extrabold text-slate-900 dark:text-white">{timeSeries[hoveredIdx].count} feedback</div>
+            <div className="font-semibold text-slate-900 dark:text-white">{timeSeries[hoveredIdx].count} feedback</div>
             {timeSeries[hoveredIdx].avgRating > 0 && (
               <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
                 <Star className="w-3 h-3 fill-amber-400 text-amber-400 shrink-0" />
@@ -692,10 +696,10 @@ function TopicsCard({ topics }: { topics: FeedbackStatsData["topics"] }) {
   const maxCount = Math.max(...topics.map(t => t.count), 1);
 
   return (
-    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
+    <div className="p-6 rounded-2xl bg-white dark:bg-[#0E1520] border border-slate-200/70 dark:border-white/[0.07] shadow-panel hover:shadow-panel-hover dark:shadow-panel-dark transition-all duration-200">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Common Feedback Topics</h2>
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">Common Feedback Topics</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Most mentioned keywords in feedback.</p>
         </div>
       </div>

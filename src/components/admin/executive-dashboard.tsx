@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { subscribeToActivity } from "@/lib/realtime/broadcast";
-import { useTheme } from "@/components/providers/theme-provider";
+import { AnimatePresence, motion } from "motion/react";
+import { useLiveRefresh } from "@/hooks/use-live-refresh";
 import {
   Users,
   Award,
@@ -17,15 +17,32 @@ import {
   UtensilsCrossed,
   Share2,
   Tag,
-  ChevronDown,
-  Calendar,
-  Loader2,
   AlertCircle,
   Sparkles,
   Activity,
   Clock,
-  ChevronRight,
+  Flame,
+  Repeat2,
+  Wallet,
+  Trophy,
+  Ticket,
+  UserCheck,
+  EyeOff,
+  RotateCw,
 } from "lucide-react";
+import { Stagger, AnimatedNumber } from "@/components/ui/motion";
+import { AreaChart, BarList, ColumnChart, Donut, Funnel, HeatGrid, Legend, RadialGauge, compact } from "@/components/charts";
+import {
+  DashboardSkeleton,
+  KpiTile,
+  PERIOD_LONG,
+  Panel,
+  PanelEmpty,
+  PeriodToolbar,
+  longDate,
+  shortDate,
+  type PeriodKey,
+} from "@/components/admin/dashboard-kit";
 
 /* ─── Types ─── */
 interface DashboardGuest {
@@ -83,22 +100,6 @@ interface ExecutiveDashboardProps {
   };
 }
 
-/* ─── Helpers ─── */
-const PERIODS = [
-  { key: "today", label: "Today" },
-  { key: "7d", label: "7 Days" },
-  { key: "30d", label: "30 Days" },
-  { key: "90d", label: "90 Days" },
-  { key: "1y", label: "1 Year" },
-  { key: "custom", label: "Custom" },
-] as const;
-
-function fmt(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(n >= 10_000 ? 0 : 1) + "K";
-  return n.toLocaleString();
-}
-
 const iconMap: Record<string, React.FC<{ className?: string }>> = {
   QrCode, UtensilsCrossed, Star, Wifi, Award, MessageSquare, Share2, Gift, Sparkles, Activity, Clock, AlertCircle, Tag, TrendingUp,
 };
@@ -108,55 +109,11 @@ function DynamicIcon({ name, className }: { name: string; className?: string }) 
   return <Icon className={className} />;
 }
 
-/* ─── Skeleton Loader ─── */
-function SkeletonCard() {
-  return (
-    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs animate-pulse">
-      <div className="flex items-start justify-between">
-        <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800" />
-      </div>
-      <div className="mt-4 space-y-2">
-        <div className="h-3 w-24 bg-slate-100 dark:bg-slate-800 rounded" />
-        <div className="h-7 w-16 bg-slate-100 dark:bg-slate-800 rounded" />
-        <div className="h-3 w-32 bg-slate-100 dark:bg-slate-800 rounded" />
-      </div>
-    </div>
-  );
-}
-
-function SkeletonBlock({ className = "h-72" }: { className?: string }) {
-  return (
-    <div className={`rounded-[24px] bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs animate-pulse ${className}`} />
-  );
-}
-
-/* ─── SVG Chart Helpers ─── */
-function buildPolylinePath(data: number[], width: number, height: number, padding = 8): string {
-  if (data.length === 0) return "";
-  const max = Math.max(...data, 1);
-  const step = (width - padding * 2) / Math.max(data.length - 1, 1);
-  return data
-    .map((val, i) => {
-      const x = padding + i * step;
-      const y = padding + (1 - val / max) * (height - padding * 2);
-      return `${i === 0 ? "M" : "L"} ${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-}
-
-function buildAreaPath(data: number[], width: number, height: number, padding = 8): string {
-  if (data.length === 0) return "";
-  const linePath = buildPolylinePath(data, width, height, padding);
-  const lastX = padding + (data.length - 1) * ((width - padding * 2) / Math.max(data.length - 1, 1));
-  return `${linePath} L ${lastX.toFixed(1)},${height - padding} L ${padding},${height - padding} Z`;
-}
-
 /* ─── Main Component ─── */
 export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
-  const [period, setPeriod] = useState("30d");
+  const [period, setPeriod] = useState<PeriodKey>("30d");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
-  const [showCustomPicker, setShowCustomPicker] = useState(false);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -191,185 +148,127 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
     fetchDashboard();
   }, [fetchDashboard, period, customFrom, customTo]);
 
-  // Real-time synchronization whenever guest opens or uses the guest hub
-  useEffect(() => {
-    const unsubscribe = subscribeToActivity(restaurant.id, () => {
-      fetchDashboard(true);
-    });
-
-    const pollInterval = setInterval(() => {
-      fetchDashboard(true);
-    }, 4000);
-
-    return () => {
-      unsubscribe();
-      clearInterval(pollInterval);
-    };
-  }, [restaurant.id, fetchDashboard]);
+  // Live refresh: 30s polling + realtime events, paused while hidden, never overlapping
+  useLiveRefresh(restaurant.id, () => fetchDashboard(true));
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-  const periodLabel = PERIODS.find((p) => p.key === period)?.label || "30 Days";
 
   return (
-    <div className="space-y-6 pb-12 w-full">
-      {/* 1. Header + Date Filter */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div>
-            <div className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+    <div className="w-full space-y-6 pb-12">
+      {/* 1. Header + period controls */}
+      <motion.header
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between"
+      >
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-[12px] font-medium text-slate-500 dark:text-slate-400">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-2 py-0.5 text-teal-800 ring-1 ring-inset ring-teal-600/15 dark:bg-teal-400/10 dark:text-teal-300 dark:ring-teal-400/20">
+              <Sparkles className="h-3 w-3" />
               Overview
-            </div>
-            <h1 className="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              {greeting}, {restaurant.name}
-            </h1>
-            <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 mt-1">
-              {loading
-                ? "Loading your dashboard..."
-                : `Here's how your guest experience performed — ${periodLabel}`}
-            </p>
+            </span>
+            <span>{PERIOD_LONG[period]}</span>
+            {data && (
+              <span className="hidden sm:inline text-slate-400">
+                · {shortDate(data.startDate.slice(0, 10))} – {shortDate(data.endDate.slice(0, 10))}
+              </span>
+            )}
           </div>
+          <h1 className="mt-2 text-[26px] font-semibold tracking-tight text-slate-900 sm:text-[30px] dark:text-white">
+            {greeting}, <span className="text-teal-700 dark:text-teal-300">{restaurant.name}</span>
+          </h1>
+          <p className="mt-1 text-[13.5px] text-slate-500 dark:text-slate-400">
+            {loading && !data ? "Pulling the latest numbers from your venue…" : "Here's how your guest experience is performing."}
+          </p>
         </div>
-
-        {/* Date Filter Pills */}
         <div className="flex flex-wrap items-center gap-2">
-          {PERIODS.map((p) => (
-            <button
-              key={p.key}
-              onClick={() => {
-                setPeriod(p.key);
-                if (p.key === "custom") {
-                  setShowCustomPicker(true);
-                } else {
-                  setShowCustomPicker(false);
-                }
-              }}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                period === p.key
-                  ? "bg-[#0B3B36] dark:bg-emerald-600 text-white shadow-sm"
-                  : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-emerald-400 dark:hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400"
-              }`}
-            >
-              {p.key === "custom" && <Calendar className="w-3 h-3 inline mr-1.5 -mt-px" />}
-              {p.label}
-            </button>
-          ))}
-
-          {showCustomPicker && period === "custom" && (
-            <div className="flex items-center gap-2 ml-2">
-              <input
-                type="date"
-                value={customFrom}
-                onChange={(e) => setCustomFrom(e.target.value)}
-                className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
-              />
-              <span className="text-xs text-slate-400 dark:text-slate-500">to</span>
-              <input
-                type="date"
-                value={customTo}
-                onChange={(e) => setCustomTo(e.target.value)}
-                className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
-              />
-            </div>
-          )}
-
-          {loading && <Loader2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 animate-spin ml-2" />}
+          <PeriodToolbar
+            layoutId="dashboard-period"
+            period={period}
+            onPeriod={setPeriod}
+            customFrom={customFrom}
+            customTo={customTo}
+            onCustomFrom={setCustomFrom}
+            onCustomTo={setCustomTo}
+            loading={loading}
+          />
         </div>
-      </div>
+      </motion.header>
 
       {/* Error State */}
-      {error && (
-        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium flex items-center gap-2">
-          <AlertCircle className="w-4 h-4" />
-          <span>{error}</span>
-          <button onClick={() => fetchDashboard()} className="ml-auto text-xs font-bold underline">
-            Retry
-          </button>
-        </div>
-      )}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            role="alert"
+            className="flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
+          >
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{error}</span>
+            <button
+              onClick={() => fetchDashboard()}
+              className="pressable ml-auto inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100 dark:bg-rose-900/40 dark:text-rose-200 dark:ring-rose-800"
+            >
+              <RotateCw className="h-3 w-3" />
+              Retry
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Loading Skeletons */}
-      {loading && !data && (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <SkeletonBlock className="lg:col-span-2 h-80" />
-            <SkeletonBlock className="h-80" />
-          </div>
-          <SkeletonBlock className="h-72" />
-        </>
-      )}
+      {loading && !data && <DashboardSkeleton />}
 
-      {/* Real Data Dashboard */}
       {data && (
-        <>
-          {/* 2. KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <KPICard
-              icon={<Users className="w-5 h-5" />}
-              iconBg="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
-              label="Guest Engagements"
-              value={fmt(data.kpis.visits.current)}
-              change={data.kpis.visits.change}
-              sparkData={data.timeSeries.map((d) => d.current)}
-              color="#10B981"
-              gradientId="gradEmerald"
+        <Stagger className="space-y-4 sm:space-y-5" stagger={0.05}>
+          {/* 2. KPI tiles */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <KpiTile
+              featured
+              label="Guest engagements"
+              value={data.kpis.visits.current}
+              format={compact}
+              delta={data.kpis.visits.change}
+              icon={<Users className="h-4 w-4" />}
+              spark={data.timeSeries.map((d) => d.current)}
             />
-            <KPICard
-              icon={<Award className="w-5 h-5" />}
-              iconBg="bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/40"
-              label="Loyalty Stamps"
-              value={fmt(data.kpis.stamps.current)}
-              change={data.kpis.stamps.change}
-              sparkData={data.timeSeries.map((d) => d.current)}
-              color="#3B82F6"
-              gradientId="gradBlue"
+            <KpiTile
+              label="Loyalty stamps issued"
+              value={data.kpis.stamps.current}
+              format={compact}
+              delta={data.kpis.stamps.change}
+              icon={<Award className="h-4 w-4" />}
             />
-            <KPICard
-              icon={<MessageSquare className="w-5 h-5" />}
-              iconBg="bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/40"
-              label="Guest Feedback"
-              value={fmt(data.kpis.feedbacks.current)}
-              change={data.kpis.feedbacks.change}
-              sparkData={data.timeSeries.map((d) => d.current)}
-              color="#8B5CF6"
-              gradientId="gradPurple"
+            <KpiTile
+              label="Guest feedback"
+              value={data.kpis.feedbacks.current}
+              format={compact}
+              delta={data.kpis.feedbacks.change}
+              icon={<MessageSquare className="h-4 w-4" />}
             />
-            <KPICard
-              icon={<TrendingUp className="w-5 h-5" />}
-              iconBg="bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
-              label="Returning Guests"
-              value={`${data.kpis.returningPct}%`}
-              change={0}
-              sparkData={data.timeSeries.map((d) => d.current)}
-              color="#F59E0B"
-              gradientId="gradAmber"
+            <KpiTile
+              label="Returning guests"
+              value={data.kpis.returningPct}
+              format={(n) => `${n.toFixed(n % 1 === 0 ? 0 : 1)}%`}
+              icon={<Repeat2 className="h-4 w-4" />}
+              hint={`${data.kpis.newCustomers.current.toLocaleString()} new wallets this period`}
             />
           </div>
 
-          {/* 3. Engagement Chart + Guest Actions */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <EngagementChart timeSeries={data.timeSeries} />
-            <GuestActionsBreakdown actions={data.actionBreakdown} />
+          {/* 3. Engagement chart + Guest actions */}
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-3">
+            <EngagementPanel timeSeries={data.timeSeries} />
+            <GuestActionsPanel actions={data.actionBreakdown} />
           </div>
 
           {/* 4. Loyalty, Customer Insights, Feedback */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <LoyaltyPerformance
-              loyalty={data.loyalty}
-              restaurantId={restaurant.id}
-              timeSeries={data.timeSeries}
-            />
-            <CustomerInsights
-              insights={data.customerInsights}
-              restaurantId={restaurant.id}
-            />
-            <FeedbackOverview
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2 xl:grid-cols-3">
+            <LoyaltyPanel loyalty={data.loyalty} restaurantId={restaurant.id} timeSeries={data.timeSeries} />
+            <CustomerInsightsPanel insights={data.customerInsights} restaurantId={restaurant.id} />
+            <FeedbackPanel
               distribution={data.feedbackDistribution}
               averageRating={data.averageRating}
               positivePct={data.positivePct}
@@ -377,386 +276,136 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
             />
           </div>
 
-          {/* 5. Heatmap + Funnel (no more Recent Activity) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <PeakActivityHeatmap heatmap={data.heatmap} />
-            <ReviewFunnel funnel={data.funnel} />
+          {/* 5. Heatmap + Funnel */}
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-5">
+            <PeakActivityPanel heatmap={data.heatmap} />
+            <ReviewJourneyPanel funnel={data.funnel} />
           </div>
-        </>
+        </Stagger>
       )}
     </div>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   SUB-COMPONENTS
+   PANELS
    ═══════════════════════════════════════════════════════════════ */
 
-/* ─── KPI Card ─── */
-function KPICard({
-  icon,
-  iconBg,
-  label,
-  value,
-  change,
-  sparkData,
-  color,
-  gradientId,
-}: {
-  icon: React.ReactNode;
-  iconBg: string;
-  label: string;
-  value: string;
-  change: number;
-  sparkData: number[];
-  color: string;
-  gradientId: string;
-}) {
-  const isPositive = change >= 0;
+function ViewLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <div className="p-5 sm:p-5.5 rounded-[22px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden flex flex-col justify-between backdrop-blur-xs">
-      <div className="flex items-start justify-between">
-        <div className={`w-10 h-10 rounded-2xl ${iconBg} flex items-center justify-center shadow-xs`}>
-          {icon}
-        </div>
+    <Link
+      href={href}
+      className="group/link inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold text-teal-700 transition-colors hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-400/10"
+    >
+      {children}
+      <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover/link:translate-x-0.5" />
+    </Link>
+  );
+}
+
+function Stat({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
+  return (
+    <div className="rounded-xl bg-slate-50/80 p-3 ring-1 ring-inset ring-slate-200/60 dark:bg-white/[0.03] dark:ring-white/[0.06]">
+      <div className="flex items-center gap-1.5 text-[11.5px] font-medium text-slate-500 dark:text-slate-400">
+        {icon}
+        {label}
       </div>
-      <div className="mt-4">
-        <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</div>
-        <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1 tabular-nums">{value}</div>
-        {change !== 0 && (
-          <div className={`flex items-center gap-1.5 mt-2 text-xs font-bold ${isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"}`}>
-            <span className="px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/50">{isPositive ? "↑" : "↓"} {Math.abs(change)}%</span>
-            <span className="text-slate-400 dark:text-slate-500 font-medium text-[11px]">vs previous</span>
-          </div>
-        )}
-        {change === 0 && (
-          <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-slate-400 dark:text-slate-500">
-            <span className="font-medium text-[11px]">Steady baseline</span>
-          </div>
-        )}
-      </div>
-      {/* Mini Sparkline */}
-      <div className="h-10 mt-3 -mx-2 -mb-2">
-        <svg className="w-full h-full" viewBox="0 0 100 30" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity="0.3" />
-              <stop offset="100%" stopColor={color} stopOpacity="0.0" />
-            </linearGradient>
-          </defs>
-          {sparkData.length > 1 && (
-            <>
-              <path d={buildAreaPath(sparkData, 100, 30, 2)} fill={`url(#${gradientId})`} />
-              <path d={buildPolylinePath(sparkData, 100, 30, 2)} fill="none" stroke={color} strokeWidth="2" />
-            </>
-          )}
-        </svg>
-      </div>
+      <AnimatedNumber value={value} className="mt-1 block text-lg font-semibold tracking-tight text-slate-900 dark:text-white" />
     </div>
   );
 }
 
-/* ─── Engagement Chart ─── */
-function EngagementChart({
-  timeSeries,
-}: {
-  timeSeries: { date: string; current: number; previous: number }[];
-}) {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+/* ─── Engagement over time ─── */
+function EngagementPanel({ timeSeries }: { timeSeries: DashboardData["timeSeries"] }) {
+  const current = timeSeries.map((d) => d.current);
+  const previous = timeSeries.map((d) => d.previous);
+  const total = current.reduce((a, b) => a + b, 0);
+  const prevTotal = previous.reduce((a, b) => a + b, 0);
+  const avg = timeSeries.length ? total / timeSeries.length : 0;
+  const peakIdx = current.length ? current.indexOf(Math.max(...current)) : -1;
 
-  const currentData = timeSeries.map((d) => d.current);
-  const previousData = timeSeries.map((d) => d.previous);
-  const maxVal = Math.max(...currentData, ...previousData, 1);
-
-  // Clean, consistent Y-axis tick intervals
-  const yTicks = [maxVal, Math.round(maxVal * 0.75), Math.round(maxVal * 0.5), Math.round(maxVal * 0.25), 0];
-
-  // Normalized coordinate space
-  const svgW = 1000;
-  const svgH = 200;
-  const padTop = 15;
-  const padBottom = 15;
-  const plotH = svgH - padTop - padBottom;
-
-  const toY = (val: number) => padTop + (1 - val / maxVal) * plotH;
-  const toX = (i: number) => {
-    if (timeSeries.length <= 1) return svgW / 2;
-    return (i / (timeSeries.length - 1)) * svgW;
-  };
-
-  const currentPath = currentData
-    .map((v, i) => `${i === 0 ? "M" : "L"} ${toX(i).toFixed(1)},${toY(v).toFixed(1)}`)
-    .join(" ");
-  const prevPath = previousData
-    .map((v, i) => `${i === 0 ? "M" : "L"} ${toX(i).toFixed(1)},${toY(v).toFixed(1)}`)
-    .join(" ");
-  const areaPath = currentData.length > 0
-    ? `${currentPath} L ${svgW},${svgH - padBottom} L 0,${svgH - padBottom} Z`
-    : "";
-
-  // Date labels distributed across the series, strictly including the first and last days
-  const dateLabels: { label: string; idx: number }[] = [];
-  if (timeSeries.length > 0) {
-    const numLabels = Math.min(7, timeSeries.length);
-    const step = (timeSeries.length - 1) / (numLabels - 1);
-    for (let l = 0; l < numLabels; l++) {
-      const idx = Math.round(l * step);
-      if (idx < timeSeries.length) {
-        const d = new Date(timeSeries[idx].date);
-        dateLabels.push({
-          label: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-          idx,
-        });
+  return (
+    <Panel
+      className="xl:col-span-2"
+      title="Guest engagement"
+      description="Every interaction on your guest hub, compared with the previous period."
+      action={
+        <Legend
+          items={[
+            { label: "This period", color: "var(--chart-1)" },
+            { label: "Previous", color: "var(--chart-axis)", dashed: true },
+          ]}
+        />
       }
-    }
-    // Guarantee last index is exactly the last date in the series
-    if (dateLabels.length > 0) {
-      const lastIdx = timeSeries.length - 1;
-      const d = new Date(timeSeries[lastIdx].date);
-      dateLabels[dateLabels.length - 1] = {
-        label: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        idx: lastIdx,
-      };
-    }
-  }
-
-  const primaryStroke = isDark ? "#2DD4BF" : "#0F766E";
-  const prevStroke = isDark ? "#475569" : "#94A3B8";
-  const gridStroke = isDark ? "#1E293B" : "#F1F5F9";
-
-  return (
-    <div className="lg:col-span-2 p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    >
+      <div className="mb-4 grid grid-cols-3 gap-3 border-b border-slate-100 pb-4 dark:border-white/[0.06]">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Guest Engagement</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Guest interactions over the selected period.</p>
+          <div className="text-[11.5px] font-medium text-slate-500 dark:text-slate-400">All interactions</div>
+          <AnimatedNumber value={total} className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white" />
+          <span className="ml-1.5 text-[11.5px] text-slate-400 tabular">vs {prevTotal.toLocaleString()}</span>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#0F766E] dark:bg-teal-400" />
-              Current period
-            </span>
-            <span className="flex items-center gap-1.5 font-medium text-slate-400 dark:text-slate-500">
-              <span className="w-3 border-t-2 border-dashed border-slate-300 dark:border-slate-600" />
-              Previous period
-            </span>
+        <div>
+          <div className="text-[11.5px] font-medium text-slate-500 dark:text-slate-400">Daily average</div>
+          <AnimatedNumber value={avg} format={(n) => n.toFixed(1)} className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white" />
+        </div>
+        <div>
+          <div className="text-[11.5px] font-medium text-slate-500 dark:text-slate-400">Busiest day</div>
+          <div className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
+            {peakIdx >= 0 && current[peakIdx] > 0 ? shortDate(timeSeries[peakIdx].date) : "—"}
           </div>
         </div>
       </div>
-
-      {/* Main Chart Area */}
-      <div className="flex gap-3 items-stretch relative select-none">
-        {/* Y-Axis Column pinned to the far left */}
-        <div className="w-8 shrink-0 flex flex-col justify-between text-right text-[11px] font-semibold text-slate-400 dark:text-slate-500 select-none pb-7 pt-1">
-          {yTicks.map((val, idx) => (
-            <span key={idx} className="leading-none">{fmt(val)}</span>
-          ))}
-        </div>
-
-        {/* Plot Area */}
-        <div className="flex-1 flex flex-col relative min-w-0">
-          {/* Tooltip */}
-          {hoveredIdx !== null && timeSeries[hoveredIdx] && (
-            <div
-              className="absolute -top-3 z-30 bg-white dark:bg-slate-800 rounded-xl p-3 shadow-xl border border-slate-100 dark:border-slate-700 pointer-events-none text-center animate-in fade-in zoom-in-95 duration-150 whitespace-nowrap"
-              style={{
-                left: `${(hoveredIdx / Math.max(timeSeries.length - 1, 1)) * 100}%`,
-                transform: "translateX(-50%) translateY(-100%)",
-              }}
-            >
-              <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                {new Date(timeSeries[hoveredIdx].date).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </div>
-              <div className="text-sm font-black text-slate-900 dark:text-white mt-0.5">
-                {timeSeries[hoveredIdx].current.toLocaleString()} engagements
-              </div>
-              {timeSeries[hoveredIdx].previous > 0 && (
-                <div className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mt-0.5">
-                  vs {timeSeries[hoveredIdx].previous.toLocaleString()} prev
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* SVG Canvas */}
-          <div className="relative w-full h-56">
-            <svg
-              className="w-full h-full overflow-visible"
-              viewBox={`0 0 ${svgW} ${svgH}`}
-              preserveAspectRatio="none"
-              onMouseLeave={() => setHoveredIdx(null)}
-            >
-              <defs>
-                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={primaryStroke} stopOpacity="0.25" />
-                  <stop offset="100%" stopColor={primaryStroke} stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-
-              {/* Gridlines */}
-              {yTicks.map((_, i) => {
-                const y = padTop + (i / (yTicks.length - 1)) * plotH;
-                return (
-                  <line
-                    key={i}
-                    x1="0"
-                    y1={y}
-                    x2={svgW}
-                    y2={y}
-                    stroke={gridStroke}
-                    strokeWidth="1"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                );
-              })}
-
-              {/* Previous period line */}
-              {previousData.length > 1 && (
-                <path
-                  d={prevPath}
-                  fill="none"
-                  stroke={prevStroke}
-                  strokeWidth="1.5"
-                  strokeDasharray="4 4"
-                  vectorEffect="non-scaling-stroke"
-                />
-              )}
-
-              {/* Current period area & curve */}
-              {currentData.length > 1 && (
-                <>
-                  <path d={areaPath} fill="url(#areaGradient)" />
-                  <path
-                    d={currentPath}
-                    fill="none"
-                    stroke={primaryStroke}
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                </>
-              )}
-
-              {/* Hover point & vertical indicator */}
-              {hoveredIdx !== null && (
-                <g>
-                  <line
-                    x1={toX(hoveredIdx)}
-                    y1={toY(currentData[hoveredIdx] || 0)}
-                    x2={toX(hoveredIdx)}
-                    y2={svgH - padBottom}
-                    stroke={primaryStroke}
-                    strokeWidth="1.5"
-                    strokeDasharray="3 3"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                  <circle
-                    cx={toX(hoveredIdx)}
-                    cy={toY(currentData[hoveredIdx] || 0)}
-                    r="5"
-                    fill={primaryStroke}
-                    stroke={isDark ? "#0F172A" : "#FFFFFF"}
-                    strokeWidth="2"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                </g>
-              )}
-            </svg>
-
-            {/* Hover Trigger Overlay Columns */}
-            <div
-              className="absolute inset-0 flex"
-              onMouseLeave={() => setHoveredIdx(null)}
-            >
-              {currentData.map((_, i) => (
-                <div
-                  key={i}
-                  className="flex-1 h-full cursor-pointer"
-                  onMouseEnter={() => setHoveredIdx(i)}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* X-Axis Date Labels: Positioned at exact data point percentages */}
-          <div className="relative w-full h-6 mt-3">
-            {dateLabels.map((dl) => {
-              const pct = (dl.idx / Math.max(timeSeries.length - 1, 1)) * 100;
-              return (
-                <span
-                  key={dl.idx}
-                  className="absolute text-[11px] font-semibold text-slate-400 dark:text-slate-500 whitespace-nowrap"
-                  style={{
-                    left: `${pct}%`,
-                    transform:
-                      dl.idx === 0
-                        ? "none"
-                        : dl.idx === timeSeries.length - 1
-                        ? "translateX(-100%)"
-                        : "translateX(-50%)",
-                  }}
-                >
-                  {dl.label}
-                </span>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </div>
+      {total === 0 && prevTotal === 0 ? (
+        <PanelEmpty
+          icon={<Activity className="h-4 w-4" />}
+          title="No guest activity yet"
+          hint="Share your table QR codes — engagement will chart here in real time."
+        />
+      ) : (
+        <AreaChart
+          ariaLabel="Guest engagement over time, current versus previous period"
+          labels={timeSeries.map((d) => d.date)}
+          formatLabel={shortDate}
+          formatTooltipLabel={longDate}
+          height={250}
+          series={[
+            { key: "previous", label: "Previous", color: "var(--chart-axis)", data: previous, dashed: true },
+            { key: "current", label: "This period", color: "var(--chart-1)", data: current },
+          ]}
+        />
+      )}
+    </Panel>
   );
 }
 
-/* ─── Guest Actions Breakdown ─── */
-function GuestActionsBreakdown({ actions }: { actions: DashboardData["actionBreakdown"] }) {
+/* ─── Guest actions ─── */
+function GuestActionsPanel({ actions }: { actions: DashboardData["actionBreakdown"] }) {
+  const total = actions.reduce((a, b) => a + b.count, 0);
   return (
-    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Guest Actions</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Which features your guests interact with most.</p>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {actions.length === 0 && (
-          <div className="text-center text-sm text-slate-400 dark:text-slate-500 py-8">No action data yet</div>
-        )}
-        {actions.map((item) => (
-          <div key={item.action}>
-            <div className="flex items-center justify-between text-xs mb-1.5 font-bold text-slate-700 dark:text-slate-200">
-              <div className="flex items-center gap-2">
-                <DynamicIcon name={item.icon} className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
-                <span>{item.action}</span>
-              </div>
-              <div className="flex items-center gap-2 font-mono text-slate-900 dark:text-slate-100">
-                <span>{item.count.toLocaleString()}</span>
-                <span className="text-slate-400 dark:text-slate-500 font-normal">{item.percentage}%</span>
-              </div>
-            </div>
-            <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-[#0F766E] dark:bg-emerald-500 transition-all duration-500"
-                style={{ width: `${Math.max(item.percentage, 1)}%` }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <Panel title="Guest actions" description="Which touchpoints guests use most.">
+      {total === 0 ? (
+        <PanelEmpty icon={<Sparkles className="h-4 w-4" />} title="No actions recorded" hint="Menu views, Wi-Fi, reviews and loyalty taps will appear here." />
+      ) : (
+        <BarList
+          items={actions.map((a) => ({
+            key: a.action,
+            label: a.action,
+            value: a.count,
+            icon: (
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-teal-700 ring-1 ring-slate-200/80 dark:bg-white/[0.05] dark:text-teal-300 dark:ring-white/[0.08]">
+                <DynamicIcon name={a.icon} className="h-3.5 w-3.5" />
+              </span>
+            ),
+            meta: <span className="text-[11px] font-medium tabular text-slate-400">{a.percentage}%</span>,
+          }))}
+        />
+      )}
+    </Panel>
   );
 }
 
-/* ─── Loyalty Performance ─── */
-function LoyaltyPerformance({
+/* ─── Loyalty performance ─── */
+function LoyaltyPanel({
   loyalty,
   restaurantId,
   timeSeries,
@@ -765,160 +414,107 @@ function LoyaltyPerformance({
   restaurantId: string;
   timeSeries: DashboardData["timeSeries"];
 }) {
-  const barData = timeSeries.slice(-20).map((d) => d.current);
-  const maxBar = Math.max(...barData, 1);
-
+  const recent = timeSeries.slice(-20);
   return (
-    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Loyalty Performance</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Track how your loyalty program is performing.</p>
-        </div>
-        <Link
-          href={`/admin/restaurants/${restaurantId}/loyalty`}
-          className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1"
-        >
-          <span>View details</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
+    <Panel
+      title="Loyalty performance"
+      description="Wallets, stamps and rewards at a glance."
+      action={<ViewLink href={`/admin/restaurants/${restaurantId}/loyalty`}>Details</ViewLink>}
+    >
+      <div className="grid grid-cols-2 gap-2.5">
+        <Stat label="Active wallets" value={loyalty.activeWallets} icon={<Wallet className="h-3.5 w-3.5" />} />
+        <Stat label="Stamps issued" value={loyalty.stampsIssued} icon={<Award className="h-3.5 w-3.5" />} />
+        <Stat label="Milestones" value={loyalty.milestonesUnlocked} icon={<Trophy className="h-3.5 w-3.5" />} />
+        <Stat label="Redeemed" value={loyalty.rewardsRedeemed} icon={<Ticket className="h-3.5 w-3.5" />} />
       </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 border-y border-slate-100 dark:border-slate-800">
-        <div>
-          <div className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">Active Wallets</div>
-          <div className="text-base font-black text-slate-900 dark:text-white mt-0.5">{loyalty.activeWallets.toLocaleString()}</div>
-        </div>
-        <div>
-          <div className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">Stamps Issued</div>
-          <div className="text-base font-black text-slate-900 dark:text-white mt-0.5">{loyalty.stampsIssued.toLocaleString()}</div>
-        </div>
-        <div>
-          <div className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">Milestones</div>
-          <div className="text-base font-black text-slate-900 dark:text-white mt-0.5">{loyalty.milestonesUnlocked.toLocaleString()}</div>
-        </div>
-        <div>
-          <div className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">Redeemed</div>
-          <div className="text-base font-black text-slate-900 dark:text-white mt-0.5">{loyalty.rewardsRedeemed.toLocaleString()}</div>
-        </div>
-      </div>
-
       <div className="mt-4">
-        <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2">Activity trend</div>
-        <div className="h-20 flex items-end gap-1">
-          {barData.map((val, idx) => (
-            <div
-              key={idx}
-              className="flex-1 rounded-t-xs bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400 transition"
-              style={{ height: `${Math.max((val / maxBar) * 100, 2)}%` }}
-            />
-          ))}
-        </div>
+        <div className="mb-2 text-[11.5px] font-medium text-slate-500 dark:text-slate-400">Daily guest activity</div>
+        <ColumnChart
+          ariaLabel="Daily guest activity for the most recent days"
+          data={recent.map((d) => d.current)}
+          labels={recent.map((d) => d.date)}
+          formatLabel={shortDate}
+          height={96}
+          tickEvery={Math.max(1, Math.ceil(recent.length / 3))}
+          valueFormatter={(n) => `${n.toLocaleString()} interactions`}
+        />
       </div>
-    </div>
+    </Panel>
   );
 }
 
-/* ─── Customer Insights ─── */
-function CustomerInsights({
+/* ─── Customer insights ─── */
+function CustomerInsightsPanel({
   insights,
   restaurantId,
 }: {
   insights: DashboardData["customerInsights"];
   restaurantId: string;
 }) {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const newPct = insights.newGuestsPct || 0;
   const retPct = insights.returningPct || 0;
-  const newDash = (newPct / 100) * 88;
-  const retDash = (retPct / 100) * 88;
+  const newPct = insights.newGuestsPct || 0;
+  const returning = Math.round((insights.totalGuests * retPct) / 100);
+  const fresh = Math.max(0, insights.totalGuests - returning);
+  const identifiedPct = insights.totalGuests > 0 ? Math.round((insights.identifiedGuests / insights.totalGuests) * 100) : 0;
 
   return (
-    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Customer Insights</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Understand your guest base.</p>
+    <Panel
+      title="Customer insights"
+      description="Who your guests are."
+      action={<ViewLink href={`/admin/restaurants/${restaurantId}/customers`}>CRM</ViewLink>}
+    >
+      <div className="flex flex-col items-center gap-5 sm:flex-row">
+        <Donut
+          size={150}
+          thickness={14}
+          centerLabel="Total guests"
+          centerValue={insights.totalGuests.toLocaleString()}
+          segments={[
+            { key: "new", label: "New", value: fresh, color: "var(--chart-1)" },
+            { key: "returning", label: "Returning", value: returning, color: "var(--chart-3)" },
+          ]}
+        />
+        <div className="w-full flex-1 space-y-2.5 text-[12.5px]">
+          <LegendRow color="var(--chart-1)" label="New guests" value={fresh} pct={newPct} />
+          <LegendRow color="var(--chart-3)" label="Returning" value={returning} pct={retPct} />
         </div>
       </div>
-
-      <div className="flex flex-col sm:flex-row items-center gap-6 my-2">
-        {/* Donut */}
-        <div className="relative w-36 h-36 shrink-0">
-          <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-            <circle cx="18" cy="18" r="14" fill="none" stroke={isDark ? "#334155" : "#E2E8F0"} strokeWidth="4" />
-            <circle
-              cx="18" cy="18" r="14" fill="none"
-              stroke={isDark ? "#2DD4BF" : "#0F766E"}
-              strokeWidth="4"
-              strokeDasharray={`${newDash} ${88 - newDash}`}
-              strokeDashoffset="0"
-              strokeLinecap="round"
-            />
-            <circle
-              cx="18" cy="18" r="14" fill="none"
-              stroke="#34D399"
-              strokeWidth="4"
-              strokeDasharray={`${retDash} ${88 - retDash}`}
-              strokeDashoffset={`${-newDash}`}
-              strokeLinecap="round"
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2">
-            <span className="text-sm font-black text-slate-900 dark:text-white leading-tight">{insights.totalGuests.toLocaleString()}</span>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Total Guests</span>
-          </div>
+      <div className="mt-5">
+        <div className="mb-1.5 flex items-center justify-between text-[11.5px] font-medium text-slate-500 dark:text-slate-400">
+          <span className="flex items-center gap-1.5"><UserCheck className="h-3.5 w-3.5" /> Identified {insights.identifiedGuests.toLocaleString()}</span>
+          <span className="flex items-center gap-1.5">Anonymous {insights.anonymousGuests.toLocaleString()} <EyeOff className="h-3.5 w-3.5" /></span>
         </div>
-
-        {/* Breakdown */}
-        <div className="flex-1 space-y-2.5 text-xs">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold">
-              <span className="w-2.5 h-2.5 rounded-sm bg-[#0F766E] dark:bg-teal-400" />
-              <span>New Guests</span>
-            </div>
-            <div className="font-mono text-slate-900 dark:text-slate-100 font-bold">
-              {(insights.totalGuests - (insights.totalGuests * retPct / 100)).toFixed(0)}{" "}
-              <span className="text-slate-400 dark:text-slate-500 font-normal text-[11px]">{newPct}%</span>
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold">
-              <span className="w-2.5 h-2.5 rounded-sm bg-[#34D399]" />
-              <span>Returning Guests</span>
-            </div>
-            <div className="font-mono text-slate-900 dark:text-slate-100 font-bold">
-              {Math.round(insights.totalGuests * retPct / 100)}{" "}
-              <span className="text-slate-400 dark:text-slate-500 font-normal text-[11px]">{retPct}%</span>
-            </div>
-          </div>
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <span className="text-slate-500 dark:text-slate-400 font-medium">Identified Guests</span>
-            <span className="font-mono text-slate-900 dark:text-slate-100 font-bold">
-              {insights.identifiedGuests.toLocaleString()}{" "}
-              <span className="text-slate-400 dark:text-slate-500 font-normal text-[11px]">
-                {insights.totalGuests > 0 ? Math.round((insights.identifiedGuests / insights.totalGuests) * 100) : 0}%
-              </span>
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-slate-500 dark:text-slate-400 font-medium">Anonymous Guests</span>
-            <span className="font-mono text-slate-900 dark:text-slate-100 font-bold">
-              {insights.anonymousGuests.toLocaleString()}{" "}
-              <span className="text-slate-400 dark:text-slate-500 font-normal text-[11px]">
-                {insights.totalGuests > 0 ? Math.round((insights.anonymousGuests / insights.totalGuests) * 100) : 0}%
-              </span>
-            </span>
-          </div>
+        <div className="flex h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-white/[0.05]">
+          <motion.div
+            className="h-full rounded-full bg-teal-600 dark:bg-teal-400"
+            initial={{ width: 0 }}
+            animate={{ width: `${identifiedPct}%` }}
+            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
+          />
         </div>
+        <p className="mt-1.5 text-[11.5px] text-slate-400">{identifiedPct}% of wallets are linked to a guest profile</p>
       </div>
+    </Panel>
+  );
+}
+
+function LegendRow({ color, label, value, pct }: { color: string; label: string; value: number; pct: number }) {
+  return (
+    <div className="flex items-center justify-between rounded-lg px-2.5 py-2 ring-1 ring-inset ring-slate-200/60 dark:ring-white/[0.06]">
+      <span className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-200">
+        <span className="h-2.5 w-2.5 rounded-[4px]" style={{ background: color }} />
+        {label}
+      </span>
+      <span className="tabular">
+        <span className="font-semibold text-slate-900 dark:text-white">{value.toLocaleString()}</span>
+        <span className="ml-1.5 text-[11px] text-slate-400">{pct}%</span>
+      </span>
     </div>
   );
 }
 
-/* ─── Feedback Overview ─── */
-function FeedbackOverview({
+/* ─── Feedback overview ─── */
+function FeedbackPanel({
   distribution,
   averageRating,
   positivePct,
@@ -930,132 +526,109 @@ function FeedbackOverview({
   restaurantId: string;
 }) {
   return (
-    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Feedback Overview</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">See what your guests are saying.</p>
+    <Panel
+      className="lg:col-span-2 xl:col-span-1"
+      title="Feedback overview"
+      description="What guests are saying."
+      action={<ViewLink href={`/admin/restaurants/${restaurantId}/feedback`}>Inbox</ViewLink>}
+    >
+      <div className="flex items-center gap-5">
+        <RadialGauge value={averageRating} max={5} size={132} thickness={12} color="var(--chart-3)">
+          <div className="text-2xl font-semibold leading-none tracking-tight text-slate-900 dark:text-white tabular">
+            {averageRating > 0 ? averageRating.toFixed(1) : "—"}
+          </div>
+          <div className="mt-1 flex items-center gap-0.5 text-amber-500">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Star key={i} className={`h-3 w-3 ${i <= Math.round(averageRating) ? "fill-current" : "opacity-30"}`} />
+            ))}
+          </div>
+        </RadialGauge>
+        <div className="flex-1">
+          <div className="text-[11.5px] font-medium text-slate-500 dark:text-slate-400">Positive (4–5★)</div>
+          <AnimatedNumber value={positivePct} format={(n) => `${Math.round(n)}%`} className="text-2xl font-semibold tracking-tight text-emerald-600 dark:text-emerald-400" />
         </div>
-        <Link
-          href={`/admin/restaurants/${restaurantId}/feedback`}
-          className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1"
-        >
-          <span>View all</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
       </div>
-
-      <div className="space-y-3 my-2">
-        {distribution.map((item) => (
-          <div key={item.stars} className="flex items-center gap-3 text-xs">
-            <span className="w-14 font-semibold text-slate-600 dark:text-slate-300 shrink-0">
-              {item.stars} star{item.stars !== 1 ? "s" : ""}
+      <div className="mt-4 space-y-2">
+        {distribution.map((item, i) => (
+          <div key={item.stars} className="flex items-center gap-3 text-[12px]">
+            <span className="flex w-8 shrink-0 items-center gap-0.5 font-medium text-slate-600 dark:text-slate-300">
+              {item.stars}
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
             </span>
-            <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-[#0F766E] dark:bg-emerald-500 transition-all duration-500"
-                style={{ width: `${item.percentage}%` }}
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-white/[0.05]">
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: item.stars >= 4 ? "var(--chart-1)" : item.stars === 3 ? "var(--chart-3)" : "var(--chart-5)" }}
+                initial={{ width: 0 }}
+                animate={{ width: `${item.percentage}%` }}
+                transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.2 + i * 0.06 }}
               />
             </div>
-            <span className="w-8 text-right font-mono text-slate-400 dark:text-slate-500 shrink-0">{item.percentage}%</span>
+            <span className="w-14 shrink-0 text-right tabular text-slate-400">
+              {item.count} · {item.percentage}%
+            </span>
           </div>
         ))}
       </div>
-
-      <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-        <span>
-          Average: <strong className="text-slate-900 dark:text-white font-black">{averageRating > 0 ? averageRating.toFixed(1) : "—"} / 5.0</strong>
-        </span>
-        <span className="text-emerald-600 dark:text-emerald-400 font-bold">{positivePct}% Positive</span>
-      </div>
-    </div>
+    </Panel>
   );
 }
 
-/* ─── Peak Activity Heatmap ─── */
-function PeakActivityHeatmap({ heatmap }: { heatmap: number[][] }) {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+/* ─── Peak activity heatmap ─── */
+function PeakActivityPanel({ heatmap }: { heatmap: number[][] }) {
   const timeSlots = ["Morning", "Afternoon", "Evening", "Night"];
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const intensityClasses = isDark
-    ? [
-        "bg-emerald-950/70 border border-emerald-900/60",
-        "bg-emerald-800",
-        "bg-emerald-600",
-        "bg-emerald-400",
-      ]
-    : [
-        "bg-emerald-100",
-        "bg-emerald-300",
-        "bg-emerald-500",
-        "bg-[#07352F]",
-      ];
+  const levelNames = ["No activity", "Light", "Busy", "Peak"];
+  let best: [number, number] | null = null;
+  heatmap.forEach((row, r) =>
+    row.forEach((v, c) => {
+      if (v > 0 && (!best || v > heatmap[best[0]][best[1]])) best = [r, c];
+    })
+  );
+  const peak = best as [number, number] | null;
 
   return (
-    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Peak Guest Activity</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">When your guests are most active.</p>
-        </div>
-        <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500">
-          <span>Less</span>
-          <div className="flex gap-0.5">
-            {intensityClasses.map((c, i) => (
-              <span key={i} className={`w-2 h-2 rounded-xs ${c}`} />
-            ))}
-          </div>
-          <span>More</span>
-        </div>
-      </div>
-
-      <div className="space-y-2 mt-3">
-        <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 pl-16">
-          {days.map((d) => (
-            <span key={d} className="flex-1 text-center">{d}</span>
-          ))}
-        </div>
-
-        {heatmap.map((row, rowIdx) => (
-          <div key={rowIdx} className="flex items-center gap-1.5">
-            <span className="w-14 text-[10px] font-bold text-slate-400 dark:text-slate-500 text-right shrink-0">
-              {timeSlots[rowIdx]}
-            </span>
-            {row.map((val, colIdx) => (
-              <div
-                key={colIdx}
-                className={`flex-1 h-5 rounded-xs ${intensityClasses[val] || intensityClasses[0]} hover:opacity-80 transition cursor-pointer`}
-                title={`${days[colIdx]} ${timeSlots[rowIdx]}: Level ${val}`}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
+    <Panel
+      className="xl:col-span-3"
+      icon={<Flame className="h-4 w-4" />}
+      title="Peak guest activity"
+      description="When guests engage most, by day and time of day (UTC)."
+      action={
+        peak ? (
+          <span className="rounded-lg bg-amber-50 px-2 py-1 text-[11.5px] font-semibold text-amber-800 ring-1 ring-inset ring-amber-600/15 dark:bg-amber-400/10 dark:text-amber-300 dark:ring-amber-400/20">
+            Busiest: {days[peak[1]]} {timeSlots[peak[0]].toLowerCase()}
+          </span>
+        ) : null
+      }
+    >
+      <HeatGrid
+        matrix={heatmap}
+        rowLabels={timeSlots}
+        colLabels={days}
+        describe={(r, c, v) => `${days[c]} ${timeSlots[r].toLowerCase()} — ${levelNames[v] ?? "Activity"}`}
+      />
+    </Panel>
   );
 }
 
-/* ─── Review Journey Funnel ─── */
-function ReviewFunnel({ funnel }: { funnel: DashboardData["funnel"] }) {
+/* ─── Review journey funnel ─── */
+function ReviewJourneyPanel({ funnel }: { funnel: DashboardData["funnel"] }) {
+  const first = funnel[0]?.count ?? 0;
+  const last = funnel[funnel.length - 1]?.count ?? 0;
+  const overall = first > 0 ? Math.round((last / first) * 1000) / 10 : 0;
   return (
-    <div className="p-6 rounded-[24px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
-      <div className="mb-4">
-        <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Review Journey</h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">From guest interaction to feedback.</p>
-      </div>
-
-      <div className="grid grid-cols-4 gap-2 text-center my-auto">
-        {funnel.map((stage) => (
-          <div key={stage.label} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700/60">
-            <div className="text-sm font-black text-slate-900 dark:text-white">{stage.count.toLocaleString()}</div>
-            <div className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5 leading-tight">{stage.label}</div>
-            <div className="mt-2 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border dark:border-emerald-800/40">
-              {stage.percentage}%
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <Panel
+      className="xl:col-span-2"
+      title="Review journey"
+      description="From first interaction to feedback."
+      action={
+        <span className="text-right">
+          <span className="block text-[11px] font-medium text-slate-400">Overall</span>
+          <span className="text-sm font-semibold tabular text-slate-900 dark:text-white">{overall}%</span>
+        </span>
+      }
+    >
+      <Funnel stages={funnel.map((f) => ({ label: f.label, count: f.count }))} />
+    </Panel>
   );
 }

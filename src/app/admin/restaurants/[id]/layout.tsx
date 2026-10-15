@@ -103,7 +103,7 @@ export default async function RestaurantDashboardLayout({
           image: user?.image || null,
         }}
       />
-      <div className="flex-1 min-w-0 flex flex-col min-h-screen bg-[#F8FAFC] dark:bg-slate-950 overflow-x-hidden">
+      <div className="flex-1 min-w-0 flex flex-col min-h-screen overflow-x-hidden">
         {/* Platform Admin Impersonation / Inspection Banner */}
         {isPlatformAdmin && (
           <div className="bg-slate-900 text-white px-4 py-2 text-xs flex items-center justify-between border-b border-slate-800 z-30">
@@ -131,7 +131,7 @@ export default async function RestaurantDashboardLayout({
         />
 
         <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8 overflow-x-hidden">
-          <div className="w-full mx-auto">
+          <div className="w-full mx-auto max-w-[1600px]">
             <PageTransition>{children}</PageTransition>
           </div>
         </main>

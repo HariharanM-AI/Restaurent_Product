@@ -138,7 +138,7 @@ export function QrExporter({
         {/* Left Column: Touchpoint Configuration & Best Practices */}
         <div className="flex-1 min-w-0 space-y-6">
           {/* Card 1: Touchpoint Configuration */}
-          <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs p-6 sm:p-7 space-y-6">
+          <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] shadow-card p-6 sm:p-7 space-y-6">
             <div className="flex items-start gap-3.5 pb-4 border-b border-slate-100 dark:border-slate-800">
               <div className="w-10 h-10 rounded-xl bg-[#E6F7F2] dark:bg-emerald-950/40 text-[#0A7E6C] dark:text-emerald-400 border border-[#BCE8DB] dark:border-emerald-800/40 flex items-center justify-center shrink-0">
                 <QrCode className="w-5 h-5" />
@@ -300,7 +300,7 @@ export function QrExporter({
           </div>
 
           {/* Card 2: Deployment Best Practices matching Image 3 */}
-          <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs p-6 sm:p-7 space-y-4">
+          <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] shadow-card p-6 sm:p-7 space-y-4">
             <div className="flex items-start gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="w-8 h-8 rounded-lg bg-[#E6F7F2] dark:bg-emerald-950/40 text-[#0A7E6C] dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <Sparkles className="w-4 h-4" />
@@ -396,7 +396,7 @@ export function QrExporter({
                   </svg>
                 </div>
 
-                <h3 className="font-extrabold text-base text-slate-900 tracking-tight">
+                <h3 className="font-semibold text-base text-slate-900 tracking-tight">
                   {restaurantName}
                 </h3>
                 <p className="text-[9px] font-bold text-slate-400 tracking-widest uppercase">
@@ -406,7 +406,7 @@ export function QrExporter({
 
               {/* Title: Scan to Connect */}
               <div className="space-y-1">
-                <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
+                <h2 className="text-xl font-semibold text-slate-900 tracking-tight">
                   Scan to Connect
                 </h2>
                 <p className="text-[11px] font-medium text-slate-600">
@@ -519,7 +519,7 @@ export function QrExporter({
 
       {/* Modal: View All Touchpoints */}
       {isTouchpointsModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
           <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
               <div>

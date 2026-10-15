@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback } from "react";
+import { Ambient } from "@/components/ui/ambient";
 
 interface SidebarContextType {
   isCollapsed: boolean;
@@ -26,7 +27,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarContext.Provider value={{ isCollapsed, toggle, setCollapsed }}>
-      <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex flex-col lg:flex-row">
+      <div className="admin-canvas glass-ui relative min-h-screen flex flex-col lg:flex-row">
+        <Ambient />
         {children}
       </div>
     </SidebarContext.Provider>

@@ -501,16 +501,6 @@ export function ActionsManagerList({
               <span>View Templates</span>
             </button>
 
-            <a
-              href={`/r/${restaurantSlug}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold transition shadow-xs"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span>Preview Hub</span>
-            </a>
-
             <button
               onClick={openCreateModal}
               className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#072C27] dark:bg-emerald-700 hover:bg-[#0E473F] dark:hover:bg-emerald-600 text-white text-xs font-semibold transition shadow-sm"
@@ -540,7 +530,7 @@ export function ActionsManagerList({
       )}
 
       {/* Main Card */}
-      <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs p-6 sm:p-7">
+      <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] shadow-card p-6 sm:p-7">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div>
             <h2 className="text-base font-bold text-slate-900 dark:text-white">Guest Touchpoint Actions</h2>
@@ -830,7 +820,7 @@ export function ActionsManagerList({
 
       {/* ─── Template Modal ─── */}
       {isTemplateModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
               <div>
@@ -908,7 +898,7 @@ export function ActionsManagerList({
 
       {/* ─── Create/Edit Modal ─── */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-t-[28px] sm:rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[92dvh] sm:max-h-[85vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Pinned Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900">

@@ -1,16 +1,21 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { motion, useReducedMotion } from "motion/react";
 
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const reduce = useReducedMotion();
 
   return (
-    <div
+    <motion.div
       key={pathname}
-      className="w-full animate-in fade-in-50 duration-200"
+      initial={reduce ? false : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      className="w-full"
     >
       {children}
-    </div>
+    </motion.div>
   );
 }

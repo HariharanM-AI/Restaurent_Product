@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { verifyRestaurantAccess } from "@/lib/auth/session";
+import { toFeedbackPhotoUrls } from "@/lib/supabase/feedback-photos";
 
 /**
  * GET /api/restaurants/[id]/feedback/stats?period=today|7d|30d|90d|1y|custom&from=ISO&to=ISO
@@ -76,13 +77,13 @@ export async function GET(
       // For time-series + topic analysis
       prisma.feedback.findMany({
         where: { restaurantId, createdAt: dateFilter },
-        select: { id: true, rating: true, category: true, message: true, createdAt: true, contact: true, isAnonymous: true },
+        select: { id: true, rating: true, category: true, message: true, createdAt: true, contact: true, isAnonymous: true, imagePaths: true },
         orderBy: { createdAt: "desc" },
       }),
       // ALL feedbacks for the list (last 200)
       prisma.feedback.findMany({
         where: { restaurantId },
-        select: { id: true, rating: true, category: true, message: true, createdAt: true, contact: true, isAnonymous: true },
+        select: { id: true, rating: true, category: true, message: true, createdAt: true, contact: true, isAnonymous: true, imagePaths: true },
         orderBy: { createdAt: "desc" },
         take: 200,
       }),
@@ -212,7 +213,11 @@ export async function GET(
         timeSeries,
         topics,
         categories,
-        feedbacks: allFeedbacks,
+        // Photos go out as access-controlled URLs; raw storage paths stay server-side
+        feedbacks: allFeedbacks.map(({ imagePaths, ...rest }) => ({
+          ...rest,
+          photos: toFeedbackPhotoUrls(restaurantId, rest.id, imagePaths),
+        })),
       },
     });
   } catch (err) {

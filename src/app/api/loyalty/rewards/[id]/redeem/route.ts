@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 
+class RewardNotRedeemableError extends Error {}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -22,6 +24,15 @@ export async function POST(
       );
     }
 
+    const now = new Date();
+
+    if (reward.status === "AVAILABLE" && reward.expiresAt && reward.expiresAt <= now) {
+      return NextResponse.json(
+        { success: false, error: { code: "REWARD_EXPIRED", message: "This reward has expired." } },
+        { status: 410 }
+      );
+    }
+
     if (reward.status !== "AVAILABLE") {
       return NextResponse.json(
         { success: false, error: { code: "ALREADY_REDEEMED", message: `Reward is already ${reward.status.toLowerCase()}.` } },
@@ -31,13 +42,22 @@ export async function POST(
 
     // Atomic update
     const updated = await prisma.$transaction(async (tx) => {
-      const red = await tx.loyaltyReward.update({
-        where: { id: rewardId },
+      // Atomic redeem: only an unexpired AVAILABLE reward can flip to REDEEMED, once
+      const flipped = await tx.loyaltyReward.updateMany({
+        where: {
+          id: rewardId,
+          status: "AVAILABLE",
+          OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+        },
         data: {
           status: "REDEEMED",
-          redeemedAt: new Date(),
+          redeemedAt: now,
         },
       });
+      if (flipped.count !== 1) {
+        throw new RewardNotRedeemableError();
+      }
+      const red = await tx.loyaltyReward.findUniqueOrThrow({ where: { id: rewardId } });
 
       await tx.loyaltyStampTransaction.create({
         data: {
@@ -71,6 +91,12 @@ export async function POST(
       },
     });
   } catch (error) {
+    if (error instanceof RewardNotRedeemableError) {
+      return NextResponse.json(
+        { success: false, error: { code: "ALREADY_REDEEMED", message: "Reward is no longer available." } },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
       { success: false, error: { code: "SERVER_ERROR", message: "Failed to redeem reward." } },
       { status: 500 }

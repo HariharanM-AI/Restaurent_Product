@@ -22,9 +22,9 @@ export function SaaSCard({
   ...props
 }: SaaSCardProps) {
   const variants = {
-    default: "bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover text-slate-900 dark:text-slate-100 backdrop-blur-xs",
-    muted: "bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-white/[0.06] shadow-none text-slate-800 dark:text-slate-200",
-    elevated: "bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-white/[0.1] shadow-card-hover hover:shadow-luxury text-slate-900 dark:text-slate-100",
+    default: "glass glass-hover spotlight text-slate-900 dark:text-slate-100",
+    muted: "glass-inner text-slate-800 dark:text-slate-200",
+    elevated: "glass-strong glass-hover text-slate-900 dark:text-slate-100",
     glass: "glass-surface shadow-card text-slate-900 dark:text-slate-100",
   };
 
@@ -44,7 +44,7 @@ export function SaaSCard({
   return (
     <div
       className={cn(
-        "relative transition-all duration-200 ease-out",
+        "relative transition-[box-shadow,border-color,background-color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] animate-in fade-in slide-in-from-bottom-1 duration-500",
         variants[variant],
         radiuses[radius],
         paddings[padding],
@@ -75,7 +75,7 @@ export function SaaSCardHeader({
   return (
     <div
       className={cn(
-        "flex items-start justify-between gap-4 pb-4 border-b border-slate-100/90 dark:border-white/[0.06] mb-5",
+        "flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-white/[0.06] mb-5",
         className
       )}
       {...props}
@@ -84,7 +84,7 @@ export function SaaSCardHeader({
         <>
           <div className="space-y-1 min-w-0">
             {title && (
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+              <h3 className="text-[15px] font-semibold text-slate-900 dark:text-slate-100 tracking-tight">
                 {title}
               </h3>
             )}

@@ -1,10 +1,11 @@
 "use client";
+// avoid-ai-design-ignore: K3, SD2, SD8 (brief: glass surfaces, teal/emerald brand on a dark ground)
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup, MotionConfig } from "framer-motion";
 import { useSidebar } from "./admin-shell";
 import {
   LayoutDashboard,
@@ -69,6 +70,8 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [hoveredNav, setHoveredNav] = useState<string | null>(null);
+  const [navTip, setNavTip] = useState<{ label: string; x: number; y: number } | null>(null);
   const { isCollapsed, toggle } = useSidebar();
   const { theme, toggle: toggleTheme } = useTheme();
 
@@ -162,7 +165,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
     };
   }, [activeRestaurant.id]);
 
-  // Subpath preservation for seamless venue switching
+  // Keep the current sub-page when switching venues
   const currentSubPath = pathname.replace(/^\/admin\/restaurants\/[^/]+/, "") || "/dashboard";
 
   const handleSwitchVenue = (venue: VenueItem) => {
@@ -303,10 +306,18 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
     .toUpperCase() || "RS";
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       {/* ── Top Mobile Bar ── */}
-      <header className="lg:hidden bg-white dark:bg-[#111111] text-slate-800 dark:text-white px-5 py-3.5 flex items-center justify-between sticky top-0 z-40 border-b border-slate-200/80 dark:border-white/10 transition-colors">
-        <div className="flex items-center gap-2.5">
+      <header className="glass-strong lg:hidden text-slate-800 dark:text-white mx-2 mt-2 rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2 sticky top-2 z-40 transition-colors">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 transition shrink-0"
+            aria-label="Toggle navigation menu"
+            aria-expanded={isMobileMenuOpen}
+          >
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
+          </button>
           <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 dark:border-white/20 flex items-center justify-center shrink-0 overflow-hidden p-0.5 shadow-xs">
             <img
               src="/images/Own brand logo.png"
@@ -316,10 +327,10 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
           </div>
           <div
             onClick={() => setIsMobileMenuOpen(true)}
-            className="cursor-pointer"
+            className="min-w-0 cursor-pointer"
           >
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="font-extrabold text-slate-900 dark:text-white text-sm block leading-tight shrink-0">
+              <span className="font-semibold text-slate-900 dark:text-white text-sm block leading-tight shrink-0">
                 Noura
               </span>
               <span className="text-slate-300 dark:text-white/30 text-xs shrink-0">•</span>
@@ -332,7 +343,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
             onClick={toggleTheme}
@@ -349,13 +360,6 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
           >
             <ExternalLink className="w-4 h-4" />
           </Link>
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 transition"
-            aria-label="Toggle navigation menu"
-          >
-            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
-          </button>
         </div>
       </header>
 
@@ -365,15 +369,8 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
         animate={{
           width: isCollapsed ? 72 : 260,
         }}
-        transition={{
-          duration: 0.3,
-          ease: [0.25, 0.1, 0.25, 1],
-        }}
-        className="hidden lg:flex flex-col h-screen sticky top-0 bg-white/95 dark:bg-[#0B0F17]/95 border-r border-slate-200/70 dark:border-white/[0.08] shrink-0 select-none text-slate-800 dark:text-white z-30 overflow-hidden transition-colors backdrop-blur-md"
-        style={{
-          borderRadius: "0 24px 24px 0",
-          boxShadow: theme === "dark" ? "4px 0 28px rgba(0,0,0,0.4)" : "4px 0 24px rgba(15,23,42,0.04)",
-        }}
+        transition={{ type: "spring", stiffness: 260, damping: 32, mass: 0.9 }}
+        className="glass-strong hidden lg:flex flex-col sticky top-3 my-3 ml-3 h-[calc(100vh-1.5rem)] rounded-[26px] shrink-0 select-none text-slate-800 dark:text-white z-30 overflow-hidden"
       >
         {/* Toggle Button & Collapsed Brand Icon */}
         <div className={`flex pt-3.5 pb-2 shrink-0 ${isCollapsed ? "flex-col items-center gap-2 px-2" : "justify-end px-3"}`}>
@@ -391,7 +388,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
           >
             <motion.div
               animate={{ rotate: isCollapsed ? 180 : 0 }}
-              transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
               <PanelLeftClose className="w-4 h-4" />
             </motion.div>
@@ -419,7 +416,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                     />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-slate-900 dark:text-white font-extrabold text-base tracking-tight leading-none">
+                    <div className="text-slate-900 dark:text-white font-semibold text-base tracking-tight leading-none">
                       Noura
                     </div>
                     <div className="text-[10px] text-emerald-700 dark:text-emerald-300/80 font-medium tracking-wide mt-1">
@@ -472,14 +469,14 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                   <AnimatePresence>
                     {isVenueDropdownOpen && (
                       <motion.div
-                        initial={{ opacity: 0, y: -6, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                        transition={{ duration: 0.15 }}
+                        style={{ transformOrigin: "top center" }}
+                        initial={{ opacity: 0, y: -8, scale: 0.96, filter: "blur(4px)" }}
+                        animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)", transition: { type: "spring", stiffness: 420, damping: 32 } }}
+                        exit={{ opacity: 0, y: -4, scale: 0.98, transition: { duration: 0.12 } }}
                         className="absolute left-0 right-0 mt-2 p-2 rounded-2xl bg-white dark:bg-[#1c1c1f] border border-slate-200 dark:border-white/10 shadow-2xl space-y-1 z-50 backdrop-blur-xl"
                       >
-                        <div className="px-2.5 py-1.5 text-[10px] font-bold text-slate-400 dark:text-white/40 uppercase tracking-wider flex items-center justify-between">
-                          <span>Your Venues</span>
+                        <div className="px-2.5 py-1.5 text-[11px] font-semibold text-slate-500 dark:text-white/50 flex items-center justify-between">
+                          <span>Your venues</span>
                           <span className="text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20 text-[10px]">
                             {venuesList.length}
                           </span>
@@ -553,87 +550,137 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
         </AnimatePresence>
 
         {/* Navigation Menu (Dynamically Scoped to activeRestaurant.id) */}
-        <nav className="flex-1 px-2 py-1.5 space-y-1 overflow-hidden select-none">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname.startsWith(item.href);
+        <LayoutGroup id="desktop-nav">
+          <motion.nav
+            aria-label="Restaurant admin"
+            className="flex-1 px-2 py-1.5 overflow-hidden select-none"
+            onMouseLeave={() => {
+              setHoveredNav(null);
+              setNavTip(null);
+            }}
+            initial="hidden"
+            animate="show"
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.035, delayChildren: 0.08 } } }}
+          >
+            <ul className="space-y-1">
+              {navItems.map((item, index) => {
+                const Icon = item.icon;
+                const isActive = pathname.startsWith(item.href);
+                const isHovered = hoveredNav === item.href;
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                prefetch={true}
-                title={isCollapsed ? item.label : undefined}
-                className={`group relative flex items-center rounded-xl text-xs font-semibold transition-all duration-200 ${
-                  isCollapsed
-                    ? "justify-center px-0 mx-auto w-10 h-10 shrink-0"
-                    : "gap-3 px-3.5 py-2"
-                } ${
-                  isActive
-                    ? "bg-teal-500/10 text-teal-950 font-bold border border-teal-500/20 shadow-xs dark:bg-white/[0.1] dark:text-white dark:border-white/[0.1] dark:shadow-sm"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 dark:text-white/60 dark:hover:text-white dark:hover:bg-white/[0.06]"
-                }`}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="activeNavIndicator"
-                    className="absolute inset-0 rounded-xl bg-teal-500/10 border border-teal-500/20 dark:bg-white/[0.1] dark:border-white/[0.1]"
-                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                  />
-                )}
-                <Icon
-                  className={`w-[18px] h-[18px] shrink-0 relative z-10 transition-colors ${
-                    isActive
-                      ? "text-teal-700 dark:text-teal-300 stroke-[2.2px]"
-                      : "text-slate-400 group-hover:text-slate-700 dark:text-white/40 dark:group-hover:text-white/70 stroke-[1.8px]"
-                  }`}
-                />
-                {!isCollapsed && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="truncate relative z-10"
+                return (
+                  <motion.li
+                    key={item.href}
+                    className="relative"
+                    variants={{
+                      hidden: { opacity: 0, x: -10 },
+                      show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 420, damping: 32 } },
+                    }}
+                    onMouseEnter={(e) => {
+                      setHoveredNav(item.href);
+                      const r = e.currentTarget.getBoundingClientRect();
+                      setNavTip({ label: item.label, x: r.right + 12, y: r.top + r.height / 2 });
+                    }}
                   >
-                    {item.label}
-                  </motion.span>
-                )}
+                    <Link
+                      href={item.href}
+                      prefetch={true}
+                      aria-label={isCollapsed ? item.label : undefined}
+                      aria-current={isActive ? "page" : undefined}
+                      onFocus={(e) => {
+                        setHoveredNav(item.href);
+                        const r = e.currentTarget.getBoundingClientRect();
+                        setNavTip({ label: item.label, x: r.right + 12, y: r.top + r.height / 2 });
+                      }}
+                      onBlur={() => {
+                        setHoveredNav(null);
+                        setNavTip(null);
+                      }}
+                      className={`group relative flex items-center rounded-xl text-xs font-semibold transition-colors duration-200 ${
+                        isCollapsed ? "justify-center px-0 mx-auto w-10 h-10 shrink-0" : "gap-3 px-3.5 py-2"
+                      } ${
+                        isActive
+                          ? "text-teal-950 font-bold dark:text-white"
+                          : "text-slate-600 hover:text-slate-900 dark:text-white/60 dark:hover:text-white"
+                      }`}
+                    >
+                      {/* Pointer-following hover highlight (glides between items) */}
+                      <AnimatePresence>
+                        {isHovered && !isActive && (
+                          <motion.span
+                            layoutId="navHover"
+                            aria-hidden="true"
+                            className="absolute inset-0 rounded-xl bg-slate-900/[0.05] dark:bg-white/[0.06]"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                            transition={{ type: "spring", stiffness: 500, damping: 38, mass: 0.6 }}
+                          />
+                        )}
+                      </AnimatePresence>
 
-                {isCollapsed && (
-                  <div className="absolute left-full ml-3 px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-[#222] text-white text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-xl z-50 border border-slate-800 dark:border-white/10">
-                    {item.label}
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-slate-900 dark:bg-[#222] rotate-45 border-l border-b border-slate-800 dark:border-white/10" />
-                  </div>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+                      {/* Active pill travels between items with a spring */}
+                      {isActive && (
+                        <motion.span
+                          layoutId="activeNavIndicator"
+                          aria-hidden="true"
+                          className="absolute inset-0 rounded-xl bg-teal-500/10 border border-teal-500/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] dark:bg-white/[0.1] dark:border-white/[0.1] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                          transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                        >
+                          {!isCollapsed && (
+                            <motion.span
+                              className="absolute left-0 top-1/2 w-[3px] -translate-x-[1px] -translate-y-1/2 rounded-full bg-teal-600 dark:bg-teal-300"
+                              initial={{ height: 0 }}
+                              animate={{ height: 16 }}
+                              transition={{ type: "spring", stiffness: 520, damping: 28, delay: 0.08 }}
+                            />
+                          )}
+                        </motion.span>
+                      )}
 
-        {/* Live Guest Experience Banner (Expanded mode) */}
-        <AnimatePresence>
-          {!isCollapsed && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="px-3 pb-2 pt-1"
-            >
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-50 via-slate-50 to-emerald-50/30 border border-emerald-200/80 dark:bg-gradient-to-br dark:from-emerald-950/60 dark:to-[#181818] dark:border-emerald-500/20 shadow-xs">
-                <div className="text-xs font-bold text-slate-900 dark:text-white mb-2 leading-tight">
-                  Your guest experience is live!
-                </div>
-                <Link
-                  href={`/r/${activeRestaurant.slug}?preview=true`}
-                  target="_blank"
-                  className="w-full py-2 px-3 rounded-xl bg-[#0B3B36] hover:bg-[#072B26] text-white dark:bg-white dark:hover:bg-emerald-50 dark:text-[#111] text-xs font-extrabold flex items-center justify-center gap-1.5 transition shadow-sm"
-                >
-                  <span>View Guest Experience</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-white dark:text-[#111]" />
-                </Link>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                      <motion.span
+                        key={isActive ? "on" : "off"}
+                        className="relative z-10 flex shrink-0"
+                        initial={isActive ? { scale: 0.7, rotate: -12 } : false}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: "spring", stiffness: 520, damping: 26 }}
+                      >
+                        <Icon
+                          className={`w-[18px] h-[18px] transition-[color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-rotate-6 group-hover:scale-110 ${
+                            isActive
+                              ? "text-teal-700 dark:text-teal-300 stroke-[2.2px]"
+                              : "text-slate-400 group-hover:text-slate-700 dark:text-white/40 dark:group-hover:text-white/80 stroke-[1.8px]"
+                          }`}
+                        />
+                      </motion.span>
+
+                      <AnimatePresence initial={false}>
+                        {!isCollapsed && (
+                          <motion.span
+                            key="label"
+                            className="truncate relative z-10"
+                            initial={{ opacity: 0, x: -8, filter: "blur(4px)" }}
+                            animate={{
+                              opacity: 1,
+                              x: 0,
+                              filter: "blur(0px)",
+                              transition: { delay: 0.06 + index * 0.025, duration: 0.32, ease: [0.22, 1, 0.36, 1] },
+                            }}
+                            exit={{ opacity: 0, x: -4, filter: "blur(2px)", transition: { duration: 0.1 } }}
+                          >
+                            {item.label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </Link>
+
+                  </motion.li>
+                );
+              })}
+            </ul>
+          </motion.nav>
+        </LayoutGroup>
+
 
         {/* ── Client Owner Footer (Clickable to open Client Profile) ── */}
         <div className={`border-t border-slate-200/80 dark:border-white/[0.06] bg-slate-50/60 dark:bg-black/20 shrink-0 ${isCollapsed ? "p-2" : "p-3"}`}>
@@ -689,6 +736,23 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
         </div>
       </motion.aside>
 
+      {/* Collapsed-mode tooltip: fixed-positioned so the sidebar's overflow can't clip it */}
+      <AnimatePresence>
+        {isCollapsed && navTip && (
+          <motion.div
+            key="nav-tip"
+            role="tooltip"
+            className="glass-strong pointer-events-none fixed z-[60] hidden whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-800 lg:block dark:text-white"
+            style={{ left: navTip.x, top: navTip.y, translateY: "-50%" }}
+            initial={{ opacity: 0, x: -8, scale: 0.96 }}
+            animate={{ opacity: 1, x: 0, scale: 1, top: navTip.y, transition: { type: "spring", stiffness: 520, damping: 34 } }}
+            exit={{ opacity: 0, x: -4, transition: { duration: 0.08 } }}
+          >
+            {navTip.label}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Mobile Drawer ── */}
       <AnimatePresence>
         {isMobileMenuOpen && (
@@ -718,7 +782,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                     />
                   </div>
                   <div className="min-w-0">
-                    <h2 className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight">
+                    <h2 className="font-semibold text-sm text-slate-900 dark:text-white tracking-tight">
                       Noura
                     </h2>
                     <span className="text-[10px] text-emerald-700 dark:text-emerald-300/80 font-medium block">
@@ -1266,6 +1330,6 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
           </div>
         )}
       </AnimatePresence>
-    </>
+    </MotionConfig>
   );
 }

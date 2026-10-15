@@ -60,16 +60,19 @@ export function GuestActionCard({
       whileHover={shouldReduceMotion ? undefined : { y: -2 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
       onClick={handleClick}
-      className="group relative flex items-center justify-between p-4 sm:p-4.5 bg-white/95 dark:bg-[#121927]/90 hover:bg-white dark:hover:bg-[#162032] border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.18] rounded-[22px] shadow-card hover:shadow-card-hover transition-all duration-200 cursor-pointer select-none backdrop-blur-xs overflow-hidden"
+      className="group relative flex items-center justify-between p-4 sm:p-5 bg-white dark:bg-[#0E1520] hover:bg-white dark:hover:bg-[#121B29] border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.16] rounded-[20px] shadow-panel hover:shadow-panel-hover transition-[box-shadow,border-color,background-color] duration-300 cursor-pointer select-none overflow-hidden"
     >
-      {/* Subtle ambient hover highlight */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-teal-500/[0.02] dark:to-teal-400/[0.04] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      {/* Light sweep on hover */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 -skew-x-12 bg-gradient-to-r from-transparent via-white/60 to-transparent opacity-0 transition-all duration-700 ease-out group-hover:left-[120%] group-hover:opacity-100 dark:via-white/[0.06]"
+      />
 
       {/* Icon & Details */}
       <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 pr-2">
         {/* Dynamic Icon Container */}
         <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-200 group-hover:scale-105 shadow-xs ring-1 ring-black/[0.04] dark:ring-white/[0.08]"
+          className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.36,0.64,1)] group-hover:scale-110 group-hover:-rotate-6 shadow-xs ring-1 ring-black/[0.04] dark:ring-white/[0.08]"
           style={{
             backgroundColor: bgTint,
             color: brandPrimaryColor,
@@ -80,24 +83,22 @@ export function GuestActionCard({
 
         {/* Text */}
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-snug truncate tracking-tight">
-              {action.title}
-            </h3>
-            {action.badge && (
-              <span
-                className="px-2.5 py-0.5 text-[10px] font-extrabold tracking-wider uppercase rounded-full shrink-0 border border-current/20 shadow-xs"
-                style={{
-                  backgroundColor: badgeTint,
-                  color: brandPrimaryColor,
-                }}
-              >
-                {action.badge}
-              </span>
-            )}
-          </div>
+          {action.badge && (
+            <span
+              className="mb-1 inline-flex items-center rounded-md px-1.5 py-[1px] text-[9.5px] font-semibold uppercase tracking-[0.08em]"
+              style={{
+                backgroundColor: badgeTint,
+                color: brandPrimaryColor,
+              }}
+            >
+              {action.badge}
+            </span>
+          )}
+          <h3 className="font-semibold text-[15px] text-slate-900 dark:text-white leading-snug line-clamp-2 tracking-tight">
+            {action.title}
+          </h3>
           {action.description && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed line-clamp-1 font-medium">
+            <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed line-clamp-1">
               {action.description}
             </p>
           )}
@@ -114,13 +115,13 @@ export function GuestActionCard({
   if (action.url) {
     if (isExternal) {
       return (
-        <a href={action.url} target="_blank" rel="noopener noreferrer" className="block focus:outline-none">
+        <a href={action.url} target="_blank" rel="noopener noreferrer" className="block rounded-[20px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary,#0F766E)] focus-visible:ring-offset-2">
           {CardInner}
         </a>
       );
     }
     return (
-      <Link href={action.url} className="block focus:outline-none">
+      <Link href={action.url} className="block rounded-[20px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary,#0F766E)] focus-visible:ring-offset-2">
         {CardInner}
       </Link>
     );

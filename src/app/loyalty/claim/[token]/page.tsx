@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Ambient } from "@/components/ui/ambient";
 import { Award, CheckCircle2, AlertCircle, ArrowRight, Sparkles, Gift, Loader2 } from "lucide-react";
 
 export default function ClaimTokenPage() {
@@ -66,7 +67,8 @@ export default function ClaimTokenPage() {
   }, [rawToken]);
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col justify-center items-center p-4">
+    <div className="glass-ui light-scope relative min-h-screen flex flex-col justify-center items-center p-4">
+      <Ambient />
       <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100 text-center animate-in zoom-in-95 duration-200">
         {isLoading ? (
           <div className="py-12 flex flex-col items-center justify-center">

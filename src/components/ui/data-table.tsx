@@ -57,7 +57,7 @@ export function DataTable<T>({
                 "transition-colors duration-150",
                 onRowClick
                   ? "cursor-pointer hover:bg-slate-50/90 dark:hover:bg-slate-800/50 active:bg-slate-100/80 dark:active:bg-slate-800/80"
-                  : "hover:bg-slate-50/50 dark:hover:bg-slate-850/40"
+                  : "hover:bg-slate-50/50 dark:hover:bg-white/[0.04]"
               )}
             >
               {columns.map((col, idx) => (

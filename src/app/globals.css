@@ -21,7 +21,7 @@
   }
 
   .dark {
-    --background: #0B0F17;
+    --background: #060A0D;
     --foreground: #F8FAFC;
     --muted: #94A3B8;
     --muted-foreground: #64748B;
@@ -106,3 +106,174 @@ button, a, input, select, textarea {
   box-shadow: 0 0 20px -3px var(--brand-primary, rgba(15, 118, 110, 0.25));
 }
 
+
+/* ─────────────────────────────────────────────────────────────
+   Motion tokens (shared scale — see transitions-dev)
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --duration-stagger: 40ms;
+  --duration-micro: 80ms;
+  --duration-quick: 150ms;
+  --duration-fast: 250ms;
+  --duration-medium: 350ms;
+  --duration-slow: 400ms;
+  --duration-very-slow: 500ms;
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);
+
+  /* Chart palette — single brand accent + supporting neutrals */
+  --chart-1: #0F766E;
+  --chart-2: #14B8A6;
+  --chart-3: #F59E0B;
+  --chart-4: #6366F1;
+  --chart-5: #E11D48;
+  --chart-muted: #CBD5E1;
+  --chart-grid: #EEF2F2;
+  --chart-axis: #94A3B8;
+}
+.dark {
+  --chart-1: #2DD4BF;
+  --chart-2: #5EEAD4;
+  --chart-3: #FBBF24;
+  --chart-4: #818CF8;
+  --chart-5: #FB7185;
+  --chart-muted: #334155;
+  --chart-grid: rgba(255, 255, 255, 0.06);
+  --chart-axis: #64748B;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+/* Admin canvas — soft tinted mesh behind dashboards */
+.admin-canvas {
+  background-color: #F6F8F7;
+  background-image:
+    radial-gradient(1200px 600px at 100% -10%, rgba(20, 184, 166, 0.07), transparent 60%),
+    radial-gradient(900px 500px at -10% 0%, rgba(245, 158, 11, 0.045), transparent 55%);
+  background-attachment: fixed;
+}
+.dark .admin-canvas {
+  background-color: #070B12;
+  background-image:
+    radial-gradient(1200px 600px at 100% -10%, rgba(45, 212, 191, 0.08), transparent 60%),
+    radial-gradient(900px 500px at -10% 0%, rgba(99, 102, 241, 0.06), transparent 55%);
+}
+
+/* Fine film grain for depth on hero / feature surfaces */
+.grain {
+  position: relative;
+  isolation: isolate;
+}
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  border-radius: inherit;
+}
+
+/* Skeleton with travelling sheen */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #EEF2F2;
+  border-radius: 10px;
+}
+.dark .skeleton {
+  background: rgba(255, 255, 255, 0.05);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  animation: shimmer 1.6s linear infinite;
+}
+.dark .skeleton::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+}
+
+/* Shimmer text for "live / syncing" labels */
+.text-shimmer {
+  background: linear-gradient(90deg, currentColor 0%, currentColor 40%, rgba(255, 255, 255, 0.95) 50%, currentColor 60%, currentColor 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-shimmer 2.4s linear infinite;
+}
+
+/* Animated conic border for highlighted surfaces */
+@property --border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.border-beam {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--beam-fill, #ffffff), var(--beam-fill, #ffffff)) padding-box,
+    conic-gradient(from var(--border-angle), transparent 0%, transparent 70%, rgba(20, 184, 166, 0.9) 85%, transparent 100%) border-box;
+  animation: border-spin 6s linear infinite;
+}
+.dark .border-beam {
+  --beam-fill: #0E1520;
+}
+
+/* Thin, quiet scrollbars inside panels */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
+}
+.scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.3); border-radius: 999px; }
+
+/* Pressable feedback for tactile buttons */
+.pressable {
+  transition: transform var(--duration-quick) var(--ease-smooth-out), box-shadow var(--duration-fast) var(--ease-smooth-out), background-color var(--duration-fast) var(--ease-smooth-out);
+}
+.pressable:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes text-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes border-spin {
+  0% { --border-angle: 0deg; }
+  100% { --border-angle: 360deg; }
+}

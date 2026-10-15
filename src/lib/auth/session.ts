@@ -111,8 +111,8 @@ export async function verifyRestaurantAccess(
     return { authorized: false, error: "Your session was signed out on all devices. Please sign in again." };
   }
 
-  // If user is a platform super admin, grant full administrative access to any venue
-  if ((session.user as any)?.role === "PLATFORM_ADMIN" || currentUser?.role === "PLATFORM_ADMIN") {
+  // Platform super admin access is decided by the database role only — never the JWT claim
+  if (currentUser.role === "PLATFORM_ADMIN") {
     const restaurant = await prisma.restaurant.findUnique({
       where: { id: restaurantId },
     });

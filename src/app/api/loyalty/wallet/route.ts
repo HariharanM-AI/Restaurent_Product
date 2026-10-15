@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { calculateWalletStamps, getUpcomingMilestone } from "@/lib/loyalty/ledger";
+import { rateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/client-ip";
 
 export async function GET(req: NextRequest) {
   try {
@@ -37,6 +39,27 @@ export async function GET(req: NextRequest) {
     });
 
     if (!wallet) {
+      // Only create wallets for real restaurants
+      const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId }, select: { id: true } });
+      if (!restaurant) {
+        return NextResponse.json(
+          { success: false, error: { code: "NOT_FOUND", message: "Restaurant not found." } },
+          { status: 404 }
+        );
+      }
+
+      // Generous on purpose: every guest on the venue's Wi-Fi shares one public IP
+      const limit = await rateLimit(`wallet_create_${restaurantId}_${getClientIp(req.headers)}`, {
+        limit: 60,
+        windowMs: 10 * 60 * 1000,
+      });
+      if (!limit.success) {
+        return NextResponse.json(
+          { success: false, error: { code: "RATE_LIMITED", message: "Too many requests. Please try again shortly." } },
+          { status: 429 }
+        );
+      }
+
       wallet = await prisma.loyaltyWallet.create({
         data: {
           restaurantId,

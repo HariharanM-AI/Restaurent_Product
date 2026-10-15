@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/session";
+import { getSession, verifyRestaurantAccess } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { uploadClientAsset } from "@/lib/supabase/storage";
+import { detectFileType } from "@/lib/uploads/file-signature";
 
 export async function POST(req: Request) {
   try {
@@ -32,29 +33,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate extension / MIME
-    const allowedMimeTypes = [
-      "application/pdf",
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "image/avif",
-      "image/svg+xml",
-      "image/gif",
-    ];
-
-    if (!allowedMimeTypes.includes(file.type)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            message: "Only PDF documents and image files (JPEG, PNG, WebP, SVG, GIF) are allowed.",
-          },
-        },
-        { status: 400 }
-      );
-    }
-
     // Resolve shop / restaurant ID to ensure client-specific and shop-specific storage
     let restaurantId =
       (formData.get("restaurantId") as string) ||
@@ -66,11 +44,26 @@ export async function POST(req: Request) {
         where: { userId: session.user.id },
         orderBy: { createdAt: "asc" },
       });
-      restaurantId = membership?.restaurantId || "default-shop";
+      restaurantId = membership?.restaurantId || "";
+    }
+
+    // The storage path is scoped by restaurant, so the caller must belong to it
+    const access = restaurantId
+      ? await verifyRestaurantAccess(restaurantId, ["PLATFORM_ADMIN", "OWNER", "MANAGER"])
+      : { authorized: false };
+    if (!access.authorized) {
+      return NextResponse.json(
+        { success: false, error: { message: "You do not have access to upload files for this restaurant." } },
+        { status: 403 }
+      );
     }
 
     // Resolve category (logos, covers, menus, or general)
-    let category = (formData.get("category") as "logos" | "covers" | "menus" | "general") || "general";
+    const CATEGORIES = ["logos", "covers", "menus", "general"] as const;
+    const requestedCategory = formData.get("category");
+    let category: (typeof CATEGORIES)[number] = CATEGORIES.includes(requestedCategory as never)
+      ? (requestedCategory as (typeof CATEGORIES)[number])
+      : "general";
     const requestedType = formData.get("type") as string;
     if (requestedType === "logo") category = "logos";
     if (requestedType === "cover") category = "covers";
@@ -79,11 +72,23 @@ export async function POST(req: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    // Trust the file's own bytes, not the browser-declared type
+    const detectedType = detectFileType(buffer);
+    if (!detectedType) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: { message: "Only PDF documents and image files (JPEG, PNG, WebP, AVIF, GIF) are allowed." },
+        },
+        { status: 400 }
+      );
+    }
+
     // Upload directly to Supabase Storage structured strictly by client and shop
     const uploadResult = await uploadClientAsset({
       fileBuffer: buffer,
       fileName: file.name,
-      mimeType: file.type,
+      mimeType: detectedType,
       clientId: session.user.id,
       shopId: restaurantId,
       category,
@@ -96,14 +101,14 @@ export async function POST(req: Request) {
         storagePath: uploadResult.storagePath,
         filename: uploadResult.filename,
         size: file.size,
-        type: file.type,
+        type: detectedType,
         provider: "supabase",
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Upload handler error:", error);
     return NextResponse.json(
-      { success: false, error: { message: error.message || "File upload to Supabase failed. Please try again." } },
+      { success: false, error: { message: "File upload failed. Please try again." } },
       { status: 500 }
     );
   }

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { subscribeToActivity } from "@/lib/realtime/broadcast";
+import { Ambient } from "@/components/ui/ambient";
 
 interface CustomerThemeSyncProps {
   restaurantId: string;
@@ -97,8 +98,8 @@ export function CustomerThemeSync({
 
   return (
     <div
-      className={`${isDark ? "dark" : ""} min-h-screen flex flex-col justify-start transition-colors duration-300 ${
-        isDark ? "bg-slate-950 text-slate-100" : "bg-slate-100 text-slate-900"
+      className={`${isDark ? "dark" : ""} glass-ui relative min-h-screen flex flex-col justify-start transition-colors duration-300 ${
+        isDark ? "text-slate-100" : "text-slate-900"
       }`}
       style={
         {
@@ -108,11 +109,10 @@ export function CustomerThemeSync({
         } as React.CSSProperties
       }
     >
+      <Ambient variant="guest" tint="var(--brand-primary, #14B8A6)" tintDeep="var(--brand-primary, #0F766E)" />
       <div
-        className={`w-full max-w-md mx-auto min-h-screen shadow-2xl flex flex-col transition-colors duration-300 ${
-          isDark
-            ? "bg-slate-900 border-x border-slate-800 text-slate-100"
-            : "bg-white border-x border-slate-200/60 text-slate-900"
+        className={`guest-column w-full max-w-md mx-auto min-h-screen flex flex-col transition-colors duration-300 md:my-6 md:min-h-[calc(100vh-3rem)] md:rounded-[32px] md:overflow-hidden ${
+          isDark ? "text-slate-100" : "text-slate-900"
         }`}
       >
         {children}

@@ -24,11 +24,18 @@ export function useTheme() {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isCustomerRoute = pathname?.startsWith("/r/");
+  // The admin theme (light/dark glass) only governs the admin portal;
+  // marketing, auth-adjacent and claim pages are designed light-only.
+  const isThemedRoute = pathname?.startsWith("/admin");
   const [theme, setThemeState] = useState<Theme>("light");
 
   useEffect(() => {
     // Never apply admin theme to customer guest pages
     if (isCustomerRoute) return;
+    if (!isThemedRoute) {
+      document.documentElement.classList.remove("dark");
+      return;
+    }
 
     try {
       let stored: Theme | null = null;
@@ -36,19 +43,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         stored = localStorage.getItem("noura-theme") as Theme | null;
       } catch {}
 
-      const prefersDark =
-        typeof window !== "undefined" && typeof window.matchMedia === "function"
-          ? window.matchMedia("(prefers-color-scheme: dark)")?.matches
-          : false;
-
-      const resolved: Theme = stored ?? (prefersDark ? "dark" : "light");
+      // Glass UI is designed dark-first; an explicit user choice always wins
+      const resolved: Theme = stored ?? "dark";
       setThemeState(resolved);
       applyTheme(resolved);
     } catch {}
-  }, [isCustomerRoute]);
+  }, [isCustomerRoute, isThemedRoute]);
 
   function applyTheme(t: Theme) {
-    if (typeof window === "undefined" || pathname?.startsWith("/r/")) return;
+    if (typeof window === "undefined" || !pathname?.startsWith("/admin")) return;
     try {
       const html = document.documentElement;
       if (t === "dark") {

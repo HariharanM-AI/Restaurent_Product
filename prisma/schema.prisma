@@ -251,7 +251,7 @@ model LoyaltyCheckoutSession {
   createdAt    DateTime              @default(now())
 
   restaurant   Restaurant            @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  transactions LoyaltyStampTransaction[]
+  transaction  LoyaltyStampTransaction?
 
   @@index([restaurantId, status, expiresAt])
 }
@@ -262,7 +262,7 @@ model LoyaltyStampTransaction {
   walletId          String
   type              LoyaltyTransactionType
   quantity          Int                    @default(1)
-  checkoutSessionId String?
+  checkoutSessionId String?                @unique
   milestoneId       String?
   rewardId          String?
   idempotencyKey    String                 @unique
@@ -331,6 +331,9 @@ model Feedback {
   message      String
   contact      String?
   isAnonymous  Boolean    @default(true)
+  /// Storage paths of guest-attached photos (max 3, re-encoded JPEG, metadata stripped).
+  /// Never exposed publicly: admins load them through the tenant-checked photo endpoint.
+  imagePaths   String[]   @default([]) @map("imageUrls")
   createdAt    DateTime   @default(now())
 
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)

@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { ArrowLeft, Star, Send, CheckCircle2, MessageSquare, AlertCircle, Loader2 } from "lucide-react";
 import { broadcastActivity } from "@/lib/realtime/broadcast";
 import { trackEvent } from "@/lib/analytics/tracker";
+import { FeedbackPhotoPicker, type PickedPhoto } from "@/components/guest/feedback-photo-picker";
 
 const CATEGORIES = ["Food", "Service", "Ambiance", "Cleanliness", "Other"];
 
@@ -24,6 +25,7 @@ export default function FeedbackPage() {
   const [contact, setContact] = useState<string>("");
   const [isAnonymous, setIsAnonymous] = useState<boolean>(true);
   const [honeypot, setHoneypot] = useState<string>("");
+  const [photos, setPhotos] = useState<PickedPhoto[]>([]);
 
   const [mountTime, setMountTime] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -70,25 +72,38 @@ export default function FeedbackPage() {
     setErrorMessage(null);
 
     try {
-      const res = await fetch(`/api/restaurants/${restaurantId}/feedback`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rating,
-          category,
-          message: message.trim(),
-          contact: isAnonymous ? null : contact.trim(),
-          isAnonymous,
-          website_hp: honeypot,
-          submitDurationMs: duration,
-        }),
-      });
+      const payload = {
+        rating,
+        category,
+        message: message.trim(),
+        contact: isAnonymous ? null : contact.trim(),
+        isAnonymous,
+        website_hp: honeypot,
+        submitDurationMs: duration,
+      };
+
+      // Photos travel as multipart alongside the JSON payload; text-only stays JSON
+      let requestInit: RequestInit;
+      if (photos.length > 0) {
+        const form = new FormData();
+        form.append("payload", JSON.stringify(payload));
+        photos.forEach((p) => form.append("images", p.file, p.file.name));
+        requestInit = { method: "POST", body: form };
+      } else {
+        requestInit = {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        };
+      }
+
+      const res = await fetch(`/api/restaurants/${restaurantId}/feedback`, requestInit);
 
       const json = await res.json();
       if (res.ok && json.success) {
         setIsSubmitted(true);
         if (restaurantId) {
-          broadcastActivity(restaurantId, "feedback_submit", { rating, category });
+          broadcastActivity(restaurantId, "feedback_submit", { rating, category, photos: photos.length });
         }
       } else {
         setErrorMessage(json.error?.message || "Failed to submit feedback. Please try again.");
@@ -101,7 +116,7 @@ export default function FeedbackPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
+    <div className="min-h-screen bg-transparent flex flex-col">
       {/* Top App Bar */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 flex items-center justify-between">
         <Link
@@ -232,6 +247,9 @@ export default function FeedbackPage() {
                 />
               </div>
 
+              {/* Optional photos */}
+              <FeedbackPhotoPicker photos={photos} onChange={setPhotos} brandColor={brandColor} disabled={isLoading} />
+
               {/* Anonymous Toggle & Optional Contact */}
               <div className="pt-2 border-t border-slate-100 space-y-3">
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
@@ -285,7 +303,7 @@ export default function FeedbackPage() {
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Submitting Feedback...</span>
+                    <span>{photos.length > 0 ? "Uploading photos…" : "Submitting Feedback..."}</span>
                   </>
                 ) : (
                   <>

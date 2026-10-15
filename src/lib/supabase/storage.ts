@@ -1,17 +1,37 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import path from "path";
+
+// Server-only module: uploads use the service-role key, which must never reach the browser.
+if (typeof window !== "undefined") {
+  throw new Error("src/lib/supabase/storage.ts must only be imported on the server.");
+}
 
 const supabaseUrl =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "https://wiugpsnngyponfwtlvnj.supabase.co";
-const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndpdWdwc25uZ3lwb25md3Rsdm5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4ODM2MTAsImV4cCI6MjEwNTQ1OTYxMH0.R574lqG0dcT58LSqzFQdQ-CqzmrN9r_9IZYifa4BstU";
+
+function resolveStorageKey(): string {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (serviceKey) return serviceKey;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for storage uploads in production.");
+  }
+  // Local development fallback only — production must use the service-role key
+  // with anonymous writes disabled on the bucket.
+  console.warn("[storage] SUPABASE_SERVICE_ROLE_KEY is not set; falling back to the anon key (development only).");
+  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+}
 
 export const BUCKET_NAME = process.env.SUPABASE_STORAGE_BUCKET || "restaurant-assets";
 
-export const supabaseStorage = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: { persistSession: false },
-});
+let storageClient: SupabaseClient | null = null;
+export function getStorageClient(): SupabaseClient {
+  if (!storageClient) {
+    storageClient = createClient(supabaseUrl, resolveStorageKey(), {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  }
+  return storageClient;
+}
 
 export interface UploadAssetParams {
   fileBuffer: Buffer | Uint8Array;
@@ -19,7 +39,7 @@ export interface UploadAssetParams {
   mimeType: string;
   clientId: string;
   shopId: string;
-  category?: "logos" | "covers" | "menus" | "general";
+  category?: "logos" | "covers" | "menus" | "general" | "feedback";
 }
 
 /**
@@ -44,7 +64,7 @@ export async function uploadClientAsset({
   // Enforce client-specific and shop-specific storage path
   const storagePath = `clients/${clientId}/shops/${shopId}/${category}/${uniqueFilename}`;
 
-  const { data, error } = await supabaseStorage.storage
+  const { error } = await getStorageClient().storage
     .from(BUCKET_NAME)
     .upload(storagePath, fileBuffer, {
       contentType: mimeType,
@@ -56,7 +76,7 @@ export async function uploadClientAsset({
     throw new Error(`Supabase Storage upload failed: ${error.message}`);
   }
 
-  const { data: publicData } = supabaseStorage.storage
+  const { data: publicData } = getStorageClient().storage
     .from(BUCKET_NAME)
     .getPublicUrl(storagePath);
 
@@ -81,7 +101,7 @@ export async function deleteClientAsset(pathOrUrl: string) {
   }
 
   try {
-    await supabaseStorage.storage.from(BUCKET_NAME).remove([storagePath]);
+    await getStorageClient().storage.from(BUCKET_NAME).remove([storagePath]);
   } catch (err) {
     console.warn("Failed to delete asset from Supabase Storage:", err);
   }

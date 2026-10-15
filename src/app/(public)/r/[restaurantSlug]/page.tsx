@@ -43,7 +43,7 @@ export default async function RestaurantGuestPage({
   }
 
   return (
-    <div className="flex-1 flex flex-col justify-between bg-background dark:bg-[#0B0F17] transition-colors">
+    <div className="flex-1 flex flex-col justify-between bg-transparent transition-colors">
       {/* Client telemetry tracker for page view */}
       <GuestHubTracker restaurantId={restaurant.id} />
 

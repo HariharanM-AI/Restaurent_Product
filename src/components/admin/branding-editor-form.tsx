@@ -134,7 +134,7 @@ export function BrandingEditorForm({
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setLogoUploadError("Please select a valid image file (PNG, JPG, SVG, WebP).");
+      setLogoUploadError("Please select a valid image file (PNG, JPG, WebP).");
       return;
     }
 
@@ -429,14 +429,14 @@ export function BrandingEditorForm({
                     <span>Restaurant Logo</span>
                   </span>
                   <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
-                    Square 1:1 recommended, PNG, JPG, SVG, WebP up to 10MB
+                    Square 1:1 recommended, PNG, JPG, WebP up to 10MB
                   </span>
                 </label>
 
                 <input
                   ref={logoInputRef}
                   type="file"
-                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  accept="image/png,image/jpeg,image/webp"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -493,7 +493,7 @@ export function BrandingEditorForm({
                     className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2 ${
                       isUploadingLogo
                         ? "border-teal-400 bg-teal-50/40 dark:bg-teal-950/30"
-                        : "border-slate-300 dark:border-slate-700 hover:border-teal-500 dark:hover:border-teal-400 bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-850"
+                        : "border-slate-300 dark:border-slate-700 hover:border-teal-500 dark:hover:border-teal-400 bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-white/[0.04]"
                     }`}
                   >
                     {isUploadingLogo ? (
@@ -511,7 +511,7 @@ export function BrandingEditorForm({
                             Click to upload logo or drag and drop
                           </span>
                           <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                            PNG, JPG, SVG or WebP (max 10MB)
+                            PNG, JPG or WebP (max 10MB)
                           </span>
                         </div>
                       </>
@@ -594,7 +594,7 @@ export function BrandingEditorForm({
                     className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2 ${
                       isUploadingCover
                         ? "border-teal-400 bg-teal-50/40 dark:bg-teal-950/30"
-                        : "border-slate-300 dark:border-slate-700 hover:border-teal-500 dark:hover:border-teal-400 bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-850"
+                        : "border-slate-300 dark:border-slate-700 hover:border-teal-500 dark:hover:border-teal-400 bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-white/[0.04]"
                     }`}
                   >
                     {isUploadingCover ? (
@@ -829,7 +829,7 @@ export function BrandingEditorForm({
               variant="primary"
               size="lg"
               isLoading={isLoading}
-              className="bg-gradient-to-r from-teal-700 via-teal-600 to-emerald-700 hover:from-teal-600 hover:via-teal-500 hover:to-emerald-600 text-white font-extrabold text-sm px-10 py-3.5 rounded-xl shadow-lg shadow-teal-900/25 hover:shadow-xl hover:shadow-teal-900/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 border border-teal-400/30 cursor-pointer"
+              className="bg-gradient-to-r from-teal-700 via-teal-600 to-emerald-700 hover:from-teal-600 hover:via-teal-500 hover:to-emerald-600 text-white font-semibold text-sm px-10 py-3.5 rounded-xl shadow-lg shadow-teal-900/25 hover:shadow-xl hover:shadow-teal-900/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 border border-teal-400/30 cursor-pointer"
               icon={<Check className="w-4 h-4 text-white stroke-[2.5]" />}
             >
               Save Changes

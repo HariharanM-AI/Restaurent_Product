@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { subscribeToActivity } from "@/lib/realtime/broadcast";
+import { Segmented } from "@/components/ui/motion";
+import { useLiveRefresh } from "@/hooks/use-live-refresh";
 import {
   Users,
   Award,
@@ -131,21 +132,8 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
     } catch {}
   }, [restaurant.id, selectedCustomer]);
 
-  // Subscribe to real-time events & poll periodically
-  useEffect(() => {
-    const unsubscribe = subscribeToActivity(restaurant.id, () => {
-      fetchCustomers();
-    });
-
-    const pollInterval = setInterval(() => {
-      fetchCustomers();
-    }, 4000);
-
-    return () => {
-      unsubscribe();
-      clearInterval(pollInterval);
-    };
-  }, [restaurant.id, fetchCustomers]);
+  // Live refresh: 30s polling + realtime events, paused while hidden, never overlapping
+  useLiveRefresh(restaurant.id, fetchCustomers);
 
   // Compute date filter range
   const dateRange = useMemo(() => {
@@ -286,20 +274,15 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
 
       {/* Date Filter Pills */}
       <div className="flex flex-wrap items-center gap-2">
-        {DATE_PERIODS.map((p) => (
-          <button
-            key={p.key}
-            onClick={() => setDatePeriod(p.key)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              datePeriod === p.key
-                ? "bg-[#0B3B36] dark:bg-emerald-700 text-white shadow-sm"
-                : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-400 dark:hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400"
-            }`}
-          >
-            {p.key === "custom" && <Calendar className="w-3 h-3 inline mr-1.5 -mt-px" />}
-            {p.label}
-          </button>
-        ))}
+        <Segmented
+          ariaLabel="Reporting period"
+          layoutId="customers-period"
+          options={DATE_PERIODS}
+          value={datePeriod as (typeof DATE_PERIODS)[number]["key"]}
+          onChange={(k) => {
+            setDatePeriod(k);
+          }}
+        />
 
         {datePeriod === "custom" && (
           <div className="flex items-center gap-2 ml-2">
@@ -369,7 +352,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
       </div>
 
       {/* Customer CRM Data Table */}
-      <div className="overflow-x-auto rounded-[20px] border border-slate-200/80 dark:border-white/[0.08] bg-white/95 dark:bg-[#121927]/90 shadow-card backdrop-blur-xs">
+      <div className="overflow-x-auto rounded-[20px] border border-slate-200/80 dark:border-white/[0.08] bg-white/95 dark:bg-[#121927]/90 shadow-card">
         <table className="w-full text-left border-collapse text-xs sm:text-sm">
           <thead>
             <tr className="border-b border-slate-200/80 dark:border-white/[0.08] bg-slate-50/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-bold text-[11px] uppercase tracking-wider">
@@ -532,7 +515,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
 
         {/* Table Footer */}
         {filteredCustomers.length > 0 && (
-          <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-850 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
+          <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-white/[0.04] flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
             <span>
               Showing {filteredCustomers.length} of {initialCustomers.length} guests
               {datePeriod !== "all" || searchQuery || activeFilter !== "all" ? " (filtered)" : ""}
@@ -603,7 +586,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                   <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block uppercase">
                     Visits
                   </span>
-                  <span className="text-xl font-extrabold text-slate-900 dark:text-white block mt-0.5">
+                  <span className="text-xl font-semibold text-slate-900 dark:text-white block mt-0.5">
                     {selectedCustomer.totalVisits}
                   </span>
                 </div>
@@ -612,7 +595,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                   <span className="text-[11px] font-semibold text-teal-700 dark:text-teal-400 block uppercase">
                     Stamps
                   </span>
-                  <span className="text-xl font-extrabold text-teal-900 dark:text-teal-200 block mt-0.5">
+                  <span className="text-xl font-semibold text-teal-900 dark:text-teal-200 block mt-0.5">
                     {selectedCustomer.stampsBalance}
                   </span>
                   <span className="text-[10px] text-teal-600 dark:text-teal-400">
@@ -624,14 +607,14 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                   <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 block uppercase">
                     Perks
                   </span>
-                  <span className="text-xl font-extrabold text-amber-900 dark:text-amber-200 block mt-0.5">
+                  <span className="text-xl font-semibold text-amber-900 dark:text-amber-200 block mt-0.5">
                     {selectedCustomer.activeRewards}
                   </span>
                 </div>
               </div>
 
               {/* Contact Information */}
-              <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-850 space-y-2.5">
+              <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-white/[0.04] space-y-2.5">
                 <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
                   Contact & Hardware Identifier
                 </span>
@@ -686,7 +669,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                     Feedback ({selectedCustomer.feedbacks.length})
                   </span>
                   {selectedCustomer.feedbacks.map((f) => (
-                    <div key={f.id} className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-850">
+                    <div key={f.id} className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-white/[0.04]">
                       <div className="flex items-center gap-1 mb-1">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <Star
@@ -718,7 +701,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                   selectedCustomer.rewards.map((r) => (
                     <div
                       key={r.id}
-                      className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-850 flex items-center justify-between shadow-sm"
+                      className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-white/[0.04] flex items-center justify-between shadow-sm"
                     >
                       <div className="flex items-center gap-3">
                         <Gift className="w-4 h-4 text-teal-600 dark:text-teal-400" />
@@ -778,7 +761,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
             </div>
 
             {/* Drawer Footer */}
-            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850 flex justify-end">
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-white/[0.04] flex justify-end">
               <Button variant="outline" size="sm" onClick={() => setSelectedCustomer(null)}>
                 Close Drawer
               </Button>
@@ -795,13 +778,13 @@ function KPICard({ icon, iconBg, label, value, sub }: {
   icon: React.ReactNode; iconBg: string; label: string; value: string | number; sub: string;
 }) {
   return (
-    <div className="p-4 sm:p-5 rounded-[22px] bg-white/95 dark:bg-[#121927]/90 border border-slate-200/70 dark:border-white/[0.08] shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 backdrop-blur-xs flex flex-col justify-between">
+    <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#0E1520] border border-slate-200/70 dark:border-white/[0.07] shadow-panel hover:shadow-panel-hover dark:shadow-panel-dark hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between">
       <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center mb-2.5 shadow-xs`}>
         {icon}
       </div>
       <div>
-        <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</div>
-        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5 tabular-nums">{value}</div>
+        <div className="text-[12.5px] font-medium text-slate-500 dark:text-slate-400">{label}</div>
+        <div className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight mt-0.5 tabular-nums">{value}</div>
         <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 font-medium">{sub}</div>
       </div>
     </div>

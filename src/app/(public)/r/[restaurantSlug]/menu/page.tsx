@@ -160,7 +160,7 @@ export default function MenuPage() {
   const filteredItems = DEFAULT_MENU_ITEMS.filter((item) => item.category === activeCategory);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+    <div className="min-h-screen bg-transparent flex flex-col">
       {/* Top App Bar */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3.5 flex items-center justify-between">
         <Link

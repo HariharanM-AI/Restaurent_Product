@@ -1,0 +1,307 @@
+/* ═════════════════════════════════════════════════════════════════
+   GLASS DESIGN SYSTEM
+   Frosted surfaces over an ambient teal / emerald / amber backdrop.
+   Brand colours stay the same — only the materials change.
+   ═════════════════════════════════════════════════════════════════ */
+:root {
+  --glass-fill: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.56));
+  --glass-fill-strong: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.84));
+  --glass-fill-inner: rgba(255, 255, 255, 0.5);
+  --glass-fill-input: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.85);
+  --glass-ring: rgba(15, 52, 46, 0.08);
+  --glass-inner-border: rgba(15, 52, 46, 0.09);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --glass-shadow: 0 1px 2px rgba(16, 42, 38, 0.04), 0 12px 32px -14px rgba(16, 42, 38, 0.2);
+  --glass-shadow-hover: 0 2px 4px rgba(16, 42, 38, 0.05), 0 22px 48px -18px rgba(16, 42, 38, 0.3);
+  --glass-blur: blur(22px) saturate(160%);
+}
+.dark {
+  --glass-fill: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
+  --glass-fill-strong: linear-gradient(180deg, rgba(24, 32, 40, 0.9), rgba(13, 19, 25, 0.88));
+  --glass-fill-inner: rgba(255, 255, 255, 0.04);
+  --glass-fill-input: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-ring: rgba(0, 0, 0, 0.25);
+  --glass-inner-border: rgba(255, 255, 255, 0.075);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --glass-shadow: 0 1px 0 rgba(255, 255, 255, 0.02), 0 24px 48px -24px rgba(0, 0, 0, 0.75);
+  --glass-shadow-hover: 0 1px 0 rgba(255, 255, 255, 0.03), 0 30px 60px -24px rgba(0, 0, 0, 0.85);
+}
+
+/* ── Explicit utilities ── */
+.glass,
+.glass-strong {
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), 0 0 0 1px var(--glass-ring), var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+.glass-strong {
+  background: var(--glass-fill-strong);
+}
+.glass-hover {
+  transition: box-shadow 350ms cubic-bezier(0.22, 1, 0.36, 1), border-color 350ms cubic-bezier(0.22, 1, 0.36, 1), transform 350ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.glass-hover:hover {
+  box-shadow: var(--glass-highlight), 0 0 0 1px var(--glass-ring), var(--glass-shadow-hover);
+}
+.glass-inner {
+  background: var(--glass-fill-inner);
+  border: 1px solid var(--glass-inner-border);
+}
+/* Nested glass never re-blurs: cheaper and crisper */
+.glass .glass,
+.glass-strong .glass {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--glass-fill-inner);
+  box-shadow: var(--glass-highlight);
+}
+
+/* ── Scoped layer: converts existing surfaces on every page ── */
+/* Card / panel / modal surfaces (light) */
+:is(html:not(.dark) .glass-ui:not(.dark), .glass-ui.light-scope) :where([class~="bg-white"], [class~="bg-white/95"], [class~="bg-white/90"], [class~="bg-white/85"], [class~="bg-white/80"]):where([class*="rounded-xl"], [class*="rounded-2xl"], [class*="rounded-3xl"], [class*="rounded-["], [class*="rounded-lg"]):where([class*="border"]):not([class*="rounded-full"]):not(input):not(textarea):not(select) {
+  background: var(--glass-fill) !important;
+  border-color: var(--glass-border) !important;
+  box-shadow: var(--glass-highlight), 0 0 0 1px var(--glass-ring), var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+/* Card / panel surfaces (dark) */
+.dark .glass-ui :where([class~="dark:bg-slate-900"], [class~="dark:bg-slate-900/95"], [class~="dark:bg-slate-900/90"], [class~="dark:bg-slate-900/80"], [class~="dark:bg-slate-900/70"], [class~="dark:bg-slate-900/60"], [class~="dark:bg-[#0E1520]"], [class~="dark:bg-[#121927]/90"], [class~="dark:bg-[#121927]/95"], [class~="dark:bg-[#121927]"], [class~="dark:bg-[#131B2B]/90"], [class~="dark:bg-[#141416]"], [class~="dark:bg-[#111111]"], [class~="dark:bg-[#1c1c1f]"], [class~="dark:bg-[#0B0F17]/95"]):where([class*="rounded"]):not([class*="rounded-full"]):not(input):not(textarea):not(select) {
+  background: var(--glass-fill) !important;
+  border-color: var(--glass-border) !important;
+  box-shadow: var(--glass-highlight), 0 0 0 1px var(--glass-ring), var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+/* Floating layers (dropdowns, popovers, modals) need more opacity to stay legible */
+:is(html:not(.dark) .glass-ui:not(.dark), .glass-ui.light-scope) :where([class*="absolute"], [class*="fixed"]):where([class~="bg-white"], [class~="bg-white/95"]),
+.dark .glass-ui :where([class*="absolute"], [class*="fixed"]):where([class~="dark:bg-[#121927]/95"], [class~="dark:bg-[#1c1c1f]"], [class~="dark:bg-slate-900"]):where([class*="rounded"]):where([class*="shadow"]) {
+  background: var(--glass-fill-strong) !important;
+}
+:is(html:not(.dark) .glass-ui:not(.dark), .glass-ui.light-scope) [role="dialog"] :where([class~="bg-white"]):where([class*="rounded"]):where([class*="shadow"]),
+.dark .glass-ui [role="dialog"] :where([class~="dark:bg-slate-900"], [class~="dark:bg-[#121927]"], [class~="dark:bg-[#0E1520]"]):where([class*="rounded"]):where([class*="shadow"]) {
+  background: var(--glass-fill-strong) !important;
+}
+/* Inner tiles: translucent, no extra blur */
+:is(html:not(.dark) .glass-ui:not(.dark), .glass-ui.light-scope) :where([class*="rounded"]) :where([class~="bg-slate-50"], [class~="bg-slate-50/80"], [class~="bg-slate-50/60"], [class~="bg-slate-50/50"], [class~="bg-slate-100/70"], [class~="bg-slate-100/80"]):where([class*="rounded"]):not(button):not(a) {
+  background: var(--glass-fill-inner) !important;
+}
+.dark .glass-ui :where([class~="dark:bg-slate-800"], [class~="dark:bg-slate-800/80"], [class~="dark:bg-slate-800/70"], [class~="dark:bg-slate-800/60"], [class~="dark:bg-slate-800/50"], [class~="dark:bg-slate-800/40"]):where([class*="rounded"]):not(button) {
+  background: var(--glass-fill-inner) !important;
+}
+/* Nested surfaces never re-blur */
+:is(html:not(.dark) .glass-ui:not(.dark), .glass-ui.light-scope) :where([class*="backdrop-blur"], .glass, .glass-strong, [class~="bg-white"][class*="rounded"][class*="border"]) :where([class~="bg-white"][class*="rounded"][class*="border"]) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--glass-fill-inner) !important;
+  box-shadow: var(--glass-highlight);
+}
+/* Form controls */
+.glass-ui :where(input, textarea, select):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]) {
+  background-color: var(--glass-fill-input) !important;
+  border-color: var(--glass-inner-border);
+  transition: border-color 250ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 250ms cubic-bezier(0.22, 1, 0.36, 1), background-color 250ms;
+}
+.glass-ui :where(input, textarea, select):not([type="checkbox"]):not([type="radio"]):focus {
+  border-color: rgba(20, 184, 166, 0.55) !important;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.14);
+}
+.dark .glass-ui select option {
+  background: #0E1520;
+}
+/* Table header rows soften on glass */
+.glass-ui thead tr {
+  background: transparent !important;
+}
+.dark .glass-ui :where([class~="dark:border-slate-800"], [class~="dark:border-slate-700"], [class~="dark:border-slate-700/60"]) {
+  border-color: rgba(255, 255, 255, 0.07) !important;
+}
+/* Modal scrims blur what's behind them */
+.glass-ui :where([class*="fixed"][class*="inset-0"]):where([class*="bg-slate-900/"], [class*="bg-black/"], [class*="bg-slate-950/"]) {
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  backdrop-filter: blur(8px) saturate(120%);
+}
+
+/* ── Ambient backdrop ── */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(1100px 700px at 85% -10%, rgba(20, 184, 166, 0.16), transparent 60%),
+    radial-gradient(900px 600px at -5% 105%, rgba(245, 158, 11, 0.1), transparent 60%),
+    linear-gradient(180deg, #eef4f2 0%, #e7efec 100%);
+}
+.dark .ambient {
+  background:
+    radial-gradient(1100px 700px at 85% -10%, rgba(20, 184, 166, 0.15), transparent 60%),
+    radial-gradient(900px 600px at -5% 105%, rgba(245, 158, 11, 0.06), transparent 60%),
+    linear-gradient(180deg, #060a0d 0%, #070d0e 55%, #050809 100%);
+}
+.ambient-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.5;
+  will-change: transform;
+  animation: aurora 28s ease-in-out infinite;
+}
+.dark .ambient-orb {
+  opacity: 0.36;
+}
+.ambient-shards {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.55;
+}
+.dark .ambient-shards {
+  opacity: 0.9;
+}
+@keyframes aurora {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  50% { transform: translate3d(4%, -3%, 0) rotate(8deg) scale(1.08); }
+  100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+}
+
+/* Ambient sits at z -1 inside an isolated stacking context, behind all content */
+.glass-ui {
+  isolation: isolate;
+}
+.glass-ui > .ambient {
+  z-index: -1;
+}
+.admin-canvas.glass-ui {
+  background: transparent !important;
+}
+
+/* Cursor-follow spotlight on glass cards */
+.spotlight {
+  position: relative;
+}
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 0;
+  transition: opacity 350ms cubic-bezier(0.22, 1, 0.36, 1);
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(45, 212, 191, 0.11), transparent 45%);
+}
+.spotlight:hover::before {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-orb {
+    animation: none;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --glass-fill: rgba(255, 255, 255, 0.95);
+  }
+  .dark {
+    --glass-fill: rgba(16, 23, 30, 0.96);
+  }
+}
+
+/* Guest hub: the phone-width column is itself a pane of glass */
+.guest-column {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58));
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  backdrop-filter: blur(28px) saturate(150%);
+}
+.dark .guest-column {
+  background: linear-gradient(180deg, rgba(14, 20, 27, 0.72), rgba(8, 12, 16, 0.66));
+}
+@media (min-width: 768px) {
+  .guest-column {
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-highlight), 0 0 0 1px var(--glass-ring), 0 40px 80px -30px rgba(0, 0, 0, 0.45);
+  }
+}
+/* Inside the frosted column, cards are lighter glass without a second blur */
+.guest-column :where([class~="bg-white"], [class~="dark:bg-[#0E1520]"], [class~="dark:bg-slate-900"], [class~="dark:bg-[#121927]/90"]):where([class*="rounded"]):where([class*="border"]):not([class*="rounded-full"]) {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Light-only pages keep light glass even when the app theme is dark */
+.dark .light-scope {
+  --glass-fill: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.56));
+  --glass-fill-strong: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.84));
+  --glass-fill-inner: rgba(255, 255, 255, 0.5);
+  --glass-fill-input: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.85);
+  --glass-ring: rgba(15, 52, 46, 0.08);
+  --glass-inner-border: rgba(15, 52, 46, 0.09);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --glass-shadow: 0 1px 2px rgba(16, 42, 38, 0.04), 0 12px 32px -14px rgba(16, 42, 38, 0.2);
+}
+.dark .light-scope .ambient {
+  background:
+    radial-gradient(1100px 700px at 85% -10%, rgba(20, 184, 166, 0.16), transparent 60%),
+    radial-gradient(900px 600px at -5% 105%, rgba(245, 158, 11, 0.1), transparent 60%),
+    linear-gradient(180deg, #eef4f2 0%, #e7efec 100%);
+}
+.dark .light-scope .ambient-orb { opacity: 0.5; }
+.dark .light-scope .ambient-shards { opacity: 0.55; }
+
+/* ── Guest hub dark theme layer ──
+   Guest pages were authored light-first. When a restaurant picks dark mode, this maps the
+   light utilities to dark equivalents, but ONLY on elements that don't define their own
+   dark: colour (so pages that already handle dark mode are untouched).
+   .qr-surface opts out: QR codes need a white quiet zone to scan. */
+.dark .guest-column :where([class~="bg-white"], [class~="bg-white/95"], [class~="bg-white/90"], [class~="bg-white/80"], [class~="bg-white/70"], [class~="bg-white/60"], [class~="bg-surface"], [class~="bg-[#F8FAFC]"]):not([class*="dark:bg-"]):not(.qr-surface) {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  background-image: none !important;
+}
+.dark .guest-column :where([class~="bg-slate-50"], [class~="bg-slate-50/80"], [class~="bg-slate-100"], [class~="bg-slate-100/80"], [class~="bg-slate-200"]):not([class*="dark:bg-"]):not(.qr-surface) {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+.dark .guest-column :where([class~="text-slate-900"], [class~="text-slate-800"], [class~="text-gray-900"]):not([class*="dark:text-"]) {
+  color: #f1f5f9 !important;
+}
+.dark .guest-column :where([class~="text-slate-700"], [class~="text-slate-600"]):not([class*="dark:text-"]) {
+  color: #cbd5e1 !important;
+}
+.dark .guest-column :where([class~="text-slate-500"], [class~="text-slate-400"]):not([class*="dark:text-"]) {
+  color: #94a3b8 !important;
+}
+.dark .guest-column :where([class*="border-slate-1"], [class*="border-slate-2"], [class*="border-slate-3"]):not([class*="dark:border-"]):not(.qr-surface) {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.dark .guest-column :where([class*="hover:bg-slate-"], [class*="hover:bg-white"]):hover:not([class*="dark:hover:bg-"]) {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+.dark .guest-column :where(input, textarea, select):not([class*="dark:text-"]) {
+  color: #f1f5f9;
+}
+.dark .guest-column :where(input, textarea)::placeholder {
+  color: #64748b;
+}
+/* Selected chips authored as near-black flip to light so they still read as "on" */
+.dark .guest-column :where([class~="bg-slate-900"]):not([class*="dark:bg-"]) {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+/* Tinted info notes keep their hue but at dark-mode strength */
+.dark .guest-column :where([class~="bg-emerald-50"], [class~="bg-teal-50"], [class~="bg-emerald-50/50"], [class~="bg-teal-50/50"]):not([class*="dark:bg-"]) {
+  background-color: rgba(20, 184, 166, 0.12) !important;
+}
+.dark .guest-column :where([class~="text-emerald-700"], [class~="text-teal-700"], [class~="text-emerald-800"], [class~="text-teal-800"]):not([class*="dark:text-"]) {
+  color: #5eead4 !important;
+}
+.dark .guest-column :where([class*="border-emerald-1"], [class*="border-emerald-2"], [class*="border-teal-1"], [class*="border-teal-2"]):not([class*="dark:border-"]) {
+  border-color: rgba(45, 212, 191, 0.25) !important;
+}

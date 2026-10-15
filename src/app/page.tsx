@@ -24,12 +24,15 @@ import {
   Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Ambient } from "@/components/ui/ambient";
+import { VenueLogoMarquee } from "@/components/shared/venue-logo-marquee";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col justify-between selection:bg-teal-600 selection:text-white">
+    <div className="glass-ui light-scope relative min-h-screen text-slate-900 flex flex-col justify-between selection:bg-teal-600 selection:text-white">
+      <Ambient variant="marketing" />
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs">
+      <header className="glass-strong sticky top-2 z-40 mx-2 sm:mx-4 mt-2 rounded-2xl">
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-3">
           {/* Brand Left */}
           <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
@@ -142,6 +145,9 @@ export default function HomePage() {
             <span>Multi-tenant data privacy</span>
           </div>
         </div>
+
+        {/* Vertical Logo Marquee */}
+        <VenueLogoMarquee />
 
         {/* 6 Core Product Benefits Grid (Bigger UI, Green & White) */}
         <div className="w-full py-16">

@@ -199,7 +199,9 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
         redirect: false,
       });
 
-      if (res?.error) {
+      if (res?.error === "TOO_MANY_ATTEMPTS") {
+        setLoginError("Too many sign-in attempts. Please wait 15 minutes and try again.");
+      } else if (res?.error) {
         setLoginError("Invalid email or password. Please check your credentials.");
       } else {
         router.push(callbackUrl);

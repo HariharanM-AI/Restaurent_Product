@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { analyticsEventSchema } from "@/lib/validation/schemas";
 import { rateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/client-ip";
 
 export async function POST(req: NextRequest) {
   try {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+    const ip = getClientIp(req.headers);
     const limitCheck = await rateLimit(`analytics_${ip}`, { limit: 60, windowMs: 60000 });
 
     if (!limitCheck.success) {

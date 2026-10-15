@@ -195,7 +195,7 @@ export function MenuManager({
       {/* Main Form Layout - Full Width across container */}
       <div className="w-full space-y-6">
         {/* Card 1: Guest Action Card Display */}
-        <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs p-4 sm:p-7 space-y-5 w-full overflow-hidden">
+        <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] shadow-card p-4 sm:p-7 space-y-5 w-full overflow-hidden">
           <div className="flex items-start gap-3.5 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div className="w-10 h-10 rounded-xl bg-[#E6F7F2] dark:bg-emerald-950/60 text-[#0A7E6C] dark:text-emerald-400 border border-[#BCE8DB] dark:border-emerald-800/40 flex items-center justify-center shrink-0">
               <FileText className="w-5 h-5" />
@@ -252,7 +252,7 @@ export function MenuManager({
         </div>
 
         {/* Card 2: Menu Delivery Format */}
-        <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] shadow-card backdrop-blur-xs p-4 sm:p-7 space-y-6 w-full overflow-hidden">
+        <div className="bg-white/95 dark:bg-[#121927]/90 rounded-[24px] border border-slate-200/70 dark:border-white/[0.08] shadow-card p-4 sm:p-7 space-y-6 w-full overflow-hidden">
           <div className="flex items-start gap-3.5 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div className="w-10 h-10 rounded-xl bg-[#E6F7F2] dark:bg-emerald-950/60 text-[#0A7E6C] dark:text-emerald-400 border border-[#BCE8DB] dark:border-emerald-800/40 flex items-center justify-center shrink-0">
               <UtensilsCrossed className="w-5 h-5" />
@@ -360,18 +360,6 @@ export function MenuManager({
                       className="hidden"
                     />
                   </label>
-
-                  <span className="text-xs text-slate-400 dark:text-slate-500 font-medium shrink-0">or paste direct PDF link:</span>
-                </div>
-
-                <div className="w-full min-w-0">
-                  <input
-                    type="text"
-                    value={pdfUrl}
-                    onChange={(e) => setPdfUrl(e.target.value)}
-                    placeholder="/uploads/restaurant-menu.pdf or https://..."
-                    className="w-full min-w-0 h-11 px-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0E473F] dark:focus:ring-emerald-500"
-                  />
                 </div>
 
                 {/* Uploaded PDF Row */}
@@ -414,7 +402,7 @@ export function MenuManager({
                 ) : (
                   <div className="p-3 bg-white/70 dark:bg-slate-900/60 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-center">
                     <span className="text-xs text-slate-400 dark:text-slate-500">
-                      No PDF uploaded yet. Click &ldquo;Choose PDF File&rdquo; or enter a PDF link above.
+                      No PDF uploaded yet. Click &ldquo;Choose PDF File&rdquo; to upload your menu.
                     </span>
                   </div>
                 )}
