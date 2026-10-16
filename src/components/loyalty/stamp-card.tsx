@@ -1,6 +1,6 @@
 "use client";
 
-import { getCycleLength } from "@/lib/loyalty/ledger";
+import { getNextUnlockedMilestone } from "@/lib/loyalty/ledger";
 import React from "react";
 import { Award } from "lucide-react";
 import { StampSlot } from "./stamp-slot";
@@ -25,22 +25,15 @@ export function StampCard({
   brandColor = "var(--brand-primary, #0F766E)",
   milestones = [],
 }: StampCardProps) {
-  // Same cycle as the server's reward logic, so card slots match exactly where rewards unlock
-  const activeMilestones = milestones.filter((m) => m.enabled !== false);
-  const cycleLength = getCycleLength(milestones);
-  const cardCapacity = cycleLength || 10; // no rewards configured: a plain 10-slot card, no reward markers
-
-  // Keep the just-completed card visible on the scan that finishes it
+  // Always a 10-slot card: 1-10, then 11-20, 21-30... Keep the just-completed card visible on the scan that finishes it
+  const cardCapacity = 10;
   const cycleIndex = totalLifetimeStamps === 0 ? 0 : Math.floor((totalLifetimeStamps - 1) / cardCapacity);
   const baseOffset = cycleIndex * cardCapacity;
-  const milestoneRequirementsInCycle = activeMilestones.map((m) => baseOffset + m.stampRequirement);
-  const maxMilestoneReq = cardCapacity;
+  // Reward slots use the server's own unlock rule, so markers sit exactly where rewards are granted
+  const isRewardSlot = (visit: number) => getNextUnlockedMilestone(visit, milestones) !== null;
 
   // Dynamic target stamp requirement for upcoming reward
-  const targetRewardStamp =
-    nextMilestone?.stampRequirement ??
-    milestoneRequirementsInCycle.find((req) => req > totalLifetimeStamps) ??
-    (baseOffset + maxMilestoneReq);
+  const targetRewardStamp = nextMilestone?.stampRequirement ?? baseOffset + cardCapacity;
 
   const displayStampsNeeded =
     stampsNeeded > 0
@@ -112,7 +105,7 @@ export function StampCard({
         {Array.from({ length: cardCapacity }).map((_, idx) => {
           const slotNum = baseOffset + idx + 1;
           const isFilled = slotNum <= totalLifetimeStamps;
-          const isMilestone = milestoneRequirementsInCycle.includes(slotNum);
+          const isMilestone = isRewardSlot(slotNum);
 
           return (
             <StampSlot

@@ -7,13 +7,27 @@ import { trackEvent } from "@/lib/analytics/tracker";
 
 interface SocialFooterProps {
   socialLinks: SocialLinkData[];
+  website?: string | null;
   restaurantId: string;
 }
 
-export function SocialFooter({ socialLinks, restaurantId }: SocialFooterProps) {
-  if (!socialLinks || socialLinks.length === 0) {
-    return null;
-  }
+// Admin-entered value only; bare domains get https://, anything else (javascript:, @handles) is ignored
+export const toHref = (url?: string | null) => {
+  const v = url?.trim();
+  if (!v) return null;
+  if (/^https?:\/\//i.test(v)) return v;
+  return /^[\w-]+(\.[\w-]+)+/.test(v) ? `https://${v}` : null;
+};
+
+export function SocialFooter({ socialLinks, website, restaurantId }: SocialFooterProps) {
+  // Website comes from the profile's "Official Website" field, not a separate (seeded) social link row
+  const links = [
+    { platform: "INSTAGRAM", href: toHref(socialLinks?.find((s) => s.platform === "INSTAGRAM")?.url) },
+    { platform: "FACEBOOK", href: toHref(socialLinks?.find((s) => s.platform === "FACEBOOK")?.url) },
+    { platform: "WEBSITE", href: toHref(website) },
+  ];
+  const tile =
+    "w-11 h-11 rounded-2xl bg-white/90 dark:bg-[#131B2B]/90 border border-slate-200/80 dark:border-white/[0.1] shadow-xs flex items-center justify-center backdrop-blur-xs";
 
   const getPlatformIcon = (platform: string) => {
     switch (platform.toUpperCase()) {
@@ -64,19 +78,26 @@ export function SocialFooter({ socialLinks, restaurantId }: SocialFooterProps) {
         Connect With Us
       </p>
       <div className="flex items-center justify-center gap-3.5 flex-wrap">
-        {socialLinks.map((link) => (
-          <a
-            key={link.id}
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => handleClick(link.platform)}
-            className="w-11 h-11 rounded-2xl bg-white/90 dark:bg-[#131B2B]/90 hover:bg-white dark:hover:bg-[#1b253b] border border-slate-200/80 dark:border-white/[0.1] shadow-xs hover:shadow-card-hover flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-xs"
-            aria-label={`Visit our ${link.platform}`}
-          >
-            {getPlatformIcon(link.platform)}
-          </a>
-        ))}
+        {links.map(({ platform, href }) =>
+          href ? (
+            <a
+              key={platform}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => handleClick(platform)}
+              className={`${tile} hover:bg-white dark:hover:bg-[#1b253b] hover:shadow-card-hover transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer`}
+              aria-label={`Visit our ${platform}`}
+            >
+              {getPlatformIcon(platform)}
+            </a>
+          ) : (
+            // Admin left this field empty: tapping does nothing
+            <button key={platform} type="button" disabled aria-label={`${platform} link not added`} className={`${tile} opacity-50 cursor-default`}>
+              {getPlatformIcon(platform)}
+            </button>
+          )
+        )}
       </div>
       <div className="mt-6 text-xs flex items-center justify-center gap-1.5 font-medium">
         <span className="text-slate-400 dark:text-slate-500">Powered by</span>

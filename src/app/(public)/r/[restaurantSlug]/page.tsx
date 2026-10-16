@@ -87,6 +87,7 @@ export default async function RestaurantGuestPage({
           enabled: s.enabled,
           displayOrder: s.displayOrder,
         }))}
+        website={restaurant.website}
         restaurantId={restaurant.id}
       />
     </div>
