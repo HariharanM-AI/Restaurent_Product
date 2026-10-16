@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Segmented } from "@/components/ui/motion";
 import { ColumnChart } from "@/components/charts";
 import { subscribeToActivity } from "@/lib/realtime/broadcast";
+import { LiveStatus } from "@/components/admin/dashboard-kit";
 import {
   Award,
   Users,
@@ -176,7 +177,7 @@ export function LoyaltyAdminDashboard({
 
     const pollInterval = setInterval(() => {
       fetchStats(true);
-    }, 4000);
+    }, 30000);
 
     return () => {
       unsubscribe();
@@ -271,9 +272,7 @@ export function LoyaltyAdminDashboard({
             Loyalty & Rewards Program
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {loading
-              ? "Loading loyalty data..."
-              : `Turn first-time guests into loyal regulars — ${periodLabel}`}
+            Turn first-time guests into loyal regulars — {periodLabel}
           </p>
         </div>
 
@@ -289,7 +288,7 @@ export function LoyaltyAdminDashboard({
       </div>
 
       {/* 2. Date Filter Pills */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2.5">
         <Segmented
           ariaLabel="Reporting period"
           layoutId="loyalty-period"
@@ -302,7 +301,7 @@ export function LoyaltyAdminDashboard({
         />
 
         {showCustomPicker && period === "custom" && (
-          <div className="flex items-center gap-2 ml-2">
+          <div className="flex items-center gap-2 ml-1">
             <input
               type="date"
               value={customFrom}
@@ -319,7 +318,7 @@ export function LoyaltyAdminDashboard({
           </div>
         )}
 
-        {loading && <Loader2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 animate-spin ml-2" />}
+        <LiveStatus syncing={loading} />
       </div>
 
       {/* Error State */}

@@ -11,18 +11,24 @@ export function FeedbackPhotoCell({ urls, label }: { urls: string[]; label: stri
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   if (!urls || urls.length === 0) {
-    return <span className="text-xs text-slate-300 dark:text-slate-600">No photos</span>;
+    return (
+      <div className="flex items-center justify-center w-full">
+        <span className="text-xs text-slate-400/80 dark:text-slate-500 whitespace-nowrap inline-block text-center font-medium">
+          No photos
+        </span>
+      </div>
+    );
   }
 
   return (
     <>
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-1.5">
+      <div className="flex flex-col items-center justify-center gap-1.5 mx-auto">
+        <div className="flex items-center justify-center gap-1.5">
           {urls.map((url, i) => (
             <Thumb key={url} url={url} index={i} total={urls.length} label={label} onOpen={() => setOpenIndex(i)} />
           ))}
         </div>
-        <span className="inline-flex items-center gap-1 text-[10.5px] font-medium text-slate-400 dark:text-slate-500">
+        <span className="inline-flex items-center justify-center gap-1 text-[10.5px] font-medium text-slate-400 dark:text-slate-500 text-center">
           <ImageIcon className="h-3 w-3" />
           {urls.length} photo{urls.length === 1 ? "" : "s"}
         </span>

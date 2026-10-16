@@ -23,6 +23,7 @@ import {
   ArrowLeft,
   Share2,
 } from "lucide-react";
+import { LiveStatus } from "@/components/admin/dashboard-kit";
 
 interface MenuManagerProps {
   restaurantId: string;
@@ -173,6 +174,9 @@ export function MenuManager({
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
               Upload your official menu PDF, attach multi-page food photography, link an external POS menu, or customize interactive items.
             </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <LiveStatus syncing={isSaving} />
           </div>
         </div>
       </div>

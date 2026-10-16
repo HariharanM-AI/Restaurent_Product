@@ -25,6 +25,7 @@ import { GuestActionData } from "@/types";
 import { Button } from "@/components/ui/button";
 import { broadcastActivity } from "@/lib/realtime/broadcast";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LiveStatus } from "@/components/admin/dashboard-kit";
 
 interface ActionsManagerListProps {
   initialActions: GuestActionData[];
@@ -492,6 +493,8 @@ export function ActionsManagerList({
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
+            <LiveStatus syncing={isLoading} />
+
             {/* View Templates Button — prominent */}
             <button
               onClick={() => setIsTemplateModalOpen(true)}

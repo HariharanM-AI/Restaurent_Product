@@ -23,6 +23,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
+import { LiveStatus } from "@/components/admin/dashboard-kit";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs } from "@/components/ui/tabs";
 
@@ -110,6 +111,8 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
   const [sortField, setSortField] = useState<"lastVisit" | "totalVisits" | "stampsBalance">("lastVisit");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
+  const [isSyncing, setIsSyncing] = useState(false);
+
   // Keep state in sync with initialCustomers prop changes
   useEffect(() => {
     setCustomers(initialCustomers);
@@ -117,6 +120,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
 
   // Fetch updated CRM customers in real-time
   const fetchCustomers = useCallback(async () => {
+    setIsSyncing(true);
     try {
       const res = await fetch(`/api/restaurants/${restaurant.id}/customers`);
       if (res.ok) {
@@ -129,7 +133,9 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
           }
         }
       }
-    } catch {}
+    } catch {} finally {
+      setIsSyncing(false);
+    }
   }, [restaurant.id, selectedCustomer]);
 
   // Live refresh: 30s polling + realtime events, paused while hidden, never overlapping
@@ -285,7 +291,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
         />
 
         {datePeriod === "custom" && (
-          <div className="flex items-center gap-2 ml-2">
+          <div className="flex items-center gap-2 ml-1">
             <input
               type="date"
               value={customFrom}
@@ -301,6 +307,8 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
             />
           </div>
         )}
+
+        <LiveStatus syncing={isSyncing} />
       </div>
 
       {/* Summary KPI Cards */}

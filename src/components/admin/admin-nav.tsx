@@ -1,7 +1,7 @@
 "use client";
 // avoid-ai-design-ignore: K3, SD2, SD8 (brief: glass surfaces, teal/emerald brand on a dark ground)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -80,7 +80,12 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
     restaurants.length > 0 ? restaurants : [restaurant]
   );
   const [isVenueDropdownOpen, setIsVenueDropdownOpen] = useState(false);
+  const [isMobileHeaderVenueOpen, setIsMobileHeaderVenueOpen] = useState(false);
+  const [isMobileDrawerVenueOpen, setIsMobileDrawerVenueOpen] = useState(false);
   const [isAddVenueModalOpen, setIsAddVenueModalOpen] = useState(false);
+
+  const desktopVenueRef = useRef<HTMLDivElement>(null);
+  const mobileHeaderVenueRef = useRef<HTMLDivElement>(null);
 
   // Client profile modal state
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -165,11 +170,27 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
     };
   }, [activeRestaurant.id]);
 
+  // Click outside listener for venue dropdowns
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      if (desktopVenueRef.current && !desktopVenueRef.current.contains(e.target as Node)) {
+        setIsVenueDropdownOpen(false);
+      }
+      if (mobileHeaderVenueRef.current && !mobileHeaderVenueRef.current.contains(e.target as Node)) {
+        setIsMobileHeaderVenueOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleGlobalClick);
+    return () => document.removeEventListener("mousedown", handleGlobalClick);
+  }, []);
+
   // Keep the current sub-page when switching venues
   const currentSubPath = pathname.replace(/^\/admin\/restaurants\/[^/]+/, "") || "/dashboard";
 
   const handleSwitchVenue = (venue: VenueItem) => {
     setIsVenueDropdownOpen(false);
+    setIsMobileHeaderVenueOpen(false);
+    setIsMobileDrawerVenueOpen(false);
     setIsMobileMenuOpen(false);
     setIsProfileModalOpen(false);
     router.push(`/admin/restaurants/${venue.id}${currentSubPath}`);
@@ -307,61 +328,152 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
 
   return (
     <MotionConfig reducedMotion="user">
-      {/* ── Top Mobile Bar ── */}
-      <header className="bg-white/95 dark:bg-[#0E1520]/95 backdrop-blur-md lg:hidden text-slate-800 dark:text-white mx-2 mt-2 rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2 sticky top-2 z-40 border border-slate-200/90 dark:border-white/10 shadow-xs transition-all">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 transition shrink-0 cursor-pointer"
-            aria-label="Toggle navigation menu"
-            aria-expanded={isMobileMenuOpen}
-          >
-            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
-          </button>
-          <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 dark:border-white/20 flex items-center justify-center shrink-0 overflow-hidden p-0.5 shadow-xs">
-            <img
-              src="/images/Own brand logo.png"
-              alt="Noura"
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <div
-            onClick={() => setIsMobileMenuOpen(true)}
-            className="min-w-0 cursor-pointer"
-          >
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="font-semibold text-slate-900 dark:text-white text-sm block leading-tight shrink-0">
-                Noura
-              </span>
-              <span className="text-slate-300 dark:text-white/30 text-xs shrink-0">•</span>
-              <span className="text-xs text-slate-700 dark:text-white/85 font-semibold truncate max-w-[120px]">
-                {activeRestaurant.name}
-              </span>
-              <ChevronDown className="w-3 h-3 text-slate-400 dark:text-white/50 shrink-0" />
+      {/* ── Top Mobile Bar with Venue Switcher Dropdown (Task 3) ── */}
+      <div ref={mobileHeaderVenueRef} className="sticky top-2 z-40 lg:hidden mx-2 mt-2">
+        <header className="bg-white/95 dark:bg-[#0E1520]/95 backdrop-blur-md text-slate-800 dark:text-white rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2 border border-slate-200/90 dark:border-white/10 shadow-xs transition-all">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 transition shrink-0 cursor-pointer"
+              aria-label="Toggle navigation menu"
+              aria-expanded={isMobileMenuOpen}
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
+            </button>
+            <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 dark:border-white/20 flex items-center justify-center shrink-0 overflow-hidden p-0.5 shadow-xs">
+              <img
+                src="/images/Own brand logo.png"
+                alt="Noura"
+                className="w-full h-full object-contain"
+              />
             </div>
-            <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium block">Turn Guests into Regulars</span>
+            <button
+              type="button"
+              onClick={() => setIsMobileHeaderVenueOpen((v) => !v)}
+              className="min-w-0 text-left cursor-pointer group flex flex-col focus:outline-none"
+              aria-expanded={isMobileHeaderVenueOpen}
+              aria-label="Switch cafe or hotel"
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="font-semibold text-slate-900 dark:text-white text-sm block leading-tight shrink-0">
+                  Noura
+                </span>
+                <span className="text-slate-300 dark:text-white/30 text-xs shrink-0">•</span>
+                <span className="text-xs text-slate-700 dark:text-white/85 font-semibold truncate max-w-[120px] group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                  {activeRestaurant.name}
+                </span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-slate-400 dark:text-white/50 shrink-0 transition-transform duration-200 ${
+                    isMobileHeaderVenueOpen ? "rotate-180 text-emerald-600 dark:text-emerald-400" : ""
+                  }`}
+                />
+              </div>
+              <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium block">
+                Turn Guests into Regulars
+              </span>
+            </button>
           </div>
-        </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 transition"
-          >
-            {theme === "dark" ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4" />}
-          </button>
-          <Link
-            href={`/r/${activeRestaurant.slug}?preview=true`}
-            target="_blank"
-            className="p-2 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-white text-xs flex items-center gap-1 border border-slate-200 dark:border-white/10 transition"
-            title="Preview Live Guest Experience"
-          >
-            <ExternalLink className="w-4 h-4" />
-          </Link>
-        </div>
-      </header>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              className="p-2 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 transition cursor-pointer"
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <Link
+              href={`/r/${activeRestaurant.slug}?preview=true`}
+              target="_blank"
+              className="p-2 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-white text-xs flex items-center gap-1 border border-slate-200 dark:border-white/10 transition"
+              title="Preview Live Guest Experience"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </Link>
+          </div>
+        </header>
+
+        {/* ── Mobile Header Venue Dropdown Menu (Task 3) ── */}
+        <AnimatePresence>
+          {isMobileHeaderVenueOpen && (
+            <motion.div
+              style={{ transformOrigin: "top center" }}
+              initial={{ opacity: 0, y: -8, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.18, ease: "easeOut" } }}
+              exit={{ opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.12 } }}
+              className="solid-dropdown-menu absolute left-0 right-0 top-full mt-2 p-2 rounded-2xl shadow-2xl space-y-1 z-50 overflow-hidden"
+            >
+              <div className="px-2.5 py-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                <span>Select Cafe or Hotel</span>
+                <span className="text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20 text-[10px]">
+                  {venuesList.length} venues
+                </span>
+              </div>
+
+              <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
+                {venuesList.map((venue) => {
+                  const isCurrent = venue.id === activeRestaurant.id;
+                  return (
+                    <button
+                      key={venue.id}
+                      type="button"
+                      onClick={() => handleSwitchVenue(venue)}
+                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition cursor-pointer ${
+                        isCurrent
+                          ? "bg-emerald-50/90 dark:bg-emerald-950/40 text-emerald-950 dark:text-white font-bold border border-emerald-200 dark:border-emerald-800"
+                          : "text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0 overflow-hidden">
+                          {venue.logoUrl ? (
+                            <img
+                              src={venue.logoUrl}
+                              alt={venue.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-[10px] font-bold text-slate-700 dark:text-white/80">
+                              {venue.name.slice(0, 2).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs truncate leading-tight font-semibold">
+                            {venue.name}
+                          </div>
+                          <div className="text-[10px] text-slate-400 dark:text-slate-400 truncate mt-0.5">
+                            {venue.address || venue.tagline || "Active Venue"}
+                          </div>
+                        </div>
+                      </div>
+                      {isCurrent && (
+                        <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="border-t border-slate-100 dark:border-white/[0.08] pt-1.5 mt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileHeaderVenueOpen(false);
+                    setIsAddVenueModalOpen(true);
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-600/20 dark:hover:bg-emerald-600/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 text-xs font-bold flex items-center justify-center gap-2 transition shadow-2xs cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add New Cafe or Hotel</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* ── Desktop Sidebar (Animated Collapse/Expand) ── */}
       <motion.aside
@@ -426,7 +538,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                 </div>
 
                 {/* ── Cafe / Hotel Selector Pill & Dropdown ── */}
-                <div className="relative mt-3">
+                <div ref={desktopVenueRef} className="relative mt-3">
                   <div
                     onClick={() => setIsVenueDropdownOpen(!isVenueDropdownOpen)}
                     className="p-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100/90 border border-slate-200/90 dark:bg-white/[0.05] dark:border-white/[0.08] dark:hover:bg-white/[0.09] flex items-center justify-between cursor-pointer transition select-none group"
@@ -465,17 +577,17 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                     </div>
                   </div>
 
-                  {/* ── Dropdown Menu for Switching and Adding Venues ── */}
+                  {/* ── Dropdown Menu for Switching and Adding Venues (Solid & Opaque) ── */}
                   <AnimatePresence>
                     {isVenueDropdownOpen && (
                       <motion.div
                         style={{ transformOrigin: "top center" }}
-                        initial={{ opacity: 0, y: -8, scale: 0.96, filter: "blur(4px)" }}
-                        animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)", transition: { type: "spring", stiffness: 420, damping: 32 } }}
+                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 420, damping: 32 } }}
                         exit={{ opacity: 0, y: -4, scale: 0.98, transition: { duration: 0.12 } }}
-                        className="absolute left-0 right-0 mt-2 p-2 rounded-2xl bg-white dark:bg-[#1c1c1f] border border-slate-200 dark:border-white/10 shadow-2xl space-y-1 z-50 backdrop-blur-xl"
+                        className="solid-dropdown-menu absolute left-0 right-0 mt-2 p-2 rounded-2xl shadow-2xl space-y-1 z-50 overflow-hidden"
                       >
-                        <div className="px-2.5 py-1.5 text-[11px] font-semibold text-slate-500 dark:text-white/50 flex items-center justify-between">
+                        <div className="px-2.5 py-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-between">
                           <span>Your venues</span>
                           <span className="text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20 text-[10px]">
                             {venuesList.length}
@@ -490,10 +602,10 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                                 key={venue.id}
                                 type="button"
                                 onClick={() => handleSwitchVenue(venue)}
-                                className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition ${
+                                className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition cursor-pointer ${
                                   isCurrent
-                                    ? "bg-emerald-50 dark:bg-white/10 text-emerald-950 dark:text-white font-bold border border-emerald-200 dark:border-white/10"
-                                    : "text-slate-700 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06]"
+                                    ? "bg-emerald-50/90 dark:bg-emerald-950/40 text-emerald-950 dark:text-white font-bold border border-emerald-200 dark:border-emerald-800"
+                                    : "text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08]"
                                 }`}
                               >
                                 <div className="flex items-center gap-2.5 min-w-0">
@@ -514,7 +626,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                                     <div className="text-xs truncate leading-tight">
                                       {venue.name}
                                     </div>
-                                    <div className="text-[9px] text-slate-400 dark:text-white/40 truncate">
+                                    <div className="text-[9px] text-slate-400 dark:text-slate-400 truncate">
                                       {venue.address || venue.tagline || "Active Venue"}
                                     </div>
                                   </div>
@@ -534,7 +646,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                               setIsVenueDropdownOpen(false);
                               setIsAddVenueModalOpen(true);
                             }}
-                            className="w-full py-2 px-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-600/20 dark:hover:bg-emerald-600/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 text-xs font-bold flex items-center justify-center gap-2 transition shadow-2xs"
+                            className="w-full py-2 px-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-600/20 dark:hover:bg-emerald-600/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 text-xs font-bold flex items-center justify-center gap-2 transition shadow-2xs cursor-pointer"
                           >
                             <Plus className="w-3.5 h-3.5" />
                             <span>Add New Cafe or Hotel</span>
@@ -799,42 +911,103 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                 </button>
               </div>
 
-              {/* Mobile Venues Switcher */}
-              <div className="p-3 border-b border-slate-200/80 dark:border-white/[0.06] bg-slate-50/60 dark:bg-black/20">
-                <div className="text-[10px] font-bold text-slate-400 dark:text-white/40 uppercase tracking-wider mb-2">
-                  Switch Venue ({venuesList.length})
-                </div>
-                <div className="space-y-1 max-h-36 overflow-y-auto">
-                  {venuesList.map((venue) => {
-                    const isCurrent = venue.id === activeRestaurant.id;
-                    return (
-                      <button
-                        key={venue.id}
-                        type="button"
-                        onClick={() => handleSwitchVenue(venue)}
-                        className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition ${
-                          isCurrent
-                            ? "bg-emerald-50 dark:bg-white/10 text-emerald-950 dark:text-white font-bold border border-emerald-200 dark:border-white/10"
-                            : "text-slate-700 dark:text-white/60 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06]"
-                        }`}
-                      >
-                        <span className="truncate">{venue.name}</span>
-                        {isCurrent && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
-                      </button>
-                    );
-                  })}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    setIsAddVenueModalOpen(true);
-                  }}
-                  className="w-full mt-2 py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-600/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs"
+              {/* Mobile Venues Switcher (Task 2: compact dropdown matching web view) */}
+              <div className="p-3 border-b border-slate-200/80 dark:border-white/[0.06]">
+                <div
+                  onClick={() => setIsMobileDrawerVenueOpen(!isMobileDrawerVenueOpen)}
+                  className="p-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100/90 border border-slate-200/90 dark:bg-white/[0.05] dark:border-white/[0.08] dark:hover:bg-white/[0.09] flex items-center justify-between cursor-pointer transition select-none group"
+                  title="Click to switch cafe or hotel"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add Cafe or Hotel</span>
-                </button>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-slate-200/80 dark:bg-white/10 border border-slate-300/60 dark:border-white/15 flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
+                      {activeRestaurant.logoUrl ? (
+                        <img
+                          src={activeRestaurant.logoUrl}
+                          alt={activeRestaurant.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-[#0B3B36] text-white font-bold text-xs flex items-center justify-center">
+                          {restaurantInitials}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-slate-900 dark:text-white font-bold text-xs truncate leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
+                        {activeRestaurant.name}
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-white/40 truncate mt-0.5">
+                        {activeRestaurant.address || activeRestaurant.tagline || "Downtown • Venue"}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:text-white/40 dark:group-hover:text-white shrink-0 flex items-center justify-center transition-colors">
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                        isMobileDrawerVenueOpen ? "rotate-180 text-emerald-600 dark:text-emerald-400" : ""
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {isMobileDrawerVenueOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="overflow-hidden mt-2 pt-2 border-t border-slate-200/60 dark:border-white/[0.06] space-y-1.5"
+                    >
+                      <div className="px-1 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                        <span>Your venues</span>
+                        <span className="text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20 text-[10px]">
+                          {venuesList.length}
+                        </span>
+                      </div>
+                      <div className="space-y-1 max-h-44 overflow-y-auto pr-0.5">
+                        {venuesList.map((venue) => {
+                          const isCurrent = venue.id === activeRestaurant.id;
+                          return (
+                            <button
+                              key={venue.id}
+                              type="button"
+                              onClick={() => handleSwitchVenue(venue)}
+                              className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition cursor-pointer ${
+                                isCurrent
+                                  ? "bg-emerald-50/90 dark:bg-emerald-950/40 text-emerald-950 dark:text-white font-bold border border-emerald-200 dark:border-emerald-800"
+                                  : "text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08]"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0 overflow-hidden text-[9px] font-bold">
+                                  {venue.logoUrl ? (
+                                    <img src={venue.logoUrl} alt={venue.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    venue.name.slice(0, 2).toUpperCase()
+                                  )}
+                                </div>
+                                <span className="truncate">{venue.name}</span>
+                              </div>
+                              {isCurrent && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          setIsAddVenueModalOpen(true);
+                        }}
+                        className="w-full mt-1 py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-600/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Cafe or Hotel</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">

@@ -61,8 +61,33 @@
 }
 
 /* ── Scoped layer: converts existing surfaces on every page ── */
+/* ── Solid Elevated Dropdowns & Popovers (NEVER transparent or see-through) ── */
+.solid-dropdown-menu,
+.glass-ui .solid-dropdown-menu,
+.glass-strong .solid-dropdown-menu {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid rgba(226, 232, 240, 0.95) !important;
+  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.04) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  opacity: 1 !important;
+}
+
+.dark .solid-dropdown-menu,
+.dark .glass-ui .solid-dropdown-menu,
+.dark .glass-strong .solid-dropdown-menu {
+  background-color: #0d141e !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 24px 48px -8px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  opacity: 1 !important;
+}
+
 /* Card / panel / modal surfaces (light) */
-:is(html:not(.dark) .glass-ui:not(.dark), .glass-ui.light-scope) :where([class~="bg-white"], [class~="bg-white/95"], [class~="bg-white/90"], [class~="bg-white/85"], [class~="bg-white/80"]):where([class*="rounded-xl"], [class*="rounded-2xl"], [class*="rounded-3xl"], [class*="rounded-["], [class*="rounded-lg"]):where([class*="border"]):not([class*="rounded-full"]):not(input):not(textarea):not(select) {
+:is(html:not(.dark) .glass-ui:not(.dark), .glass-ui.light-scope) :where([class~="bg-white"], [class~="bg-white/95"], [class~="bg-white/90"], [class~="bg-white/85"], [class~="bg-white/80"]):where([class*="rounded-xl"], [class*="rounded-2xl"], [class*="rounded-3xl"], [class*="rounded-["], [class*="rounded-lg"]):where([class*="border"]):not([class*="rounded-full"]):not(input):not(textarea):not(select):not(.solid-dropdown-menu):not(.solid-dropdown-menu *) {
   background: var(--glass-fill) !important;
   border-color: var(--glass-border) !important;
   box-shadow: var(--glass-highlight), 0 0 0 1px var(--glass-ring), var(--glass-shadow);
@@ -70,7 +95,7 @@
   backdrop-filter: var(--glass-blur);
 }
 /* Card / panel surfaces (dark) */
-.dark .glass-ui :where([class~="dark:bg-slate-900"], [class~="dark:bg-slate-900/95"], [class~="dark:bg-slate-900/90"], [class~="dark:bg-slate-900/80"], [class~="dark:bg-slate-900/70"], [class~="dark:bg-slate-900/60"], [class~="dark:bg-[#0E1520]"], [class~="dark:bg-[#121927]/90"], [class~="dark:bg-[#121927]/95"], [class~="dark:bg-[#121927]"], [class~="dark:bg-[#131B2B]/90"], [class~="dark:bg-[#141416]"], [class~="dark:bg-[#111111]"], [class~="dark:bg-[#1c1c1f]"], [class~="dark:bg-[#0B0F17]/95"]):where([class*="rounded"]):not([class*="rounded-full"]):not(input):not(textarea):not(select) {
+.dark .glass-ui :where([class~="dark:bg-slate-900"], [class~="dark:bg-slate-900/95"], [class~="dark:bg-slate-900/90"], [class~="dark:bg-slate-900/80"], [class~="dark:bg-slate-900/70"], [class~="dark:bg-slate-900/60"], [class~="dark:bg-[#0E1520]"], [class~="dark:bg-[#121927]/90"], [class~="dark:bg-[#121927]/95"], [class~="dark:bg-[#121927]"], [class~="dark:bg-[#131B2B]/90"], [class~="dark:bg-[#141416]"], [class~="dark:bg-[#111111]"], [class~="dark:bg-[#1c1c1f]"], [class~="dark:bg-[#0B0F17]/95"]):where([class*="rounded"]):not([class*="rounded-full"]):not(input):not(textarea):not(select):not(.solid-dropdown-menu):not(.solid-dropdown-menu *) {
   background: var(--glass-fill) !important;
   border-color: var(--glass-border) !important;
   box-shadow: var(--glass-highlight), 0 0 0 1px var(--glass-ring), var(--glass-shadow);
@@ -78,8 +103,8 @@
   backdrop-filter: var(--glass-blur);
 }
 /* Floating layers (dropdowns, popovers, modals) need more opacity to stay legible */
-:is(html:not(.dark) .glass-ui:not(.dark), .glass-ui.light-scope) :where([class*="absolute"], [class*="fixed"]):where([class~="bg-white"], [class~="bg-white/95"]),
-.dark .glass-ui :where([class*="absolute"], [class*="fixed"]):where([class~="dark:bg-[#121927]/95"], [class~="dark:bg-[#1c1c1f]"], [class~="dark:bg-slate-900"]):where([class*="rounded"]):where([class*="shadow"]) {
+:is(html:not(.dark) .glass-ui:not(.dark), .glass-ui.light-scope) :where([class*="absolute"], [class*="fixed"]):where([class~="bg-white"], [class~="bg-white/95"]):not(.solid-dropdown-menu),
+.dark .glass-ui :where([class*="absolute"], [class*="fixed"]):where([class~="dark:bg-[#121927]/95"], [class~="dark:bg-[#1c1c1f]"], [class~="dark:bg-slate-900"]):where([class*="rounded"]):where([class*="shadow"]):not(.solid-dropdown-menu) {
   background: var(--glass-fill-strong) !important;
 }
 :is(html:not(.dark) .glass-ui:not(.dark), .glass-ui.light-scope) [role="dialog"] :where([class~="bg-white"]):where([class*="rounded"]):where([class*="shadow"]),
@@ -87,14 +112,14 @@
   background: var(--glass-fill-strong) !important;
 }
 /* Inner tiles: translucent, no extra blur */
-:is(html:not(.dark) .glass-ui:not(.dark), .glass-ui.light-scope) :where([class*="rounded"]) :where([class~="bg-slate-50"], [class~="bg-slate-50/80"], [class~="bg-slate-50/60"], [class~="bg-slate-50/50"], [class~="bg-slate-100/70"], [class~="bg-slate-100/80"]):where([class*="rounded"]):not(button):not(a) {
+:is(html:not(.dark) .glass-ui:not(.dark), .glass-ui.light-scope) :where([class*="rounded"]) :where([class~="bg-slate-50"], [class~="bg-slate-50/80"], [class~="bg-slate-50/60"], [class~="bg-slate-50/50"], [class~="bg-slate-100/70"], [class~="bg-slate-100/80"]):where([class*="rounded"]):not(button):not(a):not(.solid-dropdown-menu *) {
   background: var(--glass-fill-inner) !important;
 }
-.dark .glass-ui :where([class~="dark:bg-slate-800"], [class~="dark:bg-slate-800/80"], [class~="dark:bg-slate-800/70"], [class~="dark:bg-slate-800/60"], [class~="dark:bg-slate-800/50"], [class~="dark:bg-slate-800/40"]):where([class*="rounded"]):not(button) {
+.dark .glass-ui :where([class~="dark:bg-slate-800"], [class~="dark:bg-slate-800/80"], [class~="dark:bg-slate-800/70"], [class~="dark:bg-slate-800/60"], [class~="dark:bg-slate-800/50"], [class~="dark:bg-slate-800/40"]):where([class*="rounded"]):not(button):not(.solid-dropdown-menu *) {
   background: var(--glass-fill-inner) !important;
 }
 /* Nested surfaces never re-blur */
-:is(html:not(.dark) .glass-ui:not(.dark), .glass-ui.light-scope) :where([class*="backdrop-blur"], .glass, .glass-strong, [class~="bg-white"][class*="rounded"][class*="border"]) :where([class~="bg-white"][class*="rounded"][class*="border"]) {
+:is(html:not(.dark) .glass-ui:not(.dark), .glass-ui.light-scope) :where([class*="backdrop-blur"], .glass, .glass-strong, [class~="bg-white"][class*="rounded"][class*="border"]) :where([class~="bg-white"][class*="rounded"][class*="border"]):not(.solid-dropdown-menu):not(.solid-dropdown-menu *) {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   background: var(--glass-fill-inner) !important;

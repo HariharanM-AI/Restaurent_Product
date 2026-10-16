@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Segmented } from "@/components/ui/motion";
 import { FeedbackPhotoCell } from "@/components/admin/feedback-photos";
 import { subscribeToActivity } from "@/lib/realtime/broadcast";
+import { LiveStatus } from "@/components/admin/dashboard-kit";
 import {
   Star,
   MessageSquare,
@@ -157,7 +158,7 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
 
     const pollInterval = setInterval(() => {
       fetchStats(true);
-    }, 4000);
+    }, 30000);
 
     return () => {
       unsubscribe();
@@ -193,7 +194,7 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
             Guest Feedback
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {loading ? "Loading feedback data..." : `Listen to your guests — ${periodLabel}`}
+            Listen to your guests — {periodLabel}
           </p>
         </div>
 
@@ -216,7 +217,7 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
       </div>
 
       {/* 2. Date Filter Pills */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2.5">
         <Segmented
           ariaLabel="Reporting period"
           layoutId="feedback-period"
@@ -229,7 +230,7 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
         />
 
         {showCustomPicker && period === "custom" && (
-          <div className="flex items-center gap-2 ml-2">
+          <div className="flex items-center gap-2 ml-1">
             <input
               type="date"
               value={customFrom}
@@ -245,7 +246,7 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
             />
           </div>
         )}
-        {loading && <Loader2 className="w-4 h-4 text-emerald-600 animate-spin ml-2" />}
+        <LiveStatus syncing={loading} />
       </div>
 
       {/* Error */}
@@ -371,7 +372,7 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
                   <tr className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                     <th className="text-left py-3 px-3 w-24">Rating</th>
                     <th className="text-left py-3 px-3">Feedback</th>
-                    <th className="text-left py-3 px-3 w-40">Photos</th>
+                    <th className="text-center py-3 px-3 w-32 min-w-[100px]">Photos</th>
                     <th className="text-center py-3 px-3 w-28">Category</th>
                     <th className="text-right py-3 px-3 w-36">Date & Time</th>
                   </tr>
@@ -400,7 +401,7 @@ export function FeedbackInbox({ restaurantId }: FeedbackInboxProps) {
                             )}
                           </div>
                         </td>
-                        <td className="py-4 px-3 align-top">
+                        <td className="py-4 px-3 text-center align-middle">
                           <FeedbackPhotoCell
                             urls={item.photos ?? []}
                             label={`${item.rating}-star ${item.category ?? ""} feedback`.replace(/\s+/g, " ").trim()}
