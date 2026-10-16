@@ -308,11 +308,11 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
   return (
     <MotionConfig reducedMotion="user">
       {/* ── Top Mobile Bar ── */}
-      <header className="glass-strong lg:hidden text-slate-800 dark:text-white mx-2 mt-2 rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2 sticky top-2 z-40 transition-colors">
+      <header className="bg-white/95 dark:bg-[#0E1520]/95 backdrop-blur-md lg:hidden text-slate-800 dark:text-white mx-2 mt-2 rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2 sticky top-2 z-40 border border-slate-200/90 dark:border-white/10 shadow-xs transition-all">
         <div className="flex min-w-0 items-center gap-2.5">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 transition shrink-0"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 transition shrink-0 cursor-pointer"
             aria-label="Toggle navigation menu"
             aria-expanded={isMobileMenuOpen}
           >
@@ -339,7 +339,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
               </span>
               <ChevronDown className="w-3 h-3 text-slate-400 dark:text-white/50 shrink-0" />
             </div>
-            <span className="text-[10px] text-emerald-700 dark:text-emerald-300/80 font-medium block">Turn Guests into Regulars</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium block">Turn Guests into Regulars</span>
           </div>
         </div>
 
@@ -765,10 +765,10 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
               onClick={() => setIsMobileMenuOpen(false)}
             />
             <motion.div
-              initial={{ x: -280 }}
+              initial={{ x: "-100%" }}
               animate={{ x: 0 }}
-              exit={{ x: -280 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              exit={{ x: "-100%" }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               className="relative w-80 max-w-[85vw] bg-white dark:bg-[#111111] text-slate-800 dark:text-white h-full flex flex-col shadow-2xl z-10 border-r border-slate-200/80 dark:border-white/10"
               style={{ borderRadius: "0 24px 24px 0" }}
             >
@@ -785,7 +785,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                     <h2 className="font-semibold text-sm text-slate-900 dark:text-white tracking-tight">
                       Noura
                     </h2>
-                    <span className="text-[10px] text-emerald-700 dark:text-emerald-300/80 font-medium block">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium block">
                       Turn Guests into Regulars
                     </span>
                   </div>

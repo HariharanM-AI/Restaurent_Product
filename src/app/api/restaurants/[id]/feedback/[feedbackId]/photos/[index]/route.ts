@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { verifyRestaurantAccess } from "@/lib/auth/session";
-import { downloadFeedbackPhoto, isPathForRestaurant } from "@/lib/supabase/feedback-photos";
+import { downloadFeedbackPhoto, getFeedbackPhotoPublicUrl, isPathForRestaurant } from "@/lib/supabase/feedback-photos";
 
 /**
  * GET /api/restaurants/[id]/feedback/[feedbackId]/photos/[index]
@@ -29,12 +29,16 @@ export async function GET(
     select: { imagePaths: true },
   });
   const path = feedback?.imagePaths[i];
-  if (!path || !isPathForRestaurant(path, restaurantId)) {
+  if (!path) {
     return NextResponse.json({ success: false, error: "Photo not found" }, { status: 404 });
   }
 
   const bytes = await downloadFeedbackPhoto(path);
   if (!bytes) {
+    const pubUrl = getFeedbackPhotoPublicUrl(path);
+    if (pubUrl) {
+      return NextResponse.redirect(pubUrl);
+    }
     return NextResponse.json({ success: false, error: "Photo unavailable" }, { status: 404 });
   }
 

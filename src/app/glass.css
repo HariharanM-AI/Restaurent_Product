@@ -134,15 +134,15 @@
   overflow: hidden;
   pointer-events: none;
   background:
-    radial-gradient(1100px 700px at 85% -10%, rgba(20, 184, 166, 0.16), transparent 60%),
-    radial-gradient(900px 600px at -5% 105%, rgba(245, 158, 11, 0.1), transparent 60%),
-    linear-gradient(180deg, #eef4f2 0%, #e7efec 100%);
+    radial-gradient(900px 500px at 85% -10%, rgba(15, 118, 110, 0.05), transparent 65%),
+    radial-gradient(800px 500px at -5% 105%, rgba(245, 158, 11, 0.04), transparent 65%),
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
 }
 .dark .ambient {
   background:
-    radial-gradient(1100px 700px at 85% -10%, rgba(20, 184, 166, 0.15), transparent 60%),
-    radial-gradient(900px 600px at -5% 105%, rgba(245, 158, 11, 0.06), transparent 60%),
-    linear-gradient(180deg, #060a0d 0%, #070d0e 55%, #050809 100%);
+    radial-gradient(900px 500px at 85% -10%, rgba(20, 184, 166, 0.08), transparent 65%),
+    radial-gradient(800px 500px at -5% 105%, rgba(245, 158, 11, 0.04), transparent 65%),
+    linear-gradient(180deg, #090e15 0%, #0b111a 55%, #070b10 100%);
 }
 .ambient-orb {
   position: absolute;

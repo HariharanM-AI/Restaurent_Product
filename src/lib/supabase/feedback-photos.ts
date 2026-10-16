@@ -19,9 +19,27 @@ export const feedbackPhotoPrefix = (restaurantId: string) => `restaurants/${rest
 export const feedbackPhotoUrl = (restaurantId: string, feedbackId: string, index: number) =>
   `/api/restaurants/${encodeURIComponent(restaurantId)}/feedback/${encodeURIComponent(feedbackId)}/photos/${index}`;
 
-/** Maps stored paths to access-controlled URLs for API responses. */
-export const toFeedbackPhotoUrls = (restaurantId: string, feedbackId: string, paths: string[] | null | undefined) =>
-  (paths ?? []).map((_, i) => feedbackPhotoUrl(restaurantId, feedbackId, i));
+/** Returns the public Supabase storage URL for an asset path. */
+export const getFeedbackPhotoPublicUrl = (path: string): string => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://wiugpsnngyponfwtlvnj.supabase.co";
+  return `${baseUrl}/storage/v1/object/public/${FEEDBACK_BUCKET}/${path}`;
+};
+
+/** Maps stored paths to accessible photo URLs for API responses and admin viewing. */
+export const toFeedbackPhotoUrls = (
+  restaurantId: string,
+  feedbackId: string,
+  paths: string[] | null | undefined
+) => {
+  return (paths ?? []).map((path, i) => {
+    if (path && (path.startsWith("restaurants/") || path.startsWith("http"))) {
+      return getFeedbackPhotoPublicUrl(path);
+    }
+    return feedbackPhotoUrl(restaurantId, feedbackId, i);
+  });
+};
 
 /** A stored path is only valid for the restaurant whose prefix it carries. */
 export const isPathForRestaurant = (path: string, restaurantId: string) =>
@@ -31,15 +49,36 @@ export async function uploadFeedbackPhoto(restaurantId: string, jpeg: Buffer): P
   const path = `${feedbackPhotoPrefix(restaurantId)}${randomUUID()}.jpg`;
   const { error } = await getStorageClient()
     .storage.from(FEEDBACK_BUCKET)
-    .upload(path, jpeg, { contentType: "image/jpeg", upsert: false, cacheControl: "private, max-age=0" });
-  if (error) throw new Error(`Feedback photo upload failed: ${error.message}`);
+    .upload(path, jpeg, { contentType: "image/jpeg", upsert: false, cacheControl: "3600" });
+  if (error) {
+    console.error("Feedback photo upload error:", error);
+    throw new Error(`Feedback photo upload failed: ${error.message}`);
+  }
   return path;
 }
 
 export async function downloadFeedbackPhoto(path: string): Promise<Buffer | null> {
-  const { data, error } = await getStorageClient().storage.from(FEEDBACK_BUCKET).download(path);
-  if (error || !data) return null;
-  return Buffer.from(await data.arrayBuffer());
+  try {
+    const { data, error } = await getStorageClient().storage.from(FEEDBACK_BUCKET).download(path);
+    if (!error && data) {
+      return Buffer.from(await data.arrayBuffer());
+    }
+  } catch (err) {
+    console.warn("downloadFeedbackPhoto storage client error:", err);
+  }
+
+  // Fallback: fetch directly from public URL if download API had issues
+  try {
+    const pubUrl = getFeedbackPhotoPublicUrl(path);
+    const resp = await fetch(pubUrl);
+    if (resp.ok) {
+      return Buffer.from(await resp.arrayBuffer());
+    }
+  } catch (fetchErr) {
+    console.warn("downloadFeedbackPhoto public fetch error:", fetchErr);
+  }
+
+  return null;
 }
 
 export async function deleteFeedbackPhotos(paths: string[]): Promise<void> {

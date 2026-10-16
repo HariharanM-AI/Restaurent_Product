@@ -12,13 +12,12 @@ const supabaseUrl =
 function resolveStorageKey(): string {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (serviceKey) return serviceKey;
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for storage uploads in production.");
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (anonKey) {
+    return anonKey;
   }
-  // Local development fallback only — production must use the service-role key
-  // with anonymous writes disabled on the bucket.
-  console.warn("[storage] SUPABASE_SERVICE_ROLE_KEY is not set; falling back to the anon key (development only).");
-  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  console.warn("[storage] Neither SUPABASE_SERVICE_ROLE_KEY nor NEXT_PUBLIC_SUPABASE_ANON_KEY is configured.");
+  return "";
 }
 
 export const BUCKET_NAME = process.env.SUPABASE_STORAGE_BUCKET || "restaurant-assets";

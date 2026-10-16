@@ -52,33 +52,28 @@ function Thumb({
     <motion.button
       type="button"
       onClick={onOpen}
-      disabled={state === "error"}
       initial={{ opacity: 0, scale: 0.85 }}
       animate={{ opacity: 1, scale: 1 }}
-      whileHover={state === "ready" ? { y: -2 } : undefined}
-      whileTap={state === "ready" ? { scale: 0.96 } : undefined}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.96 }}
       transition={{ type: "spring", stiffness: 420, damping: 30, delay: index * 0.04 }}
-      className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 disabled:cursor-not-allowed dark:border-white/10 dark:bg-white/5"
-      aria-label={
-        state === "error" ? `Photo ${index + 1} is unavailable` : `View photo ${index + 1} of ${total} from ${label}`
-      }
+      className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 dark:border-white/10 dark:bg-white/5 cursor-pointer group"
+      aria-label={`View photo ${index + 1} of ${total} from ${label}`}
     >
       {state === "loading" && <span className="skeleton absolute inset-0 rounded-none" aria-hidden="true" />}
-      {state === "error" ? (
-        <span className="flex h-full w-full items-center justify-center text-slate-300 dark:text-slate-600" aria-hidden="true">
+      {state === "error" && (
+        <span className="flex h-full w-full items-center justify-center text-slate-400 group-hover:text-teal-600 dark:text-slate-500 transition" aria-hidden="true">
           <ImageIcon className="h-4 w-4" />
         </span>
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={url}
-          alt=""
-          loading="lazy"
-          onLoad={() => setState("ready")}
-          onError={() => setState("error")}
-          className={`h-full w-full object-cover transition-opacity duration-300 ${state === "ready" ? "opacity-100" : "opacity-0"}`}
-        />
       )}
+      <img
+        src={url}
+        alt=""
+        loading="lazy"
+        onLoad={() => setState("ready")}
+        onError={() => setState("error")}
+        className={`h-full w-full object-cover transition-opacity duration-300 ${state === "ready" ? "opacity-100" : "opacity-0 absolute inset-0"}`}
+      />
     </motion.button>
   );
 }

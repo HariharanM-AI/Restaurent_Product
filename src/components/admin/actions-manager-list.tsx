@@ -95,8 +95,8 @@ const PRESET_TEMPLATES = [
     urlPattern: (slug: string) => `/r/${slug}/feedback`,
   },
   {
-    title: "Play Sudoku",
-    description: "Enjoy a relaxing classic puzzle while waiting for your course.",
+    title: "Games",
+    description: "Enjoy classic puzzles like Sudoku and Tic-Tac-Toe (XOXO) while waiting.",
     icon: "Gamepad2",
     type: "GAME",
     badge: "",

@@ -64,8 +64,8 @@ export const DEFAULT_QUICK_ACTIONS_TEMPLATE: DefaultActionDefinition[] = [
   },
   {
     type: "GAME",
-    title: "Play Sudoku",
-    description: "Enjoy a relaxing classic puzzle while waiting for your course",
+    title: "Games",
+    description: "Enjoy classic puzzles like Sudoku and Tic-Tac-Toe (XOXO) while waiting",
     icon: "Gamepad2",
     urlPattern: (slug: string) => `/r/${slug}/game`,
     displayOrder: 6,

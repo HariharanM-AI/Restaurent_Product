@@ -14,10 +14,13 @@ export function Ambient({
 }) {
   return (
     <div className="ambient" aria-hidden="true">
-      <div className="ambient-orb" style={{ width: 620, height: 620, top: "-12%", right: "-8%", background: tint }} />
       <div
-        className="ambient-orb"
-        style={{ width: 520, height: 520, bottom: "-18%", left: "-10%", background: tintDeep, animationDelay: "-9s" }}
+        className="ambient-orb hidden sm:block"
+        style={{ width: 500, height: 500, top: "-15%", right: "-5%", background: tint, opacity: 0.2 }}
+      />
+      <div
+        className="ambient-orb hidden sm:block"
+        style={{ width: 450, height: 450, bottom: "-18%", left: "-10%", background: tintDeep, animationDelay: "-9s", opacity: 0.15 }}
       />
       <div
         className="ambient-orb"
