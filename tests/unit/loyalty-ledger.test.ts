@@ -54,6 +54,32 @@ describe("Loyalty Ledger Engine", () => {
     expect(reachedSecond?.id).toBe("m2");
   });
 
+  it("never unlocks 15-stamp reward when user is only at 5 stamps (custom venue milestones)", () => {
+    const venueMilestones = [
+      { id: "m1", stampRequirement: 5, rewardTitle: "Free Signature Beverage", validityDays: 30 },
+      { id: "m2", stampRequirement: 10, rewardTitle: "Artisan Dessert on Us", validityDays: 45 },
+      { id: "m3", stampRequirement: 15, rewardTitle: "Chef's Table Appetizer Board", validityDays: 60 },
+    ];
+
+    // At 5 stamps with no prior rewards: unlocks m1 ONLY
+    const at5 = getNextUnlockedMilestone(5, venueMilestones, []);
+    expect(at5?.id).toBe("m1");
+    expect(at5?.stampRequirement).toBe(5);
+
+    // At 5 stamps when m1 is already unlocked: does NOT unlock m2 or m3!
+    const at5WithM1 = getNextUnlockedMilestone(5, venueMilestones, [{ milestoneId: "m1" }]);
+    expect(at5WithM1).toBeNull();
+
+    // At 14 stamps with m1 and m2 unlocked: does NOT unlock m3!
+    const at14 = getNextUnlockedMilestone(14, venueMilestones, [{ milestoneId: "m1" }, { milestoneId: "m2" }]);
+    expect(at14).toBeNull();
+
+    // At 15 stamps: unlocks m3!
+    const at15 = getNextUnlockedMilestone(15, venueMilestones, [{ milestoneId: "m1" }, { milestoneId: "m2" }]);
+    expect(at15?.id).toBe("m3");
+    expect(at15?.rewardTitle).toBe("Chef's Table Appetizer Board");
+  });
+
   it("calculates upcoming milestone and visits needed", () => {
     const milestones = [
       {

@@ -24,35 +24,32 @@ export function StampCard({
   brandColor = "var(--brand-primary, #0F766E)",
   milestones = [],
 }: StampCardProps) {
-  // Continuous 10-stamp card numbering:
-  // Card 1: 1 to 10
-  // Card 2: 11 to 20
-  // Card 3: 21 to 30, etc.
-  const cycleIndex = Math.floor(totalLifetimeStamps / 10);
-  const baseOffset = cycleIndex * 10;
-
-  // Active milestone targets in the current 10-stamp card cycle
-  const activeMilestones =
+  const activeMilestones = (
     milestones.length > 0
       ? milestones
       : [
-          { stampRequirement: 5, rewardTitle: "Reward Milestone" },
-          { stampRequirement: 10, rewardTitle: "Reward Milestone" },
-        ];
+          { stampRequirement: 5, rewardTitle: "Reward Milestone", enabled: true },
+          { stampRequirement: 10, rewardTitle: "Reward Milestone", enabled: true },
+        ]
+  )
+    .filter((m) => m.enabled !== false)
+    .sort((a, b) => a.stampRequirement - b.stampRequirement);
 
-  const milestoneRequirementsInCycle = activeMilestones
-    .map((m) => {
-      const reqInCard = ((m.stampRequirement - 1) % 10) + 1;
-      return baseOffset + reqInCard;
-    })
-    .sort((a, b) => a - b);
+  const maxMilestoneReq = Math.max(...activeMilestones.map((m) => m.stampRequirement), 10);
+  // Total slots on the card adapts to venue's milestones (minimum 10, rounded to multiple of 5)
+  const cardCapacity = Math.max(10, Math.ceil(maxMilestoneReq / 5) * 5);
+
+  const cycleIndex = Math.floor(totalLifetimeStamps / cardCapacity);
+  const baseOffset = cycleIndex * cardCapacity;
+
+  // Milestone requirement numbers in the active cycle
+  const milestoneRequirementsInCycle = activeMilestones.map((m) => baseOffset + m.stampRequirement);
 
   // Dynamic target stamp requirement for upcoming reward
-  // For example: 12/15 when user needs 3 more to achieve reward, 16/20 when user needs 4 more
   const targetRewardStamp =
     nextMilestone?.stampRequirement ??
     milestoneRequirementsInCycle.find((req) => req > totalLifetimeStamps) ??
-    (baseOffset + 10);
+    (baseOffset + maxMilestoneReq);
 
   const displayStampsNeeded =
     stampsNeeded > 0
@@ -119,9 +116,9 @@ export function StampCard({
         </div>
       )}
 
-      {/* Stamp Slots Grid (Continuous numbering: 1-10, 11-20, 21-30, etc.) */}
+      {/* Stamp Slots Grid (Continuous numbering matching venue card capacity) */}
       <div className="grid grid-cols-5 gap-2 sm:gap-2.5 my-2">
-        {Array.from({ length: 10 }).map((_, idx) => {
+        {Array.from({ length: cardCapacity }).map((_, idx) => {
           const slotNum = baseOffset + idx + 1;
           const isFilled = slotNum <= totalLifetimeStamps;
           const isMilestone = milestoneRequirementsInCycle.includes(slotNum);

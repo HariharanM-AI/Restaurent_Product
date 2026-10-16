@@ -42,21 +42,32 @@ export function calculateWalletStamps(transactions: StampTransactionLike[]): {
 
 /**
  * Evaluates whether a new milestone has been achieved that has not yet been unlocked for this wallet.
- * Returns the milestone if a reward should be issued, or null.
+ * Milestones and their stamp requirements are defined specifically by the cafe admin.
+ * A reward is unlocked ONLY when the customer has reached the exact stampRequirement set by the cafe.
+ * Returns the unlocked milestone, or null.
  */
 export function getNextUnlockedMilestone(
   lifetimeStamps: number,
   milestones: MilestoneLike[],
   existingRewards: ExistingRewardLike[]
 ): MilestoneLike | null {
-  const sorted = [...milestones].sort((a, b) => a.stampRequirement - b.stampRequirement);
+  const activeMilestones = (milestones || [])
+    .filter((m) => m.enabled !== false)
+    .sort((a, b) => a.stampRequirement - b.stampRequirement);
 
-  for (const milestone of sorted) {
-    const reqInCycle = ((milestone.stampRequirement - 1) % 10) + 1;
-    const timesEarnable =
-      lifetimeStamps >= reqInCycle
-        ? Math.floor((lifetimeStamps - reqInCycle) / 10) + 1
-        : 0;
+  if (activeMilestones.length === 0) {
+    return null;
+  }
+
+  // The cycle length is defined by the cafe's maximum milestone requirement (minimum 10)
+  const maxRequirement = Math.max(...activeMilestones.map((m) => m.stampRequirement), 10);
+  const fullCycles = Math.floor(lifetimeStamps / maxRequirement);
+  const remainder = lifetimeStamps % maxRequirement;
+
+  for (const milestone of activeMilestones) {
+    // A milestone is earnable once for every completed full cycle of the cafe's program,
+    // plus once more if the current remainder has reached or exceeded its stampRequirement.
+    const timesEarnable = fullCycles + (remainder >= milestone.stampRequirement ? 1 : 0);
     const timesUnlocked = existingRewards.filter((r) => r.milestoneId === milestone.id).length;
 
     if (timesEarnable > timesUnlocked) {
@@ -68,43 +79,46 @@ export function getNextUnlockedMilestone(
 }
 
 /**
- * Finds the upcoming milestone the customer is currently working towards in the active 10-stamp card cycle.
+ * Finds the upcoming milestone the customer is currently working towards based on the cafe's configured milestones.
  */
 export function getUpcomingMilestone(
   lifetimeStamps: number,
   milestones: MilestoneLike[]
 ): { nextMilestone: MilestoneLike | null; stampsNeeded: number } {
-  if (!milestones || milestones.length === 0) {
+  const activeMilestones = (milestones || [])
+    .filter((m) => m.enabled !== false)
+    .sort((a, b) => a.stampRequirement - b.stampRequirement);
+
+  if (activeMilestones.length === 0) {
     return { nextMilestone: null, stampsNeeded: 0 };
   }
 
-  const sorted = [...milestones].sort((a, b) => a.stampRequirement - b.stampRequirement);
-  const cycleIndex = Math.floor(lifetimeStamps / 10);
-  const baseOffset = cycleIndex * 10;
+  const maxRequirement = Math.max(...activeMilestones.map((m) => m.stampRequirement), 10);
+  const currentCycle = Math.floor(lifetimeStamps / maxRequirement);
+  const remainder = lifetimeStamps % maxRequirement;
 
-  for (const milestone of sorted) {
-    const reqInCycle = ((milestone.stampRequirement - 1) % 10) + 1;
-    const absoluteTarget = baseOffset + reqInCycle;
-    if (lifetimeStamps < absoluteTarget) {
-      return {
-        nextMilestone: {
-          ...milestone,
-          stampRequirement: absoluteTarget,
-        },
-        stampsNeeded: absoluteTarget - lifetimeStamps,
-      };
-    }
+  // Find the first milestone in the current cycle that has not yet been reached
+  const upcomingInCycle = activeMilestones.find((m) => m.stampRequirement > remainder);
+
+  if (upcomingInCycle) {
+    const absoluteTarget = currentCycle * maxRequirement + upcomingInCycle.stampRequirement;
+    return {
+      nextMilestone: {
+        ...upcomingInCycle,
+        stampRequirement: absoluteTarget,
+      },
+      stampsNeeded: Math.max(0, absoluteTarget - lifetimeStamps),
+    };
   }
 
-  // If all milestones in this 10-stamp card cycle are reached, point to the first milestone of the next cycle
-  const firstMilestone = sorted[0];
-  const firstReq = ((firstMilestone.stampRequirement - 1) % 10) + 1;
-  const nextCycleTarget = baseOffset + 10 + firstReq;
+  // If all milestones in this cycle were reached, point to the first milestone of the next cycle
+  const firstMilestone = activeMilestones[0];
+  const nextCycleTarget = (currentCycle + 1) * maxRequirement + firstMilestone.stampRequirement;
   return {
     nextMilestone: {
       ...firstMilestone,
       stampRequirement: nextCycleTarget,
     },
-    stampsNeeded: nextCycleTarget - lifetimeStamps,
+    stampsNeeded: Math.max(0, nextCycleTarget - lifetimeStamps),
   };
 }

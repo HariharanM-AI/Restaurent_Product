@@ -29,7 +29,7 @@ export async function GET(
     select: { imagePaths: true },
   });
   const path = feedback?.imagePaths[i];
-  if (!path) {
+  if (!path || !isPathForRestaurant(path, restaurantId)) {
     return NextResponse.json({ success: false, error: "Photo not found" }, { status: 404 });
   }
 

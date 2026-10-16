@@ -130,8 +130,8 @@ export default async function RestaurantDashboardLayout({
           restaurants={restaurantsList}
         />
 
-        <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8 overflow-x-hidden">
-          <div className="w-full mx-auto max-w-[1600px]">
+        <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8 xl:px-10 overflow-x-hidden w-full">
+          <div className="w-full">
             <PageTransition>{children}</PageTransition>
           </div>
         </main>

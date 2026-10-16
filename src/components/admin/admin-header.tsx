@@ -126,7 +126,7 @@ export function AdminHeader({ restaurantName, restaurantSlug, restaurants = [] }
   };
 
   return (
-    <header className="glass-strong hidden lg:block mx-4 xl:mx-6 mt-3 rounded-2xl px-4 py-2.5 sticky top-3 z-30 transition-colors">
+    <header className="glass-strong hidden lg:block mx-4 sm:mx-6 lg:mx-8 xl:mx-10 mt-3 rounded-2xl px-4 py-2.5 sticky top-3 z-30 transition-colors">
       <div className="w-full flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/80 dark:bg-white/[0.05] border border-slate-200/60 dark:border-white/[0.08] shadow-2xs">

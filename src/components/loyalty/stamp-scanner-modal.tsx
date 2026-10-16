@@ -12,6 +12,7 @@ import {
   Gift,
   RotateCcw,
   ArrowRight,
+  ArrowLeft,
   UploadCloud,
   Keyboard,
 } from "lucide-react";
@@ -375,6 +376,16 @@ export function StampScannerModal({
     };
   }, [isOpen, mode, successData]);
 
+  // Prevent background scrolling while modal is open (especially on mobile iOS/Android)
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -384,37 +395,51 @@ export function StampScannerModal({
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 overflow-hidden"
     >
-      <div className="solid-modal glass-modal relative w-full max-w-sm bg-white dark:bg-[#0D141F] rounded-3xl shadow-2xl border border-slate-100 dark:border-white/10 overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/10">
-          <div className="flex items-center gap-2.5">
-            <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs shadow-xs"
-              style={{ backgroundColor: brandColor }}
-            >
-              <QrCode className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-none">Collect Stamp</h3>
-              <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">{restaurantName}</p>
-            </div>
-          </div>
+      <div className="solid-modal glass-modal relative w-full h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-md bg-white dark:bg-[#0D141F] rounded-none sm:rounded-3xl shadow-2xl border-0 sm:border sm:border-slate-100 dark:sm:border-white/10 overflow-hidden flex flex-col">
+        {/* Header with prominent Back button */}
+        <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100 dark:border-white/10 shrink-0 bg-white/95 dark:bg-[#0D141F]/95 backdrop-blur-md z-10">
           <button
             type="button"
             onClick={handleClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 transition cursor-pointer"
+            className="flex items-center gap-1.5 py-1.5 px-2.5 -ml-1 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 text-xs font-bold transition cursor-pointer"
+            aria-label="Back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
+          </button>
+
+          <div className="flex items-center gap-2">
+            <div
+              className="w-7 h-7 rounded-xl flex items-center justify-center text-white text-xs shadow-xs shrink-0"
+              style={{ backgroundColor: brandColor }}
+            >
+              <QrCode className="w-3.5 h-3.5" />
+            </div>
+            <div className="text-left">
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">Collect Stamp</h3>
+              <p className="text-[10px] text-slate-400 dark:text-slate-400 leading-none mt-0.5 truncate max-w-[130px] sm:max-w-[180px]">
+                {restaurantName}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 transition cursor-pointer"
+            aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-5 space-y-4">
+        <div className="flex-1 p-4 sm:p-5 overflow-y-auto flex flex-col justify-center sm:justify-start space-y-4">
           {successData ? (
             /* Success State */
-            <div className="text-center py-4 space-y-3 animate-in zoom-in-95 duration-200">
+            <div className="text-center py-4 space-y-3 animate-in zoom-in-95 duration-200 max-w-[320px] mx-auto w-full">
               <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center mx-auto shadow-sm">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
@@ -468,7 +493,7 @@ export function StampScannerModal({
           ) : (
             <>
               {/* Mode Switch Tabs */}
-              <div className="flex rounded-xl bg-slate-100 dark:bg-white/10 p-1">
+              <div className="flex rounded-xl bg-slate-100 dark:bg-white/10 p-1 max-w-[320px] mx-auto w-full">
                 <button
                   type="button"
                   onClick={() => setMode("camera")}
@@ -497,7 +522,7 @@ export function StampScannerModal({
 
               {/* Mode 1: Camera Scanner */}
               {mode === "camera" && (
-                <div className="space-y-3">
+                <div className="space-y-3 max-w-[320px] mx-auto w-full">
                   <div className="relative aspect-square w-full rounded-2xl bg-black overflow-hidden flex items-center justify-center shadow-inner">
                     <video
                       ref={videoRef}
@@ -557,7 +582,7 @@ export function StampScannerModal({
 
               {/* Mode 2: Manual Code Entry */}
               {mode === "manual" && (
-                <div className="space-y-3">
+                <div className="space-y-3 max-w-[320px] mx-auto w-full">
                   {cameraError && (
                     <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-200 text-[11px]">
                       {cameraError}
@@ -604,7 +629,7 @@ export function StampScannerModal({
 
               {/* Error Message with immediate Scan Again recovery */}
               {errorMessage && (
-                <div className="p-3.5 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 text-xs flex flex-col gap-2">
+                <div className="p-3.5 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 text-xs flex flex-col gap-2 max-w-[320px] mx-auto w-full">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
                     <span className="leading-snug font-medium">{errorMessage}</span>
