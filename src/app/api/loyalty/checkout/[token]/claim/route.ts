@@ -148,7 +148,7 @@ export async function POST(
 
       // Check if milestone unlocked
       const milestones = session.restaurant.loyaltyProgram?.milestones || [];
-      const newMilestone = getNextUnlockedMilestone(lifetimeStamps, milestones, wallet.rewards);
+      const newMilestone = getNextUnlockedMilestone(lifetimeStamps, milestones);
 
       let newReward = null;
       if (newMilestone) {

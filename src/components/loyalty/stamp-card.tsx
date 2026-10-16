@@ -1,5 +1,6 @@
 "use client";
 
+import { getCycleLength } from "@/lib/loyalty/ledger";
 import React from "react";
 import { Award } from "lucide-react";
 import { StampSlot } from "./stamp-slot";
@@ -24,26 +25,16 @@ export function StampCard({
   brandColor = "var(--brand-primary, #0F766E)",
   milestones = [],
 }: StampCardProps) {
-  const activeMilestones = (
-    milestones.length > 0
-      ? milestones
-      : [
-          { stampRequirement: 5, rewardTitle: "Reward Milestone", enabled: true },
-          { stampRequirement: 10, rewardTitle: "Reward Milestone", enabled: true },
-        ]
-  )
-    .filter((m) => m.enabled !== false)
-    .sort((a, b) => a.stampRequirement - b.stampRequirement);
+  // Same cycle as the server's reward logic, so card slots match exactly where rewards unlock
+  const activeMilestones = milestones.filter((m) => m.enabled !== false);
+  const cycleLength = getCycleLength(milestones);
+  const cardCapacity = cycleLength || 10; // no rewards configured: a plain 10-slot card, no reward markers
 
-  const maxMilestoneReq = Math.max(...activeMilestones.map((m) => m.stampRequirement), 10);
-  // Total slots on the card adapts to venue's milestones (minimum 10, rounded to multiple of 5)
-  const cardCapacity = Math.max(10, Math.ceil(maxMilestoneReq / 5) * 5);
-
-  const cycleIndex = Math.floor(totalLifetimeStamps / cardCapacity);
+  // Keep the just-completed card visible on the scan that finishes it
+  const cycleIndex = totalLifetimeStamps === 0 ? 0 : Math.floor((totalLifetimeStamps - 1) / cardCapacity);
   const baseOffset = cycleIndex * cardCapacity;
-
-  // Milestone requirement numbers in the active cycle
   const milestoneRequirementsInCycle = activeMilestones.map((m) => baseOffset + m.stampRequirement);
+  const maxMilestoneReq = cardCapacity;
 
   // Dynamic target stamp requirement for upcoming reward
   const targetRewardStamp =

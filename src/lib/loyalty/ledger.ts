@@ -14,10 +14,6 @@ export interface MilestoneLike {
   displayOrder?: number;
 }
 
-export interface ExistingRewardLike {
-  milestoneId: string;
-}
-
 /**
  * Calculates current active stamp count and total lifetime stamps from transactions.
  */
@@ -40,85 +36,48 @@ export function calculateWalletStamps(transactions: StampTransactionLike[]): {
   return { currentStamps, lifetimeStamps };
 }
 
+type LevelLike = { stampRequirement: number; enabled?: boolean };
+
+const activeSorted = <T extends LevelLike>(milestones: T[]) =>
+  (milestones || []).filter((m) => m.enabled !== false).sort((a, b) => a.stampRequirement - b.stampRequirement);
+
 /**
- * Evaluates whether a new milestone has been achieved that has not yet been unlocked for this wallet.
- * Milestones and their stamp requirements are defined specifically by the cafe admin.
- * A reward is unlocked ONLY when the customer has reached the exact stampRequirement set by the cafe.
- * Returns the unlocked milestone, or null.
+ * One stamp-card cycle is exactly the cafe's highest reward level (0 when the cafe has no rewards).
+ * The card restarts after that, so rewards repeat at the same admin-set levels every cycle.
  */
-export function getNextUnlockedMilestone(
-  lifetimeStamps: number,
-  milestones: MilestoneLike[],
-  existingRewards: ExistingRewardLike[]
-): MilestoneLike | null {
-  const activeMilestones = (milestones || [])
-    .filter((m) => m.enabled !== false)
-    .sort((a, b) => a.stampRequirement - b.stampRequirement);
-
-  if (activeMilestones.length === 0) {
-    return null;
-  }
-
-  // The cycle length is defined by the cafe's maximum milestone requirement (minimum 10)
-  const maxRequirement = Math.max(...activeMilestones.map((m) => m.stampRequirement), 10);
-  const fullCycles = Math.floor(lifetimeStamps / maxRequirement);
-  const remainder = lifetimeStamps % maxRequirement;
-
-  for (const milestone of activeMilestones) {
-    // A milestone is earnable once for every completed full cycle of the cafe's program,
-    // plus once more if the current remainder has reached or exceeded its stampRequirement.
-    const timesEarnable = fullCycles + (remainder >= milestone.stampRequirement ? 1 : 0);
-    const timesUnlocked = existingRewards.filter((r) => r.milestoneId === milestone.id).length;
-
-    if (timesEarnable > timesUnlocked) {
-      return milestone;
-    }
-  }
-
-  return null;
+export function getCycleLength(milestones: LevelLike[]): number {
+  const active = activeSorted(milestones);
+  return active.length ? Math.max(...active.map((m) => m.stampRequirement)) : 0;
 }
 
 /**
- * Finds the upcoming milestone the customer is currently working towards based on the cafe's configured milestones.
+ * Returns the milestone unlocked by the stamp that brought the wallet to `lifetimeStamps`, or null.
+ * A reward unlocks ONLY on the scan that lands exactly on an admin-set level — never by "catching up"
+ * on stamps collected before a reward was created or its level was changed.
+ */
+export function getNextUnlockedMilestone(lifetimeStamps: number, milestones: MilestoneLike[]): MilestoneLike | null {
+  const cycle = getCycleLength(milestones);
+  if (cycle === 0 || lifetimeStamps <= 0) return null;
+  const positionInCycle = ((lifetimeStamps - 1) % cycle) + 1;
+  return activeSorted(milestones).find((m) => m.stampRequirement === positionInCycle) ?? null;
+}
+
+/**
+ * Finds the upcoming milestone the customer is working towards, as an absolute lifetime stamp target.
  */
 export function getUpcomingMilestone(
   lifetimeStamps: number,
   milestones: MilestoneLike[]
 ): { nextMilestone: MilestoneLike | null; stampsNeeded: number } {
-  const activeMilestones = (milestones || [])
-    .filter((m) => m.enabled !== false)
-    .sort((a, b) => a.stampRequirement - b.stampRequirement);
+  const cycle = getCycleLength(milestones);
+  if (cycle === 0) return { nextMilestone: null, stampsNeeded: 0 };
 
-  if (activeMilestones.length === 0) {
-    return { nextMilestone: null, stampsNeeded: 0 };
-  }
-
-  const maxRequirement = Math.max(...activeMilestones.map((m) => m.stampRequirement), 10);
-  const currentCycle = Math.floor(lifetimeStamps / maxRequirement);
-  const remainder = lifetimeStamps % maxRequirement;
-
-  // Find the first milestone in the current cycle that has not yet been reached
-  const upcomingInCycle = activeMilestones.find((m) => m.stampRequirement > remainder);
-
-  if (upcomingInCycle) {
-    const absoluteTarget = currentCycle * maxRequirement + upcomingInCycle.stampRequirement;
-    return {
-      nextMilestone: {
-        ...upcomingInCycle,
-        stampRequirement: absoluteTarget,
-      },
-      stampsNeeded: Math.max(0, absoluteTarget - lifetimeStamps),
-    };
-  }
-
-  // If all milestones in this cycle were reached, point to the first milestone of the next cycle
-  const firstMilestone = activeMilestones[0];
-  const nextCycleTarget = (currentCycle + 1) * maxRequirement + firstMilestone.stampRequirement;
+  const cycleStart = Math.floor(lifetimeStamps / cycle) * cycle;
+  // Always found: the highest level equals the cycle length, which is > the position in the cycle
+  const upcoming = activeSorted(milestones).find((m) => cycleStart + m.stampRequirement > lifetimeStamps)!;
+  const target = cycleStart + upcoming.stampRequirement;
   return {
-    nextMilestone: {
-      ...firstMilestone,
-      stampRequirement: nextCycleTarget,
-    },
-    stampsNeeded: Math.max(0, nextCycleTarget - lifetimeStamps),
+    nextMilestone: { ...upcoming, stampRequirement: target },
+    stampsNeeded: target - lifetimeStamps,
   };
 }

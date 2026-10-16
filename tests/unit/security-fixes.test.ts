@@ -18,6 +18,7 @@ const prismaMock = {
   analyticsEvent: { create: vi.fn() },
   loyaltyCheckoutSession: { findUnique: vi.fn(), updateMany: vi.fn() },
   loyaltyWallet: { findUnique: vi.fn(), create: vi.fn() },
+  restaurant: { findUnique: vi.fn() },
   $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(prismaMock)),
 };
 
@@ -97,6 +98,31 @@ describe("Single-use checkout QR cannot be double-claimed", () => {
     const res = await POST(req, { params: Promise.resolve({ token: "tok" }) });
 
     expect(res.status).toBe(409);
+    expect(prismaMock.loyaltyStampTransaction.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("Stamps are venue-specific", () => {
+  it("rejects another venue's checkout QR without consuming it", async () => {
+    prismaMock.loyaltyCheckoutSession.findUnique.mockResolvedValue({
+      id: "sess_B",
+      restaurantId: "rest_B",
+      status: "ACTIVE",
+      expiresAt: new Date(Date.now() + 60_000),
+      restaurant: { name: "Cafe B", slug: "b", primaryColor: "#000", loyaltyProgram: { milestones: [] } },
+    });
+    prismaMock.restaurant.findUnique.mockResolvedValue({ name: "Cafe A" });
+
+    const { POST } = await import("@/app/api/loyalty/checkout/[token]/claim/route");
+    const req = new NextRequest("http://localhost/api/claim", {
+      method: "POST",
+      body: JSON.stringify({ anonymousBrowserId: "wal_test_browser_1", idempotencyKey: "idem_key_123456", expectedRestaurantId: "rest_A" }),
+    });
+    const res = await POST(req, { params: Promise.resolve({ token: "tok" }) });
+
+    expect(res.status).toBe(400);
+    expect((await res.json()).error.code).toBe("CAFE_MISMATCH");
+    expect(prismaMock.loyaltyCheckoutSession.updateMany).not.toHaveBeenCalled();
     expect(prismaMock.loyaltyStampTransaction.create).not.toHaveBeenCalled();
   });
 });

@@ -54,7 +54,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/images/Own brand logo.png" />
       </head>
       <body
-        className="min-h-screen bg-surface font-sans text-foreground antialiased selection:bg-teal-100 selection:text-teal-900"
+        className="min-h-screen min-h-dvh bg-surface font-sans text-foreground antialiased selection:bg-teal-100 selection:text-teal-900"
         suppressHydrationWarning
       >
         <Providers>{children}</Providers>

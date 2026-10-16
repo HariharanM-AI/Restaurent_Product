@@ -98,7 +98,7 @@ export function CustomerThemeSync({
 
   return (
     <div
-      className={`${isDark ? "dark" : ""} glass-ui relative min-h-screen w-full flex flex-col justify-start transition-colors duration-300 ${
+      className={`${isDark ? "dark" : ""} glass-ui relative min-h-screen min-h-dvh w-full flex flex-col justify-start transition-colors duration-300 ${
         isDark ? "bg-[#070B11] text-slate-100" : "bg-slate-100 text-slate-900"
       }`}
       style={
@@ -111,7 +111,7 @@ export function CustomerThemeSync({
     >
       <Ambient variant="guest" tint="var(--brand-primary, #14B8A6)" tintDeep="var(--brand-primary, #0F766E)" />
       <div
-        className={`guest-column w-full max-w-md md:max-w-lg lg:max-w-xl mx-auto min-h-screen flex-1 flex flex-col transition-colors duration-300 relative z-10 ${
+        className={`guest-column w-full max-w-md md:max-w-lg lg:max-w-xl mx-auto min-h-screen min-h-dvh flex-1 flex flex-col transition-colors duration-300 relative z-10 ${
           isDark ? "text-slate-100" : "text-slate-900"
         }`}
       >

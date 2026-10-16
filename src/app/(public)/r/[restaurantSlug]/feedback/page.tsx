@@ -116,7 +116,7 @@ export default function FeedbackPage() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent flex flex-col">
+    <div className="flex-1 bg-transparent flex flex-col">
       {/* Top App Bar */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 flex items-center justify-between">
         <Link
