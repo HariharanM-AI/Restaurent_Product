@@ -1,12 +1,11 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db/prisma";
+import { getGuestRestaurant } from "@/lib/db/guest-restaurant";
 import { RestaurantHeader } from "@/components/guest/restaurant-header";
 import { GuestActionList } from "@/components/guest/action-list";
 import { SocialFooter } from "@/components/guest/social-footer";
 import { GuestHubTracker } from "@/components/guest/guest-hub-tracker";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 15;
 
 export default async function RestaurantGuestPage({
   params,
@@ -14,29 +13,7 @@ export default async function RestaurantGuestPage({
   params: Promise<{ restaurantSlug: string }>;
 }) {
   const { restaurantSlug } = await params;
-
-  const restaurant = await prisma.restaurant.findUnique({
-    where: { slug: restaurantSlug },
-    include: {
-      actions: {
-        where: { enabled: true },
-        orderBy: { displayOrder: "asc" },
-      },
-      wifiConfig: true,
-      socialLinks: {
-        where: { enabled: true },
-        orderBy: { displayOrder: "asc" },
-      },
-      loyaltyProgram: {
-        include: {
-          milestones: {
-            where: { enabled: true },
-            orderBy: { displayOrder: "asc" },
-          },
-        },
-      },
-    },
-  });
+  const restaurant = await getGuestRestaurant(restaurantSlug);
 
   if (!restaurant || restaurant.status !== "ACTIVE") {
     notFound();

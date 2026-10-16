@@ -11,7 +11,6 @@ import {
   Copy,
   ShieldCheck,
   Smartphone,
-  Sparkles,
   QrCode,
   ArrowRight,
   Users,

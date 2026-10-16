@@ -9,11 +9,15 @@ import {
   Trophy,
   Gamepad2,
   Eraser,
-  Bot,
+  User,
   Users,
-  Sparkles,
   Grid3X3,
   Hash,
+  Clock,
+  Zap,
+  Sliders,
+  Cpu,
+  Award,
 } from "lucide-react";
 
 /* ─── Sudoku Puzzle Data ─── */
@@ -259,7 +263,7 @@ function SudokuGame({ brandColor, slug }: { brandColor: string; slug: string }) 
         </div>
         <div className="flex items-center gap-2">
           <div className="text-xs font-mono font-bold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-white/10 flex items-center gap-1">
-            <span className="text-[10px] text-slate-400">⏱</span>
+            <Clock className="w-3 h-3 text-slate-400" />
             <span>{fmt(seconds)}</span>
           </div>
           <button
@@ -612,7 +616,7 @@ function XOXOGame({ brandColor, slug }: { brandColor: string; slug: string }) {
                 : "text-slate-500 hover:text-slate-800 dark:text-slate-400"
             }`}
           >
-            <Bot className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+            <User className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
             <span>vs AI</span>
           </button>
           <button
@@ -638,9 +642,19 @@ function XOXOGame({ brandColor, slug }: { brandColor: string; slug: string }) {
             <button
               type="button"
               onClick={() => setDifficulty((d) => (d === "smart" ? "casual" : "smart"))}
-              className="text-[10px] font-bold px-2 py-1 rounded-lg bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition cursor-pointer"
+              className="text-[10px] font-bold px-2 py-1 rounded-lg bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition cursor-pointer flex items-center gap-1"
             >
-              {difficulty === "smart" ? "🧠 Smart" : "🎲 Casual"}
+              {difficulty === "smart" ? (
+                <>
+                  <Zap className="w-3 h-3 text-amber-500" />
+                  <span>Smart</span>
+                </>
+              ) : (
+                <>
+                  <Sliders className="w-3 h-3 text-slate-400" />
+                  <span>Casual</span>
+                </>
+              )}
             </button>
           )}
           <button
@@ -701,13 +715,25 @@ function XOXOGame({ brandColor, slug }: { brandColor: string; slug: string }) {
       {/* ── Status Indicator ── */}
       <div className="shrink-0 text-center py-1">
         {winner ? (
-          <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 animate-pulse">
-            <Sparkles className="w-4 h-4" />
-            {winner === "draw" ? "Game Drawn!" : `${winner} Wins the Round!`}
+          <span
+            className={`inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider ${
+              winner === "draw"
+                ? "text-slate-600 dark:text-slate-300"
+                : "text-emerald-600 dark:text-emerald-400 animate-pulse"
+            }`}
+          >
+            {winner === "draw" ? (
+              <span>GAME DRAWN!</span>
+            ) : (
+              <>
+                <Award className="w-4 h-4 text-emerald-500" />
+                <span>{winner} Wins the Round!</span>
+              </>
+            )}
           </span>
         ) : isAiThinking ? (
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
-            <Bot className="w-3.5 h-3.5 animate-spin" />
+            <Cpu className="w-3.5 h-3.5 animate-pulse text-teal-600 dark:text-teal-400" />
             AI is calculating move...
           </span>
         ) : (

@@ -22,7 +22,7 @@ export async function POST(
       );
     }
 
-    const { anonymousBrowserId, customerContact, idempotencyKey } = parsed.data;
+    const { anonymousBrowserId, customerContact, idempotencyKey, expectedRestaurantId } = parsed.data;
     const tokenHash = hashToken(rawToken);
 
     // 1. Locate the checkout session by token hash
@@ -48,6 +48,27 @@ export async function POST(
       return NextResponse.json(
         { success: false, error: { code: "INVALID_TOKEN", message: "Invalid or unrecognized checkout loyalty token." } },
         { status: 404 }
+      );
+    }
+
+    // Reject checkout QR codes belonging to other cafes
+    if (expectedRestaurantId && session.restaurantId !== expectedRestaurantId) {
+      const expectedRestaurant = await prisma.restaurant.findUnique({
+        where: { id: expectedRestaurantId },
+        select: { name: true },
+      });
+      const expectedName = expectedRestaurant?.name || "this venue";
+      const scannedName = session.restaurant?.name || "another venue";
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "CAFE_MISMATCH",
+            message: `This checkout QR code belongs to "${scannedName}". You are currently at "${expectedName}". Please scan the checkout QR code for ${expectedName}.`,
+          },
+        },
+        { status: 400 }
       );
     }
 

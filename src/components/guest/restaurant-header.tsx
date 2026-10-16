@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { MapPin, Phone, Globe, ChevronDown, ChevronUp, Clock, Sparkles } from "lucide-react";
+import { MapPin, Phone, Globe, ChevronDown, ChevronUp, Clock } from "lucide-react";
 import { RestaurantData } from "@/types";
 
 interface RestaurantHeaderProps {
@@ -25,6 +25,8 @@ export function RestaurantHeader({ restaurant }: RestaurantHeaderProps) {
           <img
             src={restaurant.coverImageUrl}
             alt={`${restaurant.name} cover`}
+            loading="eager"
+            fetchPriority="high"
             className="w-full h-full object-cover object-center scale-[1.02] transform motion-safe:transition-transform motion-safe:duration-700"
           />
         ) : (

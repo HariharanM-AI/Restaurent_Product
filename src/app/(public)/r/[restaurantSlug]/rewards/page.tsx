@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Award, Sparkles, QrCode, Gift, HelpCircle } from "lucide-react";
+import { ArrowLeft, Award, QrCode, Gift, HelpCircle } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/tracker";
 import { useLoyaltyWallet } from "@/hooks/use-loyalty-wallet";
 import { StampCard } from "@/components/loyalty/stamp-card";
@@ -42,21 +42,21 @@ export default function RewardsPage() {
   return (
     <div className="min-h-screen bg-transparent flex flex-col">
       {/* Top App Bar */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-20 bg-white/95 dark:bg-[#0D141F]/90 backdrop-blur-md border-b border-slate-200/80 dark:border-white/10 px-4 py-3 flex items-center justify-between">
         <Link
           href={`/r/${slug}`}
-          className="p-2 -ml-2 rounded-xl text-slate-600 hover:bg-slate-100 transition flex items-center gap-1.5 text-xs font-semibold"
+          className="p-2 -ml-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back</span>
         </Link>
-        <span className="text-xs font-semibold text-slate-700 truncate max-w-[180px]">
+        <span className="text-xs font-semibold text-slate-700 dark:text-white truncate max-w-[180px]">
           {restaurantName}
         </span>
         <div className="w-8" />
       </div>
 
-      <div className="flex-1 max-w-md mx-auto w-full p-4 space-y-4">
+      <div className="flex-1 max-w-md md:max-w-lg lg:max-w-xl mx-auto w-full p-4 space-y-4">
         {/* Page Title */}
         <div className="text-center py-2">
           <div
@@ -65,15 +65,15 @@ export default function RewardsPage() {
           >
             <Award className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-bold text-slate-900">Your Rewards & Stamps</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Your Rewards & Stamps</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Collect stamps on each visit to unlock complimentary favorites
           </p>
         </div>
 
         {/* Digital Stamp Card */}
         {isLoading ? (
-          <div className="p-8 bg-white rounded-3xl border border-slate-200 text-center text-xs text-slate-400">
+          <div className="p-8 bg-white dark:bg-white/[0.04] rounded-3xl border border-slate-200 dark:border-white/10 text-center text-xs text-slate-400">
             Loading your stamp balance...
           </div>
         ) : wallet ? (
@@ -103,8 +103,8 @@ export default function RewardsPage() {
         {wallet && wallet.unlockedRewards && wallet.unlockedRewards.length > 0 && (
           <div className="pt-2">
             <div className="flex items-center gap-2 mb-2.5 px-1">
-              <Gift className="w-4 h-4 text-amber-600" />
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+              <Gift className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 Unlocked Rewards ({wallet.unlockedRewards.filter((r) => r.status === "AVAILABLE").length})
               </h3>
             </div>
@@ -122,15 +122,15 @@ export default function RewardsPage() {
         )}
 
         {/* How It Works Explainer Box */}
-        <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2 text-xs text-slate-600">
-          <div className="flex items-center gap-1.5 font-semibold text-slate-900">
-            <HelpCircle className="w-4 h-4 text-teal-600 shrink-0" />
+        <div className="p-4 bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 rounded-2xl space-y-2 text-xs text-slate-600 dark:text-slate-300">
+          <div className="flex items-center gap-1.5 font-semibold text-slate-900 dark:text-white">
+            <HelpCircle className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
             <span>How to Collect Stamps</span>
           </div>
-          <p className="text-[11px] leading-relaxed text-slate-500">
+          <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
             1. Tap the <strong>Scan QR to Collect Stamp</strong> button above to scan using your camera or enter the checkout code.
           </p>
-          <p className="text-[11px] leading-relaxed text-slate-500">
+          <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
             2. You can also point your phone camera directly at the single-use checkout QR code presented by staff.
           </p>
         </div>

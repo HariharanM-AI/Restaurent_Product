@@ -7,7 +7,7 @@ import {
   ArrowLeft,
   UtensilsCrossed,
   Leaf,
-  Sparkles,
+  Award,
   FileText,
   Download,
   ExternalLink,
@@ -388,7 +388,7 @@ export default function MenuPage() {
                           {tag.includes("Vegetarian") ? (
                             <Leaf className="w-2.5 h-2.5 text-emerald-600" />
                           ) : tag.includes("Chef") || tag.includes("Signature") || tag.includes("Specialty") ? (
-                            <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+                            <Award className="w-2.5 h-2.5 text-amber-500" />
                           ) : null}
                           <span>{tag}</span>
                         </span>

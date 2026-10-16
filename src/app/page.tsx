@@ -6,7 +6,7 @@ import {
   UtensilsCrossed,
   ArrowRight,
   Smartphone,
-  Sparkles,
+  Zap,
   Wifi,
   Users,
   MessageSquare,
@@ -88,7 +88,7 @@ export default function HomePage() {
       <main className="flex-1 max-w-7xl mx-auto w-full px-5 sm:px-8 py-12 sm:py-20 flex flex-col items-center text-center">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-bold mb-6 shadow-xs animate-in fade-in-50">
-          <Sparkles className="w-4 h-4 text-emerald-600" />
+          <Zap className="w-4 h-4 text-emerald-600" />
           <span>Frictionless Digital Dining Platform for Modern Restaurants</span>
         </div>
 

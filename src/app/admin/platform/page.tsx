@@ -30,7 +30,6 @@ import {
   Eye,
   Activity,
   Layers,
-  Sparkles,
   Moon,
   Sun,
 } from "lucide-react";

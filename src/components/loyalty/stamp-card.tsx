@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Award, Sparkles } from "lucide-react";
+import { Award } from "lucide-react";
 import { StampSlot } from "./stamp-slot";
 import { LoyaltyMilestoneData } from "@/types";
 
@@ -142,7 +142,7 @@ export function StampCard({
       {/* Card Subtext Footer */}
       <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-white/[0.08] flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
         <div className="flex items-center gap-1.5 font-medium">
-          <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
+          <Award className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
           <span>Scan checkout QR after dining to collect stamps</span>
         </div>
       </div>

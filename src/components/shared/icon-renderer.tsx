@@ -13,7 +13,7 @@ export function IconRenderer({ name, ...props }: IconRendererProps) {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join("") as keyof typeof LucideIcons;
 
-  const IconComponent = (LucideIcons[iconName] as React.ComponentType<LucideProps>) || LucideIcons.Sparkles;
+  const IconComponent = (LucideIcons[iconName] as React.ComponentType<LucideProps>) || LucideIcons.CircleDot;
 
   return <IconComponent {...props} />;
 }

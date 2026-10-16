@@ -36,16 +36,8 @@ export function GuestActionList({
       }
     });
 
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        router.refresh();
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-
     return () => {
       unsubscribe();
-      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [restaurantId, router]);
 

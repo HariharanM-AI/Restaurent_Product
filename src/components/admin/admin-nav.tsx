@@ -20,7 +20,8 @@ import {
   Menu as MenuIcon,
   X,
   Building2,
-  Sparkles,
+  ChefHat,
+  Tag,
   UtensilsCrossed,
   PanelLeftClose,
   Store,
@@ -1145,7 +1146,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                       { type: "Cafe", icon: Coffee },
                       { type: "Hotel", icon: Hotel },
                       { type: "Restaurant", icon: UtensilsCrossed },
-                      { type: "Bistro", icon: Sparkles },
+                      { type: "Bistro", icon: ChefHat },
                       { type: "Bar & Lounge", icon: Layers },
                       { type: "Bakery", icon: Store },
                     ].map(({ type, icon: CatIcon }) => {
@@ -1181,7 +1182,7 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
                       onChange={(e) => setNewVenueTagline(e.target.value)}
                       className="w-full h-11 pl-10 pr-4 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/60 transition"
                     />
-                    <Sparkles className="w-4 h-4 text-slate-400 dark:text-white/35 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Tag className="w-4 h-4 text-slate-400 dark:text-white/35 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 </div>
 

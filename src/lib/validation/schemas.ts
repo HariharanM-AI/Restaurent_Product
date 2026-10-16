@@ -80,6 +80,7 @@ export const claimLoyaltyTokenSchema = z.object({
   anonymousBrowserId: z.string().min(8, "Anonymous browser identifier is required"),
   customerContact: z.string().optional().nullable(),
   idempotencyKey: z.string().min(8, "Idempotency key is required"),
+  expectedRestaurantId: z.string().optional().nullable(),
 });
 
 export const loyaltyMilestoneSchema = z.object({

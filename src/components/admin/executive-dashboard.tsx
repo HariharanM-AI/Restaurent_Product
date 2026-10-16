@@ -18,7 +18,7 @@ import {
   Share2,
   Tag,
   AlertCircle,
-  Sparkles,
+  Layers,
   Activity,
   Clock,
   Flame,
@@ -101,7 +101,7 @@ interface ExecutiveDashboardProps {
 }
 
 const iconMap: Record<string, React.FC<{ className?: string }>> = {
-  QrCode, UtensilsCrossed, Star, Wifi, Award, MessageSquare, Share2, Gift, Sparkles, Activity, Clock, AlertCircle, Tag, TrendingUp,
+  QrCode, UtensilsCrossed, Star, Wifi, Award, MessageSquare, Share2, Gift, Layers, Activity, Clock, AlertCircle, Tag, TrendingUp,
 };
 
 function DynamicIcon({ name, className }: { name: string; className?: string }) {
@@ -166,7 +166,7 @@ export function ExecutiveDashboard({ restaurant }: ExecutiveDashboardProps) {
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-[12px] font-medium text-slate-500 dark:text-slate-400">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-2 py-0.5 text-teal-800 ring-1 ring-inset ring-teal-600/15 dark:bg-teal-400/10 dark:text-teal-300 dark:ring-teal-400/20">
-              <Sparkles className="h-3 w-3" />
+              <Activity className="h-3 w-3" />
               Overview
             </span>
             <span>{PERIOD_LONG[period]}</span>
@@ -384,7 +384,7 @@ function GuestActionsPanel({ actions }: { actions: DashboardData["actionBreakdow
   return (
     <Panel title="Guest actions" description="Which touchpoints guests use most.">
       {total === 0 ? (
-        <PanelEmpty icon={<Sparkles className="h-4 w-4" />} title="No actions recorded" hint="Menu views, Wi-Fi, reviews and loyalty taps will appear here." />
+        <PanelEmpty icon={<Layers className="h-4 w-4" />} title="No actions recorded" hint="Menu views, Wi-Fi, reviews and loyalty taps will appear here." />
       ) : (
         <BarList
           items={actions.map((a) => ({

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db/prisma";
+import { getGuestRestaurant } from "@/lib/db/guest-restaurant";
 import { CustomerThemeSync } from "@/components/guest/customer-theme-sync";
 
 export async function generateViewport({
@@ -9,16 +9,13 @@ export async function generateViewport({
   params: Promise<{ restaurantSlug: string }>;
 }): Promise<Viewport> {
   const { restaurantSlug } = await params;
-  const restaurant = await prisma.restaurant.findUnique({
-    where: { slug: restaurantSlug },
-    select: { primaryColor: true },
-  });
+  const restaurant = await getGuestRestaurant(restaurantSlug);
 
   return {
     width: "device-width",
     initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
+    maximumScale: 5,
+    userScalable: true,
     viewportFit: "cover",
     themeColor: restaurant?.primaryColor || "#0F766E",
   };
@@ -30,10 +27,7 @@ export async function generateMetadata({
   params: Promise<{ restaurantSlug: string }>;
 }): Promise<Metadata> {
   const { restaurantSlug } = await params;
-  const restaurant = await prisma.restaurant.findUnique({
-    where: { slug: restaurantSlug },
-    select: { name: true, tagline: true, coverImageUrl: true },
-  });
+  const restaurant = await getGuestRestaurant(restaurantSlug);
 
   if (!restaurant) {
     return { title: "Restaurant Not Found" };
@@ -58,17 +52,7 @@ export default async function RestaurantGuestLayout({
   params: Promise<{ restaurantSlug: string }>;
 }) {
   const { restaurantSlug } = await params;
-
-  const restaurant = await prisma.restaurant.findUnique({
-    where: { slug: restaurantSlug },
-    select: {
-      id: true,
-      slug: true,
-      primaryColor: true,
-      secondaryColor: true,
-      themeMode: true,
-    },
-  });
+  const restaurant = await getGuestRestaurant(restaurantSlug);
 
   if (!restaurant) {
     notFound();

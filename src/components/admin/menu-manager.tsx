@@ -12,7 +12,7 @@ import {
   Trash2,
   Eye,
   Smartphone,
-  Sparkles,
+  Layers,
   UtensilsCrossed,
   AlertCircle,
   Plus,
@@ -331,7 +331,7 @@ export function MenuManager({
                 {menuType === "items" && (
                   <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] absolute top-3 left-3" />
                 )}
-                <Sparkles className="w-5 h-5" />
+                <Layers className="w-5 h-5" />
                 <span className="text-xs font-bold">Interactive Items</span>
               </button>
             </div>

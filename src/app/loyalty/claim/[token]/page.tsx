@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Ambient } from "@/components/ui/ambient";
-import { Award, CheckCircle2, AlertCircle, ArrowRight, Sparkles, Gift, Loader2 } from "lucide-react";
+import { Award, CheckCircle2, AlertCircle, ArrowRight, Gift, Loader2 } from "lucide-react";
 
 export default function ClaimTokenPage() {
   const params = useParams();

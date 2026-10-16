@@ -8,7 +8,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  Sparkles,
+  Award,
+  Gift,
+  RotateCcw,
   ArrowRight,
   UploadCloud,
   Keyboard,
@@ -51,6 +53,11 @@ export function StampScannerModal({
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isScanningRef = useRef<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const lastScannedTokenRef = useRef<string | null>(null);
+  const autoResumeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const scanLoopRef = useRef<() => void>(() => {});
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const barcodeDetectorRef = useRef<any>(null);
 
   // Extract clean token from full URL or raw token string
   const extractToken = (rawInput: string): string => {
@@ -62,6 +69,23 @@ export function StampScannerModal({
     return text.trim();
   };
 
+  const resumeScanning = () => {
+    if (autoResumeTimerRef.current) {
+      clearTimeout(autoResumeTimerRef.current);
+      autoResumeTimerRef.current = null;
+    }
+    setErrorMessage(null);
+    lastScannedTokenRef.current = null;
+
+    if (!streamRef.current || !streamRef.current.active) {
+      startCamera();
+    } else {
+      isScanningRef.current = true;
+      if (scanIntervalRef.current) clearTimeout(scanIntervalRef.current);
+      scanIntervalRef.current = setTimeout(scanLoopRef.current, 150);
+    }
+  };
+
   const processToken = async (token: string) => {
     const cleanToken = extractToken(token);
     if (!cleanToken) {
@@ -69,11 +93,24 @@ export function StampScannerModal({
       return;
     }
 
+    if (lastScannedTokenRef.current === cleanToken && isProcessing) {
+      return;
+    }
+    lastScannedTokenRef.current = cleanToken;
+
+    // Pause scanning loop while validating, but KEEP camera stream active
+    isScanningRef.current = false;
+    if (scanIntervalRef.current) {
+      clearTimeout(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+    if (autoResumeTimerRef.current) {
+      clearTimeout(autoResumeTimerRef.current);
+      autoResumeTimerRef.current = null;
+    }
+
     setIsProcessing(true);
     setErrorMessage(null);
-
-    // Stop camera streaming during processing
-    stopCamera();
 
     try {
       let browserId = "wal_" + Math.random().toString(36).substring(2, 12);
@@ -97,11 +134,14 @@ export function StampScannerModal({
         body: JSON.stringify({
           anonymousBrowserId: browserId,
           idempotencyKey,
+          expectedRestaurantId: restaurantId,
         }),
       });
 
       const json = await res.json();
       if (res.ok && json.success) {
+        // Only stop camera stream upon confirmed success
+        stopCamera();
         setSuccessData(json.data);
         // Instant broadcast so admin dashboards update in real-time
         broadcastActivity(restaurantId, "stamp_claimed", {
@@ -113,9 +153,34 @@ export function StampScannerModal({
         setErrorMessage(
           json.error?.message || "This checkout QR code is invalid, already claimed, or expired."
         );
+        // Automatically resume scanning after 2.5s cooldown so user can scan another code
+        if (mode === "camera") {
+          autoResumeTimerRef.current = setTimeout(() => {
+            lastScannedTokenRef.current = null;
+            if (!streamRef.current || !streamRef.current.active) {
+              startCamera();
+            } else {
+              isScanningRef.current = true;
+              if (scanIntervalRef.current) clearTimeout(scanIntervalRef.current);
+              scanIntervalRef.current = setTimeout(scanLoopRef.current, 150);
+            }
+          }, 2500);
+        }
       }
     } catch {
       setErrorMessage("Network error while validating stamp. Please try again.");
+      if (mode === "camera") {
+        autoResumeTimerRef.current = setTimeout(() => {
+          lastScannedTokenRef.current = null;
+          if (!streamRef.current || !streamRef.current.active) {
+            startCamera();
+          } else {
+            isScanningRef.current = true;
+            if (scanIntervalRef.current) clearTimeout(scanIntervalRef.current);
+            scanIntervalRef.current = setTimeout(scanLoopRef.current, 150);
+          }
+        }, 2500);
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -148,18 +213,20 @@ export function StampScannerModal({
       isScanningRef.current = true;
 
       // Offscreen canvas for decoding frames
-      const canvas = document.createElement("canvas");
+      if (!canvasRef.current) {
+        canvasRef.current = document.createElement("canvas");
+      }
+      const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
       // Hardware BarcodeDetector if browser has it (optional accelerator)
-      let barcodeDetector: any = null;
       if (typeof window !== "undefined" && "BarcodeDetector" in window) {
         try {
-          barcodeDetector = new (window as any).BarcodeDetector({
+          barcodeDetectorRef.current = new (window as any).BarcodeDetector({
             formats: ["qr_code"],
           });
         } catch {
-          barcodeDetector = null;
+          barcodeDetectorRef.current = null;
         }
       }
 
@@ -174,12 +241,11 @@ export function StampScannerModal({
           video.videoHeight > 0
         ) {
           // 1. Try native BarcodeDetector if available
-          if (barcodeDetector) {
+          if (barcodeDetectorRef.current) {
             try {
-              const barcodes = await barcodeDetector.detect(video);
+              const barcodes = await barcodeDetectorRef.current.detect(video);
               if (barcodes.length > 0 && barcodes[0]?.rawValue) {
                 isScanningRef.current = false;
-                stopCamera();
                 processToken(barcodes[0].rawValue);
                 return;
               }
@@ -198,7 +264,6 @@ export function StampScannerModal({
               });
               if (code && code.data && code.data.trim()) {
                 isScanningRef.current = false;
-                stopCamera();
                 processToken(code.data);
                 return;
               }
@@ -211,7 +276,7 @@ export function StampScannerModal({
         }
       };
 
-      // Start scan loop
+      scanLoopRef.current = scanLoop;
       scanIntervalRef.current = setTimeout(scanLoop, 200);
     } catch (err: any) {
       setCameraError("Camera access denied or unavailable. You can upload a photo or enter the code.");
@@ -224,6 +289,10 @@ export function StampScannerModal({
     if (scanIntervalRef.current) {
       clearTimeout(scanIntervalRef.current);
       scanIntervalRef.current = null;
+    }
+    if (autoResumeTimerRef.current) {
+      clearTimeout(autoResumeTimerRef.current);
+      autoResumeTimerRef.current = null;
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -310,30 +379,32 @@ export function StampScannerModal({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
     >
-      <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
+      <div className="solid-modal glass-modal relative w-full max-w-sm bg-white dark:bg-[#0D141F] rounded-3xl shadow-2xl border border-slate-100 dark:border-white/10 overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/10">
           <div className="flex items-center gap-2.5">
             <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs"
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs shadow-xs"
               style={{ backgroundColor: brandColor }}
             >
               <QrCode className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-900 leading-none">Collect Stamp</h3>
-              <p className="text-[10px] text-slate-400 mt-1">{restaurantName}</p>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-none">Collect Stamp</h3>
+              <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">{restaurantName}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -344,27 +415,27 @@ export function StampScannerModal({
           {successData ? (
             /* Success State */
             <div className="text-center py-4 space-y-3 animate-in zoom-in-95 duration-200">
-              <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
+              <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center mx-auto shadow-sm">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <div>
-                <h4 className="text-base font-bold text-slate-900">+1 Stamp Added!</h4>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  You now have <strong className="text-slate-800">{successData.currentStamps} stamps</strong> on your card.
+                <h4 className="text-base font-bold text-slate-900 dark:text-white">+1 Stamp Added!</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  You now have <strong className="text-slate-800 dark:text-slate-200">{successData.currentStamps} stamps</strong> on your card.
                 </p>
               </div>
 
               {successData.newReward && (
-                <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-left space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800">
-                    <Sparkles className="w-4 h-4 text-amber-600" />
+                <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-500/30 text-left space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
+                    <Gift className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                     <span>Reward Unlocked!</span>
                   </div>
-                  <p className="text-xs font-semibold text-slate-800">
+                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                     {successData.newReward.rewardTitle}
                   </p>
                   {successData.newReward.rewardDescription && (
-                    <p className="text-[11px] text-slate-600">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
                       {successData.newReward.rewardDescription}
                     </p>
                   )}
@@ -375,7 +446,7 @@ export function StampScannerModal({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="w-full py-3 px-4 rounded-xl text-white font-bold text-xs shadow-sm transition"
+                  className="w-full py-3 px-4 rounded-xl text-white font-bold text-xs shadow-sm transition cursor-pointer"
                   style={{ backgroundColor: brandColor }}
                 >
                   View Stamp Card
@@ -388,7 +459,7 @@ export function StampScannerModal({
                     setManualCode("");
                     setMode("camera");
                   }}
-                  className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition"
+                  className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 font-bold text-xs transition cursor-pointer"
                 >
                   Scan Another QR Code
                 </button>
@@ -397,14 +468,14 @@ export function StampScannerModal({
           ) : (
             <>
               {/* Mode Switch Tabs */}
-              <div className="flex rounded-xl bg-slate-100 p-1">
+              <div className="flex rounded-xl bg-slate-100 dark:bg-white/10 p-1">
                 <button
                   type="button"
                   onClick={() => setMode("camera")}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     mode === "camera"
-                      ? "bg-white text-slate-900 shadow-xs"
-                      : "text-slate-500 hover:text-slate-800"
+                      ? "bg-white dark:bg-[#182333] text-slate-900 dark:text-white shadow-xs"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
                   }`}
                 >
                   <Camera className="w-3.5 h-3.5" />
@@ -413,10 +484,10 @@ export function StampScannerModal({
                 <button
                   type="button"
                   onClick={() => setMode("manual")}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     mode === "manual"
-                      ? "bg-white text-slate-900 shadow-xs"
-                      : "text-slate-500 hover:text-slate-800"
+                      ? "bg-white dark:bg-[#182333] text-slate-900 dark:text-white shadow-xs"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
                   }`}
                 >
                   <Keyboard className="w-3.5 h-3.5" />
@@ -461,13 +532,13 @@ export function StampScannerModal({
                   </div>
 
                   <div className="flex items-center justify-between gap-2 px-1">
-                    <p className="text-[11px] text-slate-500 leading-tight">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
                       Point camera at checkout QR code
                     </p>
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="shrink-0 text-[11px] font-bold text-teal-700 hover:text-teal-800 bg-teal-50 hover:bg-teal-100/70 border border-teal-200/80 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition"
+                      className="shrink-0 text-[11px] font-bold text-teal-700 dark:text-teal-300 hover:text-teal-800 bg-teal-50 hover:bg-teal-100/70 dark:bg-teal-950/40 dark:hover:bg-teal-900/50 border border-teal-200/80 dark:border-teal-500/30 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
                     >
                       <UploadCloud className="w-3.5 h-3.5" />
                       <span>Snap or Upload</span>
@@ -488,13 +559,13 @@ export function StampScannerModal({
               {mode === "manual" && (
                 <div className="space-y-3">
                   {cameraError && (
-                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px]">
+                    <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-200 text-[11px]">
                       {cameraError}
                     </div>
                   )}
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 block">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                       Checkout Code or URL
                     </label>
                     <input
@@ -505,7 +576,7 @@ export function StampScannerModal({
                       onKeyDown={(e) => {
                         if (e.key === "Enter") processToken(manualCode);
                       }}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-xs font-mono text-slate-900"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.05] border border-slate-200 dark:border-white/10 focus:bg-white dark:focus:bg-[#182333] focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-xs font-mono text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30"
                     />
                   </div>
 
@@ -513,7 +584,7 @@ export function StampScannerModal({
                     type="button"
                     disabled={isProcessing || !manualCode.trim()}
                     onClick={() => processToken(manualCode)}
-                    className="w-full py-2.5 px-4 rounded-xl text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="w-full py-2.5 px-4 rounded-xl text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                     style={{ backgroundColor: brandColor }}
                   >
                     {isProcessing ? (
@@ -531,11 +602,23 @@ export function StampScannerModal({
                 </div>
               )}
 
-              {/* Error Message */}
+              {/* Error Message with immediate Scan Again recovery */}
               {errorMessage && (
-                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span className="leading-snug">{errorMessage}</span>
+                <div className="p-3.5 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 text-xs flex flex-col gap-2">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
+                    <span className="leading-snug font-medium">{errorMessage}</span>
+                  </div>
+                  {mode === "camera" && (
+                    <button
+                      type="button"
+                      onClick={resumeScanning}
+                      className="self-end px-3 py-1 rounded-lg bg-red-100 hover:bg-red-200 dark:bg-red-900/50 dark:hover:bg-red-900/70 text-red-800 dark:text-red-200 text-[11px] font-bold transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Scan Again</span>
+                    </button>
+                  )}
                 </div>
               )}
             </>
