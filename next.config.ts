@@ -9,6 +9,27 @@ const supabaseHost = (() => {
   }
 })();
 
+const supabaseOrigin = `https://${supabaseHost}`;
+
+// Report-Only first: browsers log violations without blocking anything. Switch the header key to
+// "Content-Security-Policy" once the console shows no violations on real pages.
+const cspReportOnly = [
+  "default-src 'self'",
+  // Next.js inlines its bootstrap scripts (no nonces here); dev mode also needs eval for fast refresh
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  `img-src 'self' data: blob: ${supabaseOrigin}`,
+  `connect-src 'self' ${supabaseOrigin} wss://${supabaseHost}`,
+  // Menu PDFs are shown in an iframe from our storage
+  `frame-src 'self' ${supabaseOrigin}`,
+  "frame-ancestors 'none'",
+  // Google sign-in posts to NextAuth, which redirects to Google
+  "form-action 'self' https://accounts.google.com",
+  "base-uri 'self'",
+  "object-src 'none'",
+].join("; ");
+
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   reactStrictMode: true,
@@ -46,6 +67,10 @@ const nextConfig: NextConfig = {
           {
             key: "Permissions-Policy",
             value: "camera=(self), microphone=(), geolocation=()",
+          },
+          {
+            key: "Content-Security-Policy-Report-Only",
+            value: cspReportOnly,
           },
         ],
       },

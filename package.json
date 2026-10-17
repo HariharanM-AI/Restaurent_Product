@@ -16,7 +16,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:push": "prisma db push",
     "prisma:seed": "tsx prisma/seed.ts",
-    "db:setup": "prisma db push && prisma db seed",
+    "db:setup": "prisma db push && prisma db execute --file prisma/sql/2026-10-16_customer_numbers.sql --schema prisma/schema.prisma && prisma db seed",
     "db:rls": "tsx scripts/enable-rls.ts"
   },
   "prisma": {
@@ -31,6 +31,8 @@
     "@radix-ui/react-tabs": "^1.1.3",
     "@radix-ui/react-toast": "^1.2.6",
     "@supabase/supabase-js": "^2.117.2",
+    "@upstash/ratelimit": "^2.2.0",
+    "@upstash/redis": "^1.39.0",
     "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",
     "framer-motion": "^13.4.0",

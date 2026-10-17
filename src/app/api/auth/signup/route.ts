@@ -2,15 +2,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
-import { slugify, sanitizeString } from "@/lib/utils";
-import { getDefaultGuestActions } from "@/lib/constants/default-actions";
+import { createOwnerWithStarterVenue } from "@/lib/auth/provision";
 import { rateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/client-ip";
 
 const SignupSchema = z.object({
   name: z.string().min(2, "Owner name must be at least 2 characters"),
   email: z.string().email("Please provide a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(10, "Password must be at least 10 characters"),
   restaurantName: z.string().optional().nullable(),
   phone: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
@@ -73,118 +72,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate unique slug for restaurant
-    let slug = slugify(resolvedVenueName);
-    if (!slug) {
-      slug = "venue-" + Math.random().toString(36).substring(2, 8);
-    }
-
-    const slugExists = await prisma.restaurant.findUnique({
-      where: { slug },
-    });
-
-    if (slugExists) {
-      slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
-    }
-
-    // Hash password
+    // Hash password, then create the owner + starter venue (shared with Google sign-in)
     const passwordHash = await bcrypt.hash(password, 12);
-
-    // Create User, Restaurant, Membership, and Default Actions in a transaction
-    const createdData = await prisma.$transaction(async (tx) => {
-      // 1. Create User
-      const user = await tx.user.create({
-        data: {
-          name: sanitizeString(name),
-          email: normalizedEmail,
-          passwordHash,
-        },
-      });
-
-      // 2. Create Restaurant
-      const restaurant = await tx.restaurant.create({
-        data: {
-          name: sanitizeString(resolvedVenueName),
-          slug,
-          primaryColor: "#0F766E", // Deep emerald green
-          secondaryColor: "#F0FDF4", // Soft green-white
-          phone: phone ? sanitizeString(phone) : null,
-          address: address ? sanitizeString(address) : null,
-          status: "ACTIVE",
-        },
-      });
-
-      // 3. Link Owner Membership
-      await tx.restaurantMember.create({
-        data: {
-          userId: user.id,
-          restaurantId: restaurant.id,
-          role: "OWNER",
-        },
-      });
-
-      // 4. Create Default Guest Actions (Standardized demo template across all new accounts)
-      await tx.guestAction.createMany({
-        data: getDefaultGuestActions(restaurant.id, slug),
-      });
-
-      // 5. Create Default Wi-Fi Config
-      const cleanSsid = resolvedVenueName.replace(/[^\w]/g, "_").slice(0, 24) + "_Guest";
-      await tx.wifiConfig.create({
-        data: {
-          restaurantId: restaurant.id,
-          ssid: cleanSsid,
-          password: "",
-          enabled: true,
-          instructions: "Complimentary high-speed Wi-Fi access for all dining patrons.",
-        },
-      });
-
-      // 6. Create Default Loyalty Program with Milestones
-      const loyaltyProgram = await tx.loyaltyProgram.create({
-        data: {
-          restaurantId: restaurant.id,
-          name: "Stamp Rewards",
-          enabled: true,
-        },
-      });
-
-      await tx.loyaltyMilestone.createMany({
-        data: [
-          {
-            loyaltyProgramId: loyaltyProgram.id,
-            stampRequirement: 3,
-            rewardTitle: "10% Off Entire Bill",
-            rewardDescription: "Enjoy 10% off your table check on your next visit.",
-            validityDays: 30,
-            displayOrder: 1,
-            enabled: true,
-          },
-          {
-            loyaltyProgramId: loyaltyProgram.id,
-            stampRequirement: 6,
-            rewardTitle: "Complimentary Chef's Dessert",
-            rewardDescription: "Choice of any artisanal dessert from our seasonal menu.",
-            validityDays: 30,
-            displayOrder: 2,
-            enabled: true,
-          },
-          {
-            loyaltyProgramId: loyaltyProgram.id,
-            stampRequirement: 10,
-            rewardTitle: "Complimentary Entree of Choice",
-            rewardDescription: "One complimentary signature entree or house specialty.",
-            validityDays: 45,
-            displayOrder: 3,
-            enabled: true,
-          },
-        ],
-      });
-
-      return {
-        user: { id: user.id, email: user.email, name: user.name },
-        restaurant: { id: restaurant.id, name: restaurant.name, slug: restaurant.slug },
-      };
+    const createdData = await createOwnerWithStarterVenue({
+      name,
+      email: normalizedEmail,
+      passwordHash,
+      venueName: resolvedVenueName,
+      phone,
+      address,
     });
 
     return NextResponse.json(

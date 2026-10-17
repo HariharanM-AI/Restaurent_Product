@@ -129,7 +129,30 @@ describe("Stamps are venue-specific", () => {
 
 describe("Reward redemption", () => {
   const params = { params: Promise.resolve({ id: "reward_1" }) };
-  const post = () => new NextRequest("http://localhost/api/redeem", { method: "POST" });
+  const post = (browserId: string | null = "wal_owner") =>
+    new NextRequest("http://localhost/api/redeem", {
+      method: "POST",
+      body: browserId === null ? undefined : JSON.stringify({ browserId }),
+    });
+  const ownersWallet = { anonymousBrowserId: "wal_owner" };
+
+  it("only the guest whose wallet holds the reward can redeem it", async () => {
+    prismaMock.loyaltyReward.findUnique.mockResolvedValue({
+      id: "reward_1",
+      status: "AVAILABLE",
+      expiresAt: new Date(Date.now() + 60_000),
+      milestone: { rewardTitle: "Dessert" },
+      wallet: ownersWallet,
+    });
+
+    const { POST } = await import("@/app/api/loyalty/rewards/[id]/redeem/route");
+    const someoneElse = await POST(post("wal_someone_else"), params);
+    const noId = await POST(post(null), params);
+
+    expect(someoneElse.status).toBe(404); // same answer as a reward that doesn't exist
+    expect(noId.status).toBe(400);
+    expect(prismaMock.loyaltyReward.updateMany).not.toHaveBeenCalled();
+  });
 
   it("rejects an expired reward with 410", async () => {
     prismaMock.loyaltyReward.findUnique.mockResolvedValue({
@@ -137,6 +160,7 @@ describe("Reward redemption", () => {
       status: "AVAILABLE",
       expiresAt: new Date(Date.now() - 1000),
       milestone: { rewardTitle: "Dessert" },
+      wallet: ownersWallet,
     });
 
     const { POST } = await import("@/app/api/loyalty/rewards/[id]/redeem/route");
@@ -152,6 +176,7 @@ describe("Reward redemption", () => {
       status: "AVAILABLE",
       expiresAt: new Date(Date.now() + 60_000),
       milestone: { rewardTitle: "Dessert" },
+      wallet: ownersWallet,
     });
     prismaMock.loyaltyReward.updateMany.mockResolvedValue({ count: 0 });
 

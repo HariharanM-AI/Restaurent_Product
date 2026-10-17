@@ -121,22 +121,19 @@ describe("GET /api/loyalty/wallet", () => {
     expect(prismaMock.loyaltyWallet.create).not.toHaveBeenCalled();
   });
 
-  it("rate-limits wallet creation per client IP", async () => {
+  it("shows a new guest an empty 'not joined yet' card without creating a wallet", async () => {
     prismaMock.loyaltyWallet.findUnique.mockResolvedValue(null);
-    prismaMock.restaurant.findUnique.mockResolvedValue({ id: "rest_rl" });
-    prismaMock.loyaltyWallet.create.mockImplementation(async ({ data }: { data: { restaurantId: string; anonymousBrowserId: string } }) => ({
-      id: "w",
-      customerId: null,
-      status: "ACTIVE",
-      ...data,
-      transactions: [],
-      rewards: [],
-    }));
-    prismaMock.loyaltyProgram.findUnique.mockResolvedValue(null);
+    prismaMock.restaurant.findUnique.mockResolvedValue({ id: "rest_1" });
+    prismaMock.loyaltyProgram.findUnique.mockResolvedValue({
+      milestones: [{ id: "m5", loyaltyProgramId: "lp", stampRequirement: 5, rewardTitle: "Coffee", rewardDescription: null, validityDays: 30, enabled: true, displayOrder: 1 }],
+    });
 
-    const statuses: number[] = [];
-    for (let i = 0; i < 61; i++) statuses.push((await get("rest_rl", `browser_${i}`)).status);
-    expect(statuses.slice(0, 60).every((s) => s === 200)).toBe(true);
-    expect(statuses[60]).toBe(429);
+    const res = await get("rest_1", "wal_new_guest");
+    const { data } = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(prismaMock.loyaltyWallet.create).not.toHaveBeenCalled();
+    expect(data).toMatchObject({ id: null, status: "NOT_JOINED", customerNumber: null, totalLifetimeStamps: 0, unlockedRewards: [] });
+    expect(data.nextMilestone.stampRequirement).toBe(5); // card still shows the first reward level
   });
 });

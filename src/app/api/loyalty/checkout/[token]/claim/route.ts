@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db/prisma";
 import { hashToken } from "@/lib/loyalty/token";
 import { calculateWalletStamps, getNextUnlockedMilestone } from "@/lib/loyalty/ledger";
 import { claimLoyaltyTokenSchema } from "@/lib/validation/schemas";
+import { rateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/client-ip";
 
 class TokenAlreadyClaimedError extends Error {}
 
@@ -11,6 +13,14 @@ export async function POST(
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
+    const limit = await rateLimit(`claim_ip_${getClientIp(req.headers)}`, { limit: 20, windowMs: 60_000 });
+    if (!limit.success) {
+      return NextResponse.json(
+        { success: false, error: { code: "RATE_LIMITED", message: "Too many attempts. Please wait a minute and try again." } },
+        { status: 429 }
+      );
+    }
+
     const { token: rawToken } = await params;
     const body = await req.json();
 

@@ -5,19 +5,24 @@ import { LoyaltyWalletData } from "@/types";
 
 let inMemoryBrowserId: string | null = null;
 
+// The wallet ID is the guest's only credential, so 128 bits from the browser's crypto RNG.
+// getRandomValues rather than randomUUID: randomUUID is missing on plain-http pages (e.g. LAN testing).
+const randomWalletId = (prefix: string) =>
+  prefix + Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("");
+
 function getOrCreateBrowserId(): string {
   if (typeof window === "undefined") return "ssr-placeholder";
 
   try {
     let id = localStorage.getItem("guestlink_loyalty_browser_id");
     if (!id) {
-      id = "wal_" + Math.random().toString(36).substring(2, 12) + "_" + Date.now().toString(36);
+      id = randomWalletId("wal_");
       localStorage.setItem("guestlink_loyalty_browser_id", id);
     }
     return id;
   } catch {
     if (!inMemoryBrowserId) {
-      inMemoryBrowserId = "wal_mem_" + Math.random().toString(36).substring(2, 12) + "_" + Date.now().toString(36);
+      inMemoryBrowserId = randomWalletId("wal_mem_");
     }
     return inMemoryBrowserId;
   }
@@ -36,7 +41,7 @@ export function useLoyaltyWallet(restaurantId: string | null) {
   const fetchWallet = useCallback(async () => {
     if (!restaurantId || !browserId) return;
 
-    setIsLoading(true);
+    // isLoading starts true and only covers the first load, so background refreshes don't flash the card
     setError(null);
 
     try {

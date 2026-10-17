@@ -14,6 +14,7 @@ interface StampCardProps {
   restaurantName: string;
   brandColor?: string;
   milestones?: LoyaltyMilestoneData[];
+  customerNumber?: number;
 }
 
 export function StampCard({
@@ -24,6 +25,7 @@ export function StampCard({
   restaurantName,
   brandColor = "var(--brand-primary, #0F766E)",
   milestones = [],
+  customerNumber,
 }: StampCardProps) {
   // Always a 10-slot card: 1-10, then 11-20, 21-30... Keep the just-completed card visible on the scan that finishes it
   const cardCapacity = 10;
@@ -32,13 +34,13 @@ export function StampCard({
   // Reward slots use the server's own unlock rule, so markers sit exactly where rewards are granted
   const isRewardSlot = (visit: number) => getNextUnlockedMilestone(visit, milestones) !== null;
 
-  // Dynamic target stamp requirement for upcoming reward
-  const targetRewardStamp = nextMilestone?.stampRequirement ?? baseOffset + cardCapacity;
+  // No target once every admin-set level is passed: the badge then shows just the stamp count
+  const targetRewardStamp = nextMilestone?.stampRequirement ?? null;
 
   const displayStampsNeeded =
     stampsNeeded > 0
       ? stampsNeeded
-      : Math.max(0, targetRewardStamp - totalLifetimeStamps);
+      : Math.max(0, (targetRewardStamp ?? 0) - totalLifetimeStamps);
 
   const isHex = brandColor.startsWith("#");
   const badgeBg = isHex ? `${brandColor}18` : "color-mix(in srgb, var(--brand-primary) 15%, transparent)";
@@ -62,6 +64,12 @@ export function StampCard({
           <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
             {restaurantName}
           </h3>
+          {/* Guests read this out to staff, who can search it in the Customers page */}
+          {customerNumber ? (
+            <span className="mt-1 inline-block text-xs font-bold text-slate-500 dark:text-slate-400 tabular-nums">
+              Customer #{customerNumber}
+            </span>
+          ) : null}
         </div>
         <div className="flex items-center">
           <div
@@ -71,7 +79,7 @@ export function StampCard({
               color: brandColor,
             }}
           >
-            {totalLifetimeStamps} / {targetRewardStamp} Stamps
+            {targetRewardStamp === null ? totalLifetimeStamps : `${totalLifetimeStamps} / ${targetRewardStamp}`} Stamps
           </div>
         </div>
       </div>

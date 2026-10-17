@@ -95,11 +95,13 @@ export interface LoyaltyMilestoneData {
 }
 
 export interface LoyaltyWalletData {
-  id: string;
+  /** null until the guest's first stamp creates the wallet (status "NOT_JOINED") */
+  id: string | null;
   restaurantId: string;
   customerId?: string | null;
   anonymousBrowserId: string;
   status: string;
+  customerNumber?: number | null;
   currentStamps: number;
   totalLifetimeStamps: number;
   unlockedRewards: LoyaltyRewardData[];

@@ -7,12 +7,15 @@ import { formatDisplayDate } from "@/lib/utils";
 
 interface UnlockedRewardCardProps {
   reward: LoyaltyRewardData;
+  /** The guest's wallet ID (from useLoyaltyWallet); the server only redeems rewards in that wallet */
+  browserId: string;
   brandColor?: string;
   onRedeemed?: () => void;
 }
 
 export function UnlockedRewardCard({
   reward,
+  browserId,
   brandColor = "#0F766E",
   onRedeemed,
 }: UnlockedRewardCardProps) {
@@ -28,6 +31,8 @@ export function UnlockedRewardCard({
     try {
       const res = await fetch(`/api/loyalty/rewards/${reward.id}/redeem`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ browserId }),
       });
 
       const json = await res.json();

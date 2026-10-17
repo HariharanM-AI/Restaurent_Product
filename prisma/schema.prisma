@@ -228,6 +228,8 @@ model LoyaltyWallet {
   restaurantId       String
   customerId         String?
   anonymousBrowserId String
+  /// Per-cafe #1, #2, ... shown to admins; assigned by a DB trigger (prisma/sql/2026-10-16_customer_numbers.sql)
+  customerNumber     Int                       @default(0)
   status             String                    @default("ACTIVE")
   createdAt          DateTime                  @default(now())
   updatedAt          DateTime                  @updatedAt
@@ -238,6 +240,7 @@ model LoyaltyWallet {
   rewards            LoyaltyReward[]
 
   @@unique([restaurantId, anonymousBrowserId])
+  @@unique([restaurantId, customerNumber])
   @@index([restaurantId, customerId])
 }
 

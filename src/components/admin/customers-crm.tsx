@@ -13,7 +13,7 @@ import {
   X,
   Phone,
   Mail,
-  Smartphone,
+  Hash,
   Star,
   CheckCircle2,
   Repeat,
@@ -27,12 +27,21 @@ import { LiveStatus } from "@/components/admin/dashboard-kit";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs } from "@/components/ui/tabs";
 
+// Admins see "Customer #12" (per-cafe number) instead of the wallet's browser UUID
+const customerLabel = (c: { customerNumber: number }) => `Customer #${c.customerNumber}`;
+const isNamed = (c: CrmCustomer) => c.name !== customerLabel(c);
+const avatarText = (c: CrmCustomer) =>
+  isNamed(c)
+    ? c.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : String(c.customerNumber);
+
 export interface CrmCustomer {
   id: string;
   name: string;
   email: string | null;
   phone: string | null;
   browserId: string;
+  customerNumber: number;
   status: string;
   totalVisits: number;
   stampsBalance: number;
@@ -198,6 +207,9 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
         // Search query
         if (searchQuery.trim().length > 0) {
           const q = searchQuery.toLowerCase().trim();
+          // "12" or "#12" finds exactly Customer #12 (and phone numbers containing those digits)
+          const num = q.replace(/^#/, "");
+          if (/^\d+$/.test(num)) return c.customerNumber === Number(num) || (c.phone?.includes(num) ?? false);
           const matchesName = c.name.toLowerCase().includes(q);
           const matchesEmail = c.email?.toLowerCase().includes(q) || false;
           const matchesPhone = c.phone?.toLowerCase().includes(q) || false;
@@ -237,8 +249,9 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
   };
 
   const exportCsv = () => {
-    const headers = ["Name", "Email", "Phone", "Status", "Visits", "Stamps", "Rewards", "Last Visit", "Joined"];
+    const headers = ["Customer No.", "Name", "Email", "Phone", "Status", "Visits", "Stamps", "Rewards", "Last Visit", "Joined"];
     const rows = filteredCustomers.map((c) => [
+      c.customerNumber,
       `"${c.name}"`,
       `"${c.email || ""}"`,
       `"${c.phone || ""}"`,
@@ -349,7 +362,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onClear={() => setSearchQuery("")}
-          placeholder="Search by name, email, or guest ID..."
+          placeholder="Search by customer no. (e.g. 12), name, or email..."
         />
 
         <Tabs
@@ -420,12 +433,6 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
               </tr>
             ) : (
               filteredCustomers.map((cust) => {
-                const initials = cust.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .toUpperCase()
-                  .slice(0, 2);
 
                 const statusInfo = getStatusInfo(cust.status);
                 const isReturning = cust.totalVisits > 1;
@@ -439,8 +446,8 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                     <td className="py-3.5 px-5">
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          <div className="w-9 h-9 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-800/40 text-teal-800 dark:text-teal-300 font-bold text-xs flex items-center justify-center shrink-0">
-                            {initials}
+                          <div className="w-9 h-9 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-800/40 text-teal-800 dark:text-teal-300 font-bold text-[11px] tabular-nums tracking-tight flex items-center justify-center shrink-0">
+                            {avatarText(cust)}
                           </div>
                           {isReturning && (
                             <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center" title="Returning guest">
@@ -453,7 +460,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                             {cust.name}
                           </span>
                           <span className="text-xs text-slate-400 dark:text-slate-500 block truncate">
-                            {cust.email || cust.phone || `Wallet #${cust.browserId.slice(0, 8)}`}
+                            {[isNamed(cust) && customerLabel(cust), cust.email || cust.phone].filter(Boolean).join(" · ") || "Anonymous guest"}
                           </span>
                         </div>
                       </div>
@@ -546,13 +553,8 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-3.5">
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/40 text-teal-800 dark:text-teal-300 font-bold text-base flex items-center justify-center shrink-0 shadow-sm">
-                    {selectedCustomer.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()
-                      .slice(0, 2)}
+                  <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/40 text-teal-800 dark:text-teal-300 font-bold text-sm tabular-nums tracking-tight flex items-center justify-center shrink-0 shadow-sm">
+                    {avatarText(selectedCustomer)}
                   </div>
                   {selectedCustomer.totalVisits > 1 && (
                     <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center border-2 border-white dark:border-slate-900">
@@ -624,7 +626,7 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
               {/* Contact Information */}
               <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-white/[0.04] space-y-2.5">
                 <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-                  Contact & Hardware Identifier
+                  Customer Number & Contact
                 </span>
                 <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
                   <div className="flex items-center gap-2">
@@ -636,9 +638,9 @@ export function CustomersCrm({ restaurant, initialCustomers }: CustomersCrmProps
                     <span>{selectedCustomer.phone || "No phone on record"}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Smartphone className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-                    <span className="font-mono text-[11px] truncate">
-                      UUID: {selectedCustomer.browserId}
+                    <Hash className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                    <span className="font-semibold text-slate-900 dark:text-white tabular-nums">
+                      {customerLabel(selectedCustomer)}
                     </span>
                   </div>
                 </div>

@@ -9,7 +9,8 @@ import { BUCKET_NAME, getStorageClient } from "@/lib/supabase/storage";
  *    which checks restaurant membership and that the feedback belongs to that restaurant
  *
  * For full isolation at the storage layer, point SUPABASE_FEEDBACK_BUCKET at a PRIVATE
- * bucket (requires SUPABASE_SERVICE_ROLE_KEY). It falls back to the shared asset bucket.
+ * bucket and set SUPABASE_SERVICE_ROLE_KEY (server-only) so downloads are authorised.
+ * Photos are never served from a public URL, even if the bucket happens to be public.
  */
 export const FEEDBACK_BUCKET = process.env.SUPABASE_FEEDBACK_BUCKET || BUCKET_NAME;
 
@@ -19,27 +20,12 @@ export const feedbackPhotoPrefix = (restaurantId: string) => `restaurants/${rest
 export const feedbackPhotoUrl = (restaurantId: string, feedbackId: string, index: number) =>
   `/api/restaurants/${encodeURIComponent(restaurantId)}/feedback/${encodeURIComponent(feedbackId)}/photos/${index}`;
 
-/** Returns the public Supabase storage URL for an asset path. */
-export const getFeedbackPhotoPublicUrl = (path: string): string => {
-  if (!path) return "";
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://wiugpsnngyponfwtlvnj.supabase.co";
-  return `${baseUrl}/storage/v1/object/public/${FEEDBACK_BUCKET}/${path}`;
-};
-
-/** Maps stored paths to accessible photo URLs for API responses and admin viewing. */
+/** Maps stored paths to the access-controlled admin photo route (never a public storage URL). */
 export const toFeedbackPhotoUrls = (
   restaurantId: string,
   feedbackId: string,
   paths: string[] | null | undefined
-) => {
-  return (paths ?? []).map((path, i) => {
-    if (path && (path.startsWith("restaurants/") || path.startsWith("http"))) {
-      return getFeedbackPhotoPublicUrl(path);
-    }
-    return feedbackPhotoUrl(restaurantId, feedbackId, i);
-  });
-};
+) => (paths ?? []).map((_, i) => feedbackPhotoUrl(restaurantId, feedbackId, i));
 
 /** A stored path is only valid for the restaurant whose prefix it carries. */
 export const isPathForRestaurant = (path: string, restaurantId: string) =>
@@ -63,21 +49,10 @@ export async function downloadFeedbackPhoto(path: string): Promise<Buffer | null
     if (!error && data) {
       return Buffer.from(await data.arrayBuffer());
     }
+    if (error) console.warn("downloadFeedbackPhoto storage error:", error.message);
   } catch (err) {
     console.warn("downloadFeedbackPhoto storage client error:", err);
   }
-
-  // Fallback: fetch directly from public URL if download API had issues
-  try {
-    const pubUrl = getFeedbackPhotoPublicUrl(path);
-    const resp = await fetch(pubUrl);
-    if (resp.ok) {
-      return Buffer.from(await resp.arrayBuffer());
-    }
-  } catch (fetchErr) {
-    console.warn("downloadFeedbackPhoto public fetch error:", fetchErr);
-  }
-
   return null;
 }
 

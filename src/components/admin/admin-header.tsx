@@ -19,6 +19,9 @@ import {
   BarChart3,
   Store,
   Users,
+  ChevronDown,
+  Check,
+  Plus,
 } from "lucide-react";
 import { useTheme } from "@/components/providers/theme-provider";
 
@@ -30,6 +33,8 @@ interface AdminHeaderProps {
     name: string;
     slug: string;
     logoUrl?: string | null;
+    address?: string | null;
+    tagline?: string | null;
   }>;
 }
 
@@ -47,6 +52,8 @@ export function AdminHeader({ restaurantName, restaurantSlug, restaurants = [] }
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const [isVenueOpen, setIsVenueOpen] = useState(false);
+  const venueRef = useRef<HTMLDivElement>(null);
 
   const searchRoutes = [
     { title: "Dashboard", href: `/admin/restaurants/${activeId}/dashboard`, icon: LayoutDashboard, desc: "Key metrics & guest interactions" },
@@ -99,6 +106,7 @@ export function AdminHeader({ restaurantName, restaurantSlug, restaurants = [] }
         setIsSearchOpen(true);
       } else if (e.key === "Escape") {
         setIsSearchOpen(false);
+        setIsVenueOpen(false);
         searchInputRef.current?.blur();
       }
     };
@@ -112,12 +120,21 @@ export function AdminHeader({ restaurantName, restaurantSlug, restaurants = [] }
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
         setIsSearchOpen(false);
       }
+      if (venueRef.current && !venueRef.current.contains(e.target as Node)) {
+        setIsVenueOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const activeSlug = activeFromList?.slug || restaurantSlug;
+
+  // Same as the sidebar switcher: stay on the current sub-page in the other venue
+  const handleSwitchVenue = (id: string) => {
+    setIsVenueOpen(false);
+    router.push(`/admin/restaurants/${id}${pathname.replace(/^\/admin\/restaurants\/[^/]+/, "") || "/dashboard"}`);
+  };
 
   const handleSelectRoute = (href: string) => {
     setIsSearchOpen(false);
@@ -128,22 +145,94 @@ export function AdminHeader({ restaurantName, restaurantSlug, restaurants = [] }
   return (
     <header className="glass-strong hidden lg:block mx-4 sm:mx-6 lg:mx-8 xl:mx-10 mt-3 rounded-2xl px-4 py-2.5 sticky top-3 z-30 transition-colors">
       <div className="w-full flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/80 dark:bg-white/[0.05] border border-slate-200/60 dark:border-white/[0.08] shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
-            <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-              Live Venue
-            </span>
-            <span className="text-slate-300 dark:text-slate-600 font-bold">•</span>
-            <span className="text-xs font-bold text-slate-900 dark:text-white tracking-tight">
-              {currentName}
-            </span>
-          </div>
+        {/* Venue switcher: same list and actions as the mobile header dropdown */}
+        <div ref={venueRef} className="relative min-w-0">
+          <button
+            type="button"
+            onClick={() => setIsVenueOpen((open) => !open)}
+            aria-haspopup="listbox"
+            aria-expanded={isVenueOpen}
+            className="inline-flex items-center gap-2 max-w-[22rem] px-2.5 py-1.5 -ml-1 rounded-xl hover:bg-slate-100/80 dark:hover:bg-white/[0.06] transition cursor-pointer"
+          >
+            <span className="text-base font-bold text-slate-900 dark:text-white tracking-tight truncate">{currentName}</span>
+            <ChevronDown
+              className={`w-4 h-4 shrink-0 transition-transform duration-200 ${
+                isVenueOpen ? "rotate-180 text-emerald-600 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500"
+              }`}
+            />
+          </button>
+
+          {isVenueOpen && (
+            <div
+              role="listbox"
+              className="solid-dropdown-menu absolute left-0 mt-2 w-80 p-2 rounded-2xl space-y-1 z-50 animate-in fade-in zoom-in-95 duration-150"
+            >
+              <div className="px-2.5 py-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                <span>Select Cafe or Hotel</span>
+                <span className="text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20 text-[10px]">
+                  {restaurants.length} {restaurants.length === 1 ? "venue" : "venues"}
+                </span>
+              </div>
+              <div className="no-scrollbar max-h-72 overflow-y-auto space-y-1">
+                {restaurants.map((venue) => {
+                  const isCurrent = venue.id === activeId;
+                  return (
+                    <button
+                      key={venue.id}
+                      type="button"
+                      role="option"
+                      aria-selected={isCurrent}
+                      onClick={() => handleSwitchVenue(venue.id)}
+                      className={`w-full flex items-center justify-between gap-2 p-2.5 rounded-xl text-left transition cursor-pointer ${
+                        isCurrent
+                          ? "bg-emerald-50/90 dark:bg-emerald-950/40 text-emerald-950 dark:text-white font-bold border border-emerald-200 dark:border-emerald-800"
+                          : "text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0 overflow-hidden">
+                          {venue.logoUrl ? (
+                            <img src={venue.logoUrl} alt={venue.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-[10px] font-bold text-slate-700 dark:text-white/80">
+                              {venue.name.slice(0, 2).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs truncate leading-tight font-semibold">{venue.name}</div>
+                          <div className="text-[10px] text-slate-400 dark:text-slate-400 truncate mt-0.5">
+                            {venue.address || venue.tagline || "Active Venue"}
+                          </div>
+                        </div>
+                      </div>
+                      {isCurrent && <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="border-t border-slate-100 dark:border-white/[0.08] pt-1.5 mt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsVenueOpen(false);
+                    // The add-venue form lives in AdminNav; it listens for this event
+                    window.dispatchEvent(new Event("open-add-venue"));
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-600/20 dark:hover:bg-emerald-600/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 text-xs font-bold flex items-center justify-center gap-2 transition shadow-2xs cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add New Cafe or Hotel</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
           {/* Real Search Input with Autofill Protection */}
-          <div ref={searchContainerRef} className="relative">
+          {/* Mouse/trackpad screens only: hidden on phones and tablets (touch), even in landscape */}
+          <div ref={searchContainerRef} className="relative hidden [@media(hover:hover)_and_(pointer:fine)]:block">
             <div className="relative flex items-center">
               <input
                 ref={searchInputRef}
@@ -188,7 +277,7 @@ export function AdminHeader({ restaurantName, restaurantSlug, restaurants = [] }
 
             {/* Quick Navigation Dropdown */}
             {isSearchOpen && (
-              <div className="absolute right-0 mt-2 w-80 max-h-96 bg-white/95 dark:bg-[#121927]/95 border border-slate-200/80 dark:border-white/[0.1] rounded-2xl shadow-luxury overflow-y-auto z-50 animate-in fade-in zoom-in-95 duration-150 p-2 backdrop-blur-xl">
+              <div className="solid-dropdown-menu no-scrollbar absolute right-0 mt-2 w-80 max-h-96 rounded-2xl overflow-y-auto z-50 animate-in fade-in zoom-in-95 duration-150 p-2">
                 <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 px-2.5 py-1.5">
                   {searchQuery ? "Matching Pages" : "Quick Navigation"}
                 </div>

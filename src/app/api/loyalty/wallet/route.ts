@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { calculateWalletStamps, getUpcomingMilestone } from "@/lib/loyalty/ledger";
-import { rateLimit } from "@/lib/rate-limit";
-import { getClientIp } from "@/lib/client-ip";
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,8 +15,9 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 1. Find or create the anonymous wallet
-    let wallet = await prisma.loyaltyWallet.findUnique({
+    // 1. Find the anonymous wallet. It is NOT created here: viewing the page doesn't make someone a
+    //    customer. The claim route creates it on the first stamp (and assigns the customer number).
+    const wallet = await prisma.loyaltyWallet.findUnique({
       where: {
         restaurantId_anonymousBrowserId: {
           restaurantId,
@@ -39,7 +38,6 @@ export async function GET(req: NextRequest) {
     });
 
     if (!wallet) {
-      // Only create wallets for real restaurants
       const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId }, select: { id: true } });
       if (!restaurant) {
         return NextResponse.json(
@@ -47,37 +45,10 @@ export async function GET(req: NextRequest) {
           { status: 404 }
         );
       }
-
-      // Generous on purpose: every guest on the venue's Wi-Fi shares one public IP
-      const limit = await rateLimit(`wallet_create_${restaurantId}_${getClientIp(req.headers)}`, {
-        limit: 60,
-        windowMs: 10 * 60 * 1000,
-      });
-      if (!limit.success) {
-        return NextResponse.json(
-          { success: false, error: { code: "RATE_LIMITED", message: "Too many requests. Please try again shortly." } },
-          { status: 429 }
-        );
-      }
-
-      wallet = await prisma.loyaltyWallet.create({
-        data: {
-          restaurantId,
-          anonymousBrowserId: browserId,
-        },
-        include: {
-          transactions: true,
-          rewards: {
-            include: {
-              milestone: true,
-            },
-          },
-        },
-      });
     }
 
-    // 2. Compute net stamps from transactions ledger
-    const { currentStamps, lifetimeStamps } = calculateWalletStamps(wallet.transactions);
+    // 2. Compute net stamps from transactions ledger (a guest who hasn't joined yet has none)
+    const { currentStamps, lifetimeStamps } = calculateWalletStamps(wallet?.transactions ?? []);
 
     // 3. Fetch active milestones for this restaurant
     const loyaltyProgram = await prisma.loyaltyProgram.findUnique({
@@ -96,14 +67,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        id: wallet.id,
-        restaurantId: wallet.restaurantId,
-        customerId: wallet.customerId,
-        anonymousBrowserId: wallet.anonymousBrowserId,
-        status: wallet.status,
+        // Not joined yet: same shape with no ID/number, so the stamp card still renders
+        id: wallet?.id ?? null,
+        restaurantId,
+        customerId: wallet?.customerId ?? null,
+        anonymousBrowserId: browserId,
+        status: wallet?.status ?? "NOT_JOINED",
+        customerNumber: wallet?.customerNumber ?? null,
         currentStamps,
         totalLifetimeStamps: lifetimeStamps,
-        unlockedRewards: wallet.rewards.map((r) => ({
+        unlockedRewards: (wallet?.rewards ?? []).map((r) => ({
           id: r.id,
           restaurantId: r.restaurantId,
           walletId: r.walletId,

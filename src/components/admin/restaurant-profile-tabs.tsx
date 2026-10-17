@@ -332,8 +332,8 @@ export function RestaurantProfileTabs({
       setPasswordError("Please enter your current password.");
       return;
     }
-    if (!newPassword || newPassword.length < 8) {
-      setPasswordError("New password must be at least 8 characters long.");
+    if (!newPassword || newPassword.length < 10) {
+      setPasswordError("New password must be at least 10 characters long.");
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -1350,7 +1350,7 @@ export function RestaurantProfileTabs({
             {/* Password & Security Card - Strict Manual Entry without Autofill */}
             <SaaSCard
               title="Password & Security"
-              subtitle="Use at least 8 characters. You will stay signed in on this device after changing it."
+              subtitle="Use at least 10 characters. You will stay signed in on this device after changing it."
             >
               <form onSubmit={handleUpdatePassword} className="space-y-4 pt-2">
                 {/* Dummy hidden input to deter browser autofill */}
@@ -1401,7 +1401,7 @@ export function RestaurantProfileTabs({
 
                 {/* New Password Field */}
                 <div>
-                  <FieldLabel icon={KeyRound} label="New Password" hint="Minimum 8 characters" required />
+                  <FieldLabel icon={KeyRound} label="New Password" hint="Minimum 10 characters" required />
                   <div className="relative">
                     <input
                       id="new-password-field"
@@ -1410,7 +1410,7 @@ export function RestaurantProfileTabs({
                       autoComplete="new-password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Minimum 8 characters"
+                      placeholder="Minimum 10 characters"
                       className="w-full h-11 pl-3.5 pr-10 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white dark:focus:bg-slate-800 transition"
                     />
                     <button

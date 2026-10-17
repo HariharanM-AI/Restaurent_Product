@@ -9,15 +9,25 @@ export async function POST(
 ) {
   try {
     const { id: rewardId } = await params;
+    const body = await req.json().catch(() => null);
+    const browserId = typeof body?.browserId === "string" ? body.browserId : "";
+    if (!browserId) {
+      return NextResponse.json(
+        { success: false, error: { code: "VALIDATION_FAILED", message: "browserId is required." } },
+        { status: 400 }
+      );
+    }
 
     const reward = await prisma.loyaltyReward.findUnique({
       where: { id: rewardId },
       include: {
         milestone: true,
+        wallet: { select: { anonymousBrowserId: true } },
       },
     });
 
-    if (!reward) {
+    // Only the guest whose wallet holds the reward can use it; anyone else gets the same 404 as a missing reward
+    if (!reward || reward.wallet.anonymousBrowserId !== browserId) {
       return NextResponse.json(
         { success: false, error: { code: "NOT_FOUND", message: "Reward not found." } },
         { status: 404 }

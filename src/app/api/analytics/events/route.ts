@@ -22,6 +22,12 @@ export async function POST(req: NextRequest) {
 
     const data = parsed.data;
 
+    // Only record events for real, live venues (stops anyone padding another cafe's stats with made-up IDs)
+    const restaurant = await prisma.restaurant.findUnique({ where: { id: data.restaurantId }, select: { status: true } });
+    if (restaurant?.status !== "ACTIVE") {
+      return NextResponse.json({ success: false, error: "Restaurant not found" }, { status: 404 });
+    }
+
     await prisma.analyticsEvent.create({
       data: {
         restaurantId: data.restaurantId,

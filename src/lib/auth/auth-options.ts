@@ -1,9 +1,11 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/client-ip";
+import { findOrCreateOAuthUser } from "@/lib/auth/provision";
 
 const authSecret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
 
@@ -76,10 +78,45 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            // Google verifies emails, so linking to an existing email account is safe and intended.
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        const email = user.email?.toLowerCase().trim();
+        if (!email) return false;
+        try {
+          await findOrCreateOAuthUser(email, user.name);
+        } catch (err) {
+          console.error("Google sign-in provisioning failed:", err);
+          return false;
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user, account }) {
+      // Google: our DB user was just ensured in signIn; load its id/role by verified email
+      if (account?.provider === "google" && token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email.toLowerCase() },
+          select: { id: true, role: true, image: true, tokenVersion: true },
+        });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+          token.image = dbUser.image;
+          token.tokenVersion = dbUser.tokenVersion ?? 0;
+        }
+      } else if (user) {
         token.id = user.id;
         token.role = (user as any).role || "OWNER";
         token.image = (user as any).image || null;

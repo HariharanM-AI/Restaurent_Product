@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { signIn } from "next-auth/react";
+import { safeCallbackUrl } from "@/lib/auth/safe-callback";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -30,7 +31,8 @@ interface AuthSliderProps {
 export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/admin";
+  // Only same-site paths: a crafted ?callbackUrl= can't bounce users to another site after login
+  const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"));
 
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [targetMode, setTargetMode] = useState<"signin" | "signup" | null>(null);
@@ -275,14 +277,6 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
     setLoginPassword("password123");
   };
 
-  const handleFillDemoSignup = () => {
-    setSignupName("John Doe");
-    setSignupEmail("owner@thegreentable.com");
-    setSignupRestaurantName("The Green Table");
-    setSignupPassword("Password123!");
-    setSignupConfirmPassword("Password123!");
-  };
-
   // Render Green Showcase Panel (The Info Side)
   const renderSideInfo = (viewMode: "signin" | "signup") => {
     const isSignup = viewMode === "signup";
@@ -501,13 +495,16 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
               />
               <span className="group-hover:text-white lg:group-hover:text-slate-900 transition-colors">Remember me</span>
             </label>
-            <button
-              type="button"
-              onClick={handleFillDemoLogin}
-              className="text-emerald-300 hover:text-emerald-200 lg:text-emerald-700 lg:hover:text-emerald-800 font-bold hover:underline transition-colors"
-            >
-              Auto-fill demo
-            </button>
+            {/* Demo sandbox only: never reveal shared credentials on the production site */}
+            {process.env.NEXT_PUBLIC_DEMO_MODE === "true" && (
+              <button
+                type="button"
+                onClick={handleFillDemoLogin}
+                className="text-emerald-300 hover:text-emerald-200 lg:text-emerald-700 lg:hover:text-emerald-800 font-bold hover:underline transition-colors"
+              >
+                Auto-fill demo
+              </button>
+            )}
           </div>
 
           <button
@@ -537,7 +534,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
 
         <button
           type="button"
-          onClick={handleFillDemoLogin}
+          onClick={() => signIn("google", { callbackUrl })}
           className="w-full py-2.5 px-4 rounded-xl bg-white/90 hover:bg-white backdrop-blur-sm border border-slate-200/90 hover:border-slate-300 text-slate-700 font-bold text-xs flex items-center justify-center gap-2.5 transition-all duration-300 shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -661,7 +658,8 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
                   required
                   value={signupPassword}
                   onChange={(e) => setSignupPassword(e.target.value)}
-                  placeholder="At least 8 chars"
+                  minLength={10}
+                  placeholder="At least 10 characters"
                   className="w-full pl-9 pr-9 py-2 text-xs rounded-xl bg-black/25 lg:bg-white/80 hover:bg-black/35 focus:bg-black/40 border border-white/25 lg:border-slate-200/90 focus:border-emerald-400 lg:focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 lg:focus:ring-emerald-500/15 text-white lg:text-slate-900 placeholder:text-white/40 lg:placeholder:text-slate-400 transition-all duration-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] lg:shadow-2xs backdrop-blur-sm lg:backdrop-blur-none"
                 />
                 <Lock className="w-3.5 h-3.5 text-emerald-200/70 lg:text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -735,7 +733,7 @@ export function AuthSlider({ initialMode = "signin" }: AuthSliderProps) {
 
         <button
           type="button"
-          onClick={handleFillDemoSignup}
+          onClick={() => signIn("google", { callbackUrl })}
           className="w-full py-2 px-4 rounded-xl bg-white/90 hover:bg-white backdrop-blur-sm border border-slate-200/90 hover:border-slate-300 text-slate-700 font-bold text-xs flex items-center justify-center gap-2.5 transition-all duration-300 shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">

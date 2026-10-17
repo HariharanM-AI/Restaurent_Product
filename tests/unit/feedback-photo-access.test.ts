@@ -64,4 +64,26 @@ describe("Feedback photos are restaurant-private", () => {
     expect((await get("rest_A", "fb_1", "abc")).status).toBe(404);
     expect((await get("rest_A", "fb_1", "-1")).status).toBe(404);
   });
+
+  it("returns 404 (never a public-URL redirect or fetch) when the photo can't be downloaded", async () => {
+    verifyRestaurantAccess.mockResolvedValue({ authorized: true, role: "OWNER" });
+    findFirst.mockResolvedValue({ imagePaths: ["restaurants/rest_A/feedback/abc.jpg"] });
+    download.mockResolvedValue({ data: null, error: { message: "not authorised" } });
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+
+    const res = await get("rest_A", "fb_1", "0");
+
+    expect(res.status).toBe(404);
+    expect(res.headers.get("location")).toBeNull();
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
+  });
+
+  it("only ever hands out the access-checked API URL, not storage URLs", async () => {
+    const { toFeedbackPhotoUrls } = await import("@/lib/supabase/feedback-photos");
+    expect(toFeedbackPhotoUrls("rest_A", "fb_1", ["restaurants/rest_A/feedback/a.jpg", "restaurants/rest_A/feedback/b.jpg"])).toEqual([
+      "/api/restaurants/rest_A/feedback/fb_1/photos/0",
+      "/api/restaurants/rest_A/feedback/fb_1/photos/1",
+    ]);
+  });
 });

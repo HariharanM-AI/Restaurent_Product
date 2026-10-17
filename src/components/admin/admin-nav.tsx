@@ -38,6 +38,7 @@ import {
   ShieldCheck,
   Moon,
   Sun,
+  Users,
 } from "lucide-react";
 import { useTheme } from "@/components/providers/theme-provider";
 
@@ -185,6 +186,13 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
     return () => document.removeEventListener("mousedown", handleGlobalClick);
   }, []);
 
+  // The desktop header's venue dropdown opens the same add-venue form
+  useEffect(() => {
+    const openAddVenue = () => setIsAddVenueModalOpen(true);
+    window.addEventListener("open-add-venue", openAddVenue);
+    return () => window.removeEventListener("open-add-venue", openAddVenue);
+  }, []);
+
   // Keep the current sub-page when switching venues
   const currentSubPath = pathname.replace(/^\/admin\/restaurants\/[^/]+/, "") || "/dashboard";
 
@@ -283,6 +291,11 @@ export function AdminNav({ restaurant, restaurants = [], user }: AdminNavProps) 
       label: "Loyalty & Stamps",
       href: `/admin/restaurants/${activeRestaurant.id}/loyalty`,
       icon: Award,
+    },
+    {
+      label: "Customers",
+      href: `/admin/restaurants/${activeRestaurant.id}/customers`,
+      icon: Users,
     },
     {
       label: "Guest Feedback",

@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { ArrowLeft, Award, QrCode, Gift, HelpCircle } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/tracker";
 import { useLoyaltyWallet } from "@/hooks/use-loyalty-wallet";
+import { useLiveRefresh } from "@/hooks/use-live-refresh";
 import { StampCard } from "@/components/loyalty/stamp-card";
 import { UnlockedRewardCard } from "@/components/loyalty/unlocked-reward-card";
 import { StampScannerModal } from "@/components/loyalty/stamp-scanner-modal";
@@ -37,7 +38,9 @@ export default function RewardsPage() {
       .catch(() => {});
   }, [slug]);
 
-  const { wallet, isLoading, refetch } = useLoyaltyWallet(restaurantId);
+  const { wallet, browserId, isLoading, refetch } = useLoyaltyWallet(restaurantId);
+  // Picks up reward levels the admin adds, edits or deletes without the guest reloading
+  useLiveRefresh(restaurantId ?? "", refetch, 15_000);
 
   return (
     <div className="flex-1 bg-transparent flex flex-col">
@@ -85,6 +88,7 @@ export default function RewardsPage() {
             restaurantName={restaurantName}
             brandColor={brandColor}
             milestones={wallet.milestones || []}
+            customerNumber={wallet.customerNumber ?? undefined}
           />
         ) : null}
 
@@ -113,6 +117,7 @@ export default function RewardsPage() {
                 <UnlockedRewardCard
                   key={reward.id}
                   reward={reward}
+                  browserId={browserId}
                   brandColor={brandColor}
                   onRedeemed={refetch}
                 />

@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   calculateWalletStamps,
-  getCycleLength,
   getNextUnlockedMilestone,
   getUpcomingMilestone,
 } from "@/lib/loyalty/ledger";
@@ -21,44 +20,39 @@ describe("Loyalty Ledger Engine", () => {
     expect(lifetimeStamps).toBe(4); // 4 stamps earned in total
   });
 
-  it("unlocks a reward only on the scan that lands exactly on an admin-set level", () => {
+  it("unlocks each admin-set level once, on the exact stamp, never repeating", () => {
     const milestones = [
-      { id: "m1", stampRequirement: 5, rewardTitle: "Free Drink", validityDays: 30 },
-      { id: "m2", stampRequirement: 10, rewardTitle: "Free Dessert", validityDays: 30 },
+      { id: "m5", stampRequirement: 5, rewardTitle: "Free Drink", validityDays: 30 },
+      { id: "m10", stampRequirement: 10, rewardTitle: "Free Dessert", validityDays: 30 },
+      { id: "m15", stampRequirement: 15, rewardTitle: "Free Meal", validityDays: 30 },
     ];
-
-    expect(getNextUnlockedMilestone(4, milestones)).toBeNull();
-    expect(getNextUnlockedMilestone(5, milestones)?.id).toBe("m1");
-    expect(getNextUnlockedMilestone(6, milestones)).toBeNull(); // between levels: nothing
-    expect(getNextUnlockedMilestone(7, milestones)).toBeNull();
-    expect(getNextUnlockedMilestone(10, milestones)?.id).toBe("m2");
-    // The card restarts after the highest level, so rewards repeat at the same levels
-    expect(getNextUnlockedMilestone(11, milestones)).toBeNull();
-    expect(getNextUnlockedMilestone(15, milestones)?.id).toBe("m1");
-    expect(getNextUnlockedMilestone(20, milestones)?.id).toBe("m2");
+    const unlockedAt = Array.from({ length: 60 }, (_, i) => i + 1).filter((n) => getNextUnlockedMilestone(n, milestones));
+    expect(unlockedAt).toEqual([5, 10, 15]); // not 20, 25, 30, 35...
+    expect(getNextUnlockedMilestone(10, milestones)?.id).toBe("m10");
   });
 
   it("never 'catches up' rewards for stamps collected before a level existed", () => {
-    // Guest already had 12 stamps when the cafe created a 5-stamp reward (cycle = 5)
-    const milestones = [{ id: "m1", stampRequirement: 5, rewardTitle: "Free Coffee", validityDays: 30 }];
-    expect(getNextUnlockedMilestone(13, milestones)).toBeNull(); // 13th scan is not a level
-    expect(getNextUnlockedMilestone(14, milestones)).toBeNull();
-    expect(getNextUnlockedMilestone(15, milestones)?.id).toBe("m1"); // first real level hit
+    // Guest already had 12 stamps when the cafe created 5- and 15-stamp rewards
+    const milestones = [
+      { id: "m5", stampRequirement: 5, rewardTitle: "Free Coffee", validityDays: 30 },
+      { id: "m15", stampRequirement: 15, rewardTitle: "Free Meal", validityDays: 30 },
+    ];
+    expect(getNextUnlockedMilestone(13, milestones)).toBeNull();
+    expect(getNextUnlockedMilestone(15, milestones)?.id).toBe("m15"); // 5 was already passed: no back-pay
   });
 
-  it("uses the cafe's own levels exactly, including a top level that isn't a multiple of 5 or 10", () => {
+  it("uses the cafe's own levels exactly, even ones that aren't multiples of 5", () => {
     const milestones = [
       { id: "a", stampRequirement: 3, rewardTitle: "Cookie", validityDays: 30 },
       { id: "b", stampRequirement: 7, rewardTitle: "Meal", validityDays: 30 },
     ];
-    expect(getCycleLength(milestones)).toBe(7);
     const unlockedAt = Array.from({ length: 21 }, (_, i) => i + 1).filter((n) => getNextUnlockedMilestone(n, milestones));
-    expect(unlockedAt).toEqual([3, 7, 10, 14, 17, 21]);
+    expect(unlockedAt).toEqual([3, 7]);
   });
 
   it("ignores disabled rewards and cafes with no rewards", () => {
     expect(getNextUnlockedMilestone(5, [])).toBeNull();
-    expect(getCycleLength([])).toBe(0);
+    expect(getUpcomingMilestone(5, [])).toEqual({ nextMilestone: null, stampsNeeded: 0 });
     const milestones = [
       { id: "on", stampRequirement: 4, rewardTitle: "On", validityDays: 30 },
       { id: "off", stampRequirement: 2, rewardTitle: "Off", validityDays: 30, enabled: false },
@@ -88,35 +82,13 @@ describe("Loyalty Ledger Engine", () => {
     expect(stampsNeeded).toBe(2); // 5 - 3 = 2 more stamps needed
   });
 
-  it("calculates continuous upcoming milestones for consecutive cards (e.g. 12/15 and 16/20)", () => {
+  it("points at the next admin-set level, and at nothing once every level is passed", () => {
     const milestones = [
-      {
-        id: "m1",
-        stampRequirement: 5,
-        rewardTitle: "Free Drink",
-        validityDays: 30,
-      },
-      {
-        id: "m2",
-        stampRequirement: 10,
-        rewardTitle: "Free Dessert",
-        validityDays: 30,
-      },
+      { id: "m1", stampRequirement: 5, rewardTitle: "Free Drink", validityDays: 30 },
+      { id: "m2", stampRequirement: 10, rewardTitle: "Free Dessert", validityDays: 30 },
     ];
-
-    // At 12 stamps: next reward is at 15 stamps, 3 needed (12/15)
-    const at12 = getUpcomingMilestone(12, milestones);
-    expect(at12.nextMilestone?.stampRequirement).toBe(15);
-    expect(at12.stampsNeeded).toBe(3);
-
-    // At 16 stamps: next reward is at 20 stamps, 4 needed (16/20)
-    const at16 = getUpcomingMilestone(16, milestones);
-    expect(at16.nextMilestone?.stampRequirement).toBe(20);
-    expect(at16.stampsNeeded).toBe(4);
-
-    // At 10 stamps (first 10 finished): next card cycle starts, reward target is 15 stamps, 5 needed
-    const at10 = getUpcomingMilestone(10, milestones);
-    expect(at10.nextMilestone?.stampRequirement).toBe(15);
-    expect(at10.stampsNeeded).toBe(5);
+    expect(getUpcomingMilestone(5, milestones)).toMatchObject({ nextMilestone: { id: "m2", stampRequirement: 10 }, stampsNeeded: 5 });
+    expect(getUpcomingMilestone(10, milestones)).toEqual({ nextMilestone: null, stampsNeeded: 0 });
+    expect(getUpcomingMilestone(31, milestones)).toEqual({ nextMilestone: null, stampsNeeded: 0 });
   });
 });

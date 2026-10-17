@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import Link from "next/link";
 import { Segmented } from "@/components/ui/motion";
 import { ColumnChart } from "@/components/charts";
-import { subscribeToActivity } from "@/lib/realtime/broadcast";
+import { broadcastActivity, subscribeToActivity } from "@/lib/realtime/broadcast";
 import { LiveStatus } from "@/components/admin/dashboard-kit";
 import {
   Award,
@@ -22,6 +22,7 @@ import {
   Share2,
   ExternalLink,
   Edit2,
+  Trash2,
   ChevronDown,
   Calendar,
   AlertCircle,
@@ -128,6 +129,10 @@ export function LoyaltyAdminDashboard({
   const [rewardDescription, setRewardDescription] = useState("");
   const [stampRequirement, setStampRequirement] = useState(5);
   const [isSubmittingMilestone, setIsSubmittingMilestone] = useState(false);
+  const [editingMilestoneId, setEditingMilestoneId] = useState<string | null>(null);
+  const [milestoneToDelete, setMilestoneToDelete] = useState<LoyaltyMilestoneData | null>(null);
+  const [isDeletingMilestone, setIsDeletingMilestone] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Generate initial QR code
   useEffect(() => {
@@ -226,24 +231,43 @@ export function LoyaltyAdminDashboard({
     }
   };
 
+  // Opens the reward form empty (new level) or filled in (editing an existing level)
+  const openMilestoneModal = (m?: LoyaltyMilestoneData) => {
+    setEditingMilestoneId(m?.id ?? null);
+    setRewardTitle(m?.rewardTitle ?? "");
+    setRewardDescription(m?.rewardDescription ?? "");
+    setStampRequirement(m?.stampRequirement ?? 5);
+    setIsMilestoneModalOpen(true);
+  };
+
   const handleAddMilestone = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmittingMilestone(true);
     try {
-      const res = await fetch(`/api/restaurants/${restaurantId}/loyalty/milestones`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          stampRequirement: Number(stampRequirement),
-          rewardTitle,
-          rewardDescription,
-          validityDays: 30,
-        }),
-      });
+      // Editing updates the existing level in place (Save used to always create a duplicate)
+      const res = await fetch(
+        `/api/restaurants/${restaurantId}/loyalty/milestones${editingMilestoneId ? `/${editingMilestoneId}` : ""}`,
+        {
+          method: editingMilestoneId ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            stampRequirement: Number(stampRequirement),
+            rewardTitle,
+            rewardDescription,
+            ...(editingMilestoneId ? {} : { validityDays: 30 }),
+          }),
+        }
+      );
       const data = await res.json();
       if (data.success && data.data) {
-        setMilestones([...milestones, data.data]);
+        setMilestones((prev) =>
+          (editingMilestoneId ? prev.map((m) => (m.id === editingMilestoneId ? data.data : m)) : [...prev, data.data]).sort(
+            (a, b) => a.stampRequirement - b.stampRequirement
+          )
+        );
+        broadcastActivity(restaurantId, "loyalty_milestones_changed");
         setIsMilestoneModalOpen(false);
+        setEditingMilestoneId(null);
         setRewardTitle("");
         setRewardDescription("");
       }
@@ -251,6 +275,26 @@ export function LoyaltyAdminDashboard({
       console.error(err);
     } finally {
       setIsSubmittingMilestone(false);
+    }
+  };
+
+  const handleDeleteMilestone = async () => {
+    if (!milestoneToDelete) return;
+    setIsDeletingMilestone(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/restaurants/${restaurantId}/loyalty/milestones/${milestoneToDelete.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(typeof data.error === "string" ? data.error : "Could not delete this reward.");
+      setMilestones((prev) => prev.filter((m) => m.id !== milestoneToDelete.id));
+      broadcastActivity(restaurantId, "loyalty_milestones_changed");
+      setMilestoneToDelete(null);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Could not delete this reward.");
+    } finally {
+      setIsDeletingMilestone(false);
     }
   };
 
@@ -278,7 +322,7 @@ export function LoyaltyAdminDashboard({
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setIsMilestoneModalOpen(true)}
+            onClick={() => openMilestoneModal()}
             className="px-4 py-2 rounded-xl bg-[#0B3B36] hover:bg-[#072B26] dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white text-xs font-bold transition flex items-center gap-2 shadow-sm"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -603,7 +647,7 @@ export function LoyaltyAdminDashboard({
             </div>
 
             <button
-              onClick={() => setIsMilestoneModalOpen(true)}
+              onClick={() => openMilestoneModal()}
               className="self-start sm:self-auto px-4 py-2 rounded-xl bg-[#0B3B36] hover:bg-[#072B26] text-white text-xs font-bold transition flex items-center gap-2 shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -643,18 +687,26 @@ export function LoyaltyAdminDashboard({
                         </span>
                       </td>
                       <td className="py-3.5 pr-2 text-right">
-                        <button
-                          onClick={() => {
-                            setRewardTitle(m.rewardTitle);
-                            setRewardDescription(m.rewardDescription || "");
-                            setStampRequirement(m.stampRequirement);
-                            setIsMilestoneModalOpen(true);
-                          }}
-                          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[11px] inline-flex items-center gap-1 shadow-2xs"
-                        >
-                          <Edit2 className="w-3 h-3" />
-                          <span>Edit</span>
-                        </button>
+                        <div className="inline-flex items-center gap-1.5">
+                          <button
+                            onClick={() => openMilestoneModal(m)}
+                            className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[11px] inline-flex items-center gap-1 shadow-2xs"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setDeleteError(null);
+                              setMilestoneToDelete(m);
+                            }}
+                            aria-label={`Delete ${m.rewardTitle}`}
+                            title="Delete reward"
+                            className="p-1.5 rounded-lg border border-rose-200 dark:border-rose-900/60 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 inline-flex items-center shadow-2xs transition"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -670,6 +722,55 @@ export function LoyaltyAdminDashboard({
           </div>
         </div>
       </div>
+
+      {/* Delete Milestone Confirmation */}
+      {milestoneToDelete && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isDeletingMilestone) setMilestoneToDelete(null);
+          }}
+        >
+          <div role="alertdialog" aria-modal="true" aria-labelledby="delete-milestone-title" className="bg-white dark:bg-slate-900 rounded-[28px] max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800">
+            <div className="w-11 h-11 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-4">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <h3 id="delete-milestone-title" className="text-base font-semibold text-slate-900 dark:text-white">
+              Delete &ldquo;{milestoneToDelete.rewardTitle}&rdquo;?
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+              This permanently removes the {milestoneToDelete.stampRequirement}-stamp reward. Guests stop seeing it right away, and anyone
+              who already unlocked it loses that reward along with its redemption history. Stamps guests have collected are not affected.
+              This can&apos;t be undone.
+            </p>
+            {deleteError && (
+              <p className="mt-3 text-xs font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                {deleteError}
+              </p>
+            )}
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-6">
+              <button
+                type="button"
+                onClick={() => setMilestoneToDelete(null)}
+                disabled={isDeletingMilestone}
+                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteMilestone}
+                disabled={isDeletingMilestone}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-xs font-bold transition inline-flex items-center justify-center gap-2"
+              >
+                {isDeletingMilestone ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                <span>Delete permanently</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add / Edit Milestone Modal */}
       {isMilestoneModalOpen && (

@@ -23,9 +23,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!newPassword || typeof newPassword !== "string" || newPassword.length < 8) {
+    if (!newPassword || typeof newPassword !== "string" || newPassword.length < 10) {
       return NextResponse.json(
-        { success: false, error: "New password must be at least 8 characters long." },
+        { success: false, error: "New password must be at least 10 characters long." },
         { status: 400 }
       );
     }

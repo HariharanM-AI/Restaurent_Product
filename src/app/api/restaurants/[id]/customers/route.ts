@@ -50,7 +50,8 @@ export async function GET(
 
       return {
         id: wallet.id,
-        name: wallet.customer?.displayName || `Dining Guest #${wallet.anonymousBrowserId.slice(0, 6)}`,
+        name: wallet.customer?.displayName || `Customer #${wallet.customerNumber}`,
+        customerNumber: wallet.customerNumber,
         email: wallet.customer?.email || null,
         phone: wallet.customer?.phone || null,
         browserId: wallet.anonymousBrowserId,

@@ -128,7 +128,7 @@ export async function GET(
         where: { restaurantId },
         select: {
           id: true,
-          anonymousBrowserId: true,
+          customerNumber: true,
           status: true,
           createdAt: true,
           customer: { select: { displayName: true, email: true, phone: true } },
@@ -262,7 +262,7 @@ export async function GET(
     // --- Process Guest Directory for Dashboard ---
     const guests = guestDirectory.map((w) => ({
       id: w.id,
-      name: w.customer?.displayName || `Guest ${w.anonymousBrowserId.slice(0, 6)}`,
+      name: w.customer?.displayName || `Customer #${w.customerNumber}`,
       email: w.customer?.email || null,
       phone: w.customer?.phone || null,
       status: w.status,
